@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: notion
+
+# MinIO (S3) configuration
+minio:
+  endpoint: http://localhost:9000
+  accessKey: minioadmin
+  secretKey: minioadmin
+  bucket: test-bucket
+

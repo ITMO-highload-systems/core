@@ -27,6 +27,6 @@ services:
       - MINIO_VOLUMES=/mnt/data
     volumes:
       - type: bind
-        source: ./minio/mnt/data/compose
+        source: ./minio_storage/mnt/data/compose
         target: /mnt/data
 

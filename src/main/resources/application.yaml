@@ -1,15 +1,14 @@
 spring:
     application:
-        name: notion
+        name: ${SPRING_APPLICATION_NAME:notion}
     servlet:
-      multipart:
-          max-file-size: 200MB
-          max-request-size: 200MB
+        multipart:
+            max-file-size: ${SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE:200MB}
+            max-request-size: ${SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE:200MB}
 
 # MinIO (S3) configuration
 minio:
-    endpoint: http://localhost:9000
-    accessKey: minioadmin
-    secretKey: minioadmin
-    bucket: my-bucket
-
+    endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+    accessKey: ${MINIO_ACCESS_KEY:minioadmin}
+    secretKey: ${MINIO_SECRET_KEY:minioadmin}
+    bucket: ${MINIO_BUCKET:my-bucket}

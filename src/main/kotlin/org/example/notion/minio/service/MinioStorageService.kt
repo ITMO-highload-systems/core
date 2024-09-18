@@ -1,4 +1,4 @@
-package org.example.notion.service
+package org.example.notion.minio.service
 
 import org.springframework.web.multipart.MultipartFile
 import java.io.InputStream
@@ -20,7 +20,6 @@ interface MinioStorageService {
      * The file is identified and stored in the storage with a unique name derived from its hash.
      *
      * @param file The image file to upload.
-     * @throws Exception If an error occurs while uploading the file to MinIO.
      */
     fun uploadImg(file: MultipartFile)
 
@@ -32,7 +31,6 @@ interface MinioStorageService {
      *
      * @param fileHash The unique hash of the image.
      * @return An `InputStream` for reading the image content.
-     * @throws Exception If an error occurs while retrieving the image from MinIO.
      */
     fun getImage(fileHash: String): InputStream
 }
