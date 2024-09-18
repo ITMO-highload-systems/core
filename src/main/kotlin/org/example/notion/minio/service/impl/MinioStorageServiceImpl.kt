@@ -2,13 +2,17 @@ package org.example.notion.minio.service.impl
 
 import io.minio.*
 import org.example.notion.config.MinioConnectionDetails
+import lombok.extern.slf4j.Slf4j
 import org.example.notion.minio.service.MinioStorageService
 import org.example.notion.minio.util.calculateFileHash
 import org.slf4j.LoggerFactory
+import org.example.notion.util.calculateFileHash
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import java.io.InputStream
 
+@Slf4j
 @Service
 class MinioStorageServiceImpl(
     private val minioClient: MinioClient,
