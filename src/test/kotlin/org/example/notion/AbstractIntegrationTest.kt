@@ -6,6 +6,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
 import org.springframework.test.context.ActiveProfiles
 import org.testcontainers.containers.MinIOContainer
+import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.containers.wait.strategy.Wait
 
 @ActiveProfiles("test")
@@ -20,17 +21,22 @@ abstract class AbstractIntegrationTest {
                 .waitingFor(Wait.forHttp("/minio/health/live").forStatusCode(200))
         }
 
+        @ServiceConnection
+        internal var postgres = PostgreSQLContainer("postgres:16-alpine")
+
 
         @BeforeAll
         @JvmStatic
         fun setup() {
             minio.start()
+            postgres.start()
         }
 
         @AfterAll
         @JvmStatic
         fun teardown() {
             minio.stop()
+            postgres.stop()
         }
     }
 }
