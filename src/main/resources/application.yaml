@@ -5,6 +5,17 @@ spring:
         multipart:
             max-file-size: ${SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE:200MB}
             max-request-size: ${SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE:200MB}
+    datasource:
+        url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/postgres}
+        username: ${DATABASE_USERNAME:postgres}
+        password: ${DATABASE_PASSWORD:postgres}
+        driver-class-name: org.postgresql.Driver
+    jpa:
+        open-in-view: true
+
+    flyway:
+        enabled: true
+        baseline-on-migrate: true
 
 # MinIO (S3) configuration
 minio:

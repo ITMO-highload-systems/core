@@ -30,11 +30,11 @@ val testContainersVersion = "1.20.1"
 
 
 dependencies {
-//    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-//    implementation("org.flywaydb:flyway-core")
-//    implementation("org.flywaydb:flyway-database-postgresql")
+    implementation("org.flywaydb:flyway-core")
+    implementation("org.flywaydb:flyway-database-postgresql")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("io.minio:minio:$minioVersion")
     compileOnly("org.projectlombok:lombok")
@@ -47,6 +47,7 @@ dependencies {
     testImplementation("org.testcontainers:testcontainers:$testContainersVersion")
     testImplementation("org.testcontainers:junit-jupiter:$testContainersVersion")
     testImplementation("org.testcontainers:minio:$testContainersVersion")
+    testImplementation("org.testcontainers:postgresql:$testContainersVersion")
 }
 
 kotlin {

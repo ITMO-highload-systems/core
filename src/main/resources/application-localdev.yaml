@@ -5,6 +5,12 @@ spring:
     multipart:
       max-file-size: 200MB
       max-request-size: 200MB
+  jpa:
+    open-in-view: true
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
 
 # MinIO (S3) configuration
 minio:
