@@ -17,7 +17,6 @@ class MinioContainerTest : AbstractIntegrationTest() {
     @Autowired
     private lateinit var minioStorageService: MinioStorageServiceImpl
 
-
     @Test
     fun `test container healthcheck`() {
         val url =

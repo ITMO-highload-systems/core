@@ -10,7 +10,7 @@ import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.containers.wait.strategy.Wait
 
 @ActiveProfiles("test")
-@SpringBootTest(classes = [NotionApplication::class], webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest
 abstract class AbstractIntegrationTest {
 
     companion object {
@@ -22,7 +22,7 @@ abstract class AbstractIntegrationTest {
         }
 
         @ServiceConnection
-        internal var postgres = PostgreSQLContainer("postgres:16-alpine")
+        internal var postgres = PostgreSQLContainer("postgres:latest")
 
 
         @BeforeAll

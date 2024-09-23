@@ -29,8 +29,7 @@ class MinioConfiguration {
         return MinioConnectionDetailsImpl(minioProperties)
     }
 
-    @JvmRecord
-    private data class MinioConnectionDetailsImpl(val minioProperties: MinioProperties) : MinioConnectionDetails {
+    private class MinioConnectionDetailsImpl(val minioProperties: MinioProperties) : MinioConnectionDetails {
         override val url: String
             get() = minioProperties.endpoint
 
