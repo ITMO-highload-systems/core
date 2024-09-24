@@ -12,7 +12,7 @@ class SseTest : AbstractIntegrationTest() {
     fun test() {
         val result = subscribe(1)
         val messageValue = "message"
-        sendSse(1, mapOf("type" to Type.PARAGRAPH_CHANGED, "object_value" to messageValue))
+        sendSse(1, mapOf("type" to Type.PARAGRAPH_CHANGED, "objectValue" to messageValue))
         getSse(result).andExpect(MockMvcResultMatchers.status().isOk)
             .andExpect(MockMvcResultMatchers.content().string(Matchers.containsString(messageValue)))
     }

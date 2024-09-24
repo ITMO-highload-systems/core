@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
@@ -28,11 +29,12 @@ import java.util.concurrent.TimeUnit
 @SpringBootTest
 abstract class AbstractIntegrationTest {
     @Autowired
-    var mockMvc: MockMvc? = null
+    lateinit var mockMvc: MockMvc
     var objectMapper: ObjectMapper = jacksonObjectMapper()
 
-
     companion object {
+        private val logger = LoggerFactory.getLogger(this::class.java)
+
         @ServiceConnection
         internal var minio = MinIOContainer("minio/minio:latest").apply {
             withCommand("server /data")
@@ -60,14 +62,14 @@ abstract class AbstractIntegrationTest {
     }
 
     fun subscribe(noteId: Long): MvcResult {
-        return mockMvc!!.perform(MockMvcRequestBuilders.get("/sse/bind/$noteId/user"))
+        return mockMvc.perform(MockMvcRequestBuilders.get("/sse/bind/$noteId/user"))
             .andExpect(MockMvcResultMatchers.request().asyncStarted()).andReturn()
     }
 
     fun sendSse(noteId: Long, message: Map<String, Any>) {
         val valueAsBytes = objectMapper.writeValueAsBytes(message)
-        println("Sending JSON: ${String(valueAsBytes)}")
-        mockMvc!!.perform(
+        logger.debug("Sending JSON: ${String(valueAsBytes)}")
+        mockMvc.perform(
             MockMvcRequestBuilders.post("/sse/send/$noteId").content(valueAsBytes)
                 .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(MockMvcResultMatchers.status().isOk)
@@ -88,7 +90,7 @@ abstract class AbstractIntegrationTest {
 
         result.asyncResult
 
-        return mockMvc!!.perform(MockMvcRequestBuilders.asyncDispatch(result))
+        return mockMvc.perform(MockMvcRequestBuilders.asyncDispatch(result))
 
     }
 
