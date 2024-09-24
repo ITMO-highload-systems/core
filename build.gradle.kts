@@ -1,9 +1,9 @@
 plugins {
     kotlin("jvm") version "1.9.25"
     kotlin("plugin.spring") version "1.9.25"
+    kotlin("plugin.jpa") version "1.9.25"
     id("org.springframework.boot") version "3.3.3"
     id("io.spring.dependency-management") version "1.1.6"
-    kotlin("plugin.jpa") version "1.9.25"
 }
 
 group = "org.example"
@@ -11,13 +11,7 @@ version = "0.0.1-SNAPSHOT"
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
-}
-
-configurations {
-    compileOnly {
-        extendsFrom(configurations.annotationProcessor.get())
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
 }
 
@@ -25,9 +19,9 @@ repositories {
     mavenCentral()
 }
 
+// Dependencies
 val minioVersion = "8.5.11"
 val testContainersVersion = "1.20.1"
-
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
@@ -37,25 +31,45 @@ dependencies {
     implementation("org.flywaydb:flyway-database-postgresql")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("io.minio:minio:$minioVersion")
-    compileOnly("org.projectlombok:lombok")
-    developmentOnly("org.springframework.boot:spring-boot-docker-compose")
-    runtimeOnly("org.postgresql:postgresql")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure:1.42.1")
 
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    // Optional configuration processor
+    annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
+
+    // Compile-time dependencies
+    compileOnly("org.projectlombok:lombok")
+
+    // Development dependencies
+    developmentOnly("org.springframework.boot:spring-boot-docker-compose")
+
+    // Runtime dependencies
+    runtimeOnly("org.postgresql:postgresql")
+
+    // Test dependencies
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("org.testcontainers:testcontainers:$testContainersVersion")
     testImplementation("org.testcontainers:junit-jupiter:$testContainersVersion")
     testImplementation("org.testcontainers:minio:$testContainersVersion")
     testImplementation("org.testcontainers:postgresql:$testContainersVersion")
 }
 
+// Compiler options for Kotlin
 kotlin {
     compilerOptions {
         freeCompilerArgs.addAll("-Xjsr305=strict")
     }
 }
 
+// Test task configuration
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+tasks {
+    withType<JavaCompile>
+    {
+        dependsOn(processResources)
+    }
 }
