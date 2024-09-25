@@ -5,7 +5,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 
 
 data class SseConnection(val username: String, val noteId: Long, val sseEmitter: SseEmitter) {
-    private val reconnectTime: Long = 200
+    private val reconnectTime: Long = 400
 
     companion object {
         private val logger = LoggerFactory.getLogger(this::class.java)
