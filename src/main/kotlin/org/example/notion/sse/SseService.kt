@@ -16,7 +16,7 @@ class SseService {
 
     fun openConnection(username: String, noteId: Long): SseConnection {
         val sseConnection = SseConnection(username, noteId, SseEmitter(timeout))
-        sseConnections.computeIfAbsent(noteId) { k: Long? -> ArrayList() }.add(sseConnection)
+        sseConnections.computeIfAbsent(noteId) { ArrayList() }.add(sseConnection)
         logger.info("Connection open for username {} and note_id {}", username, noteId)
 
         sseConnection.sseEmitter.onCompletion {

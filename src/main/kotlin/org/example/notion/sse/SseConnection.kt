@@ -11,7 +11,7 @@ data class SseConnection(val username: String, val noteId: Long, val sseEmitter:
         private val logger = LoggerFactory.getLogger(this::class.java)
     }
 
-    fun sendMessage(payload: Any) {
+    fun sendMessage(payload: AbstractMessage) {
         logger.info("Send message {} to connection {}", payload, this)
 
         try {

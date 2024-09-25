@@ -1,6 +1,6 @@
 package org.example.notion.sse
 
 data class Message(
-    val type: Type,
-    val objectValue: Any?
-)
+    override val type: Type,
+    val objectValue: String
+) : AbstractMessage(type)
