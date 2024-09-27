@@ -4,9 +4,9 @@ import java.time.LocalDateTime
 
 data class Note(
     val noteId: Int,
-    val owner: Int?,
+    val owner: Int,
     val title: String,
     val description: String?,
-    val createdAt: LocalDateTime?,
-    val updatedAt: LocalDateTime?
+    val createdAt: LocalDateTime,
+    val updatedAt: LocalDateTime
 )

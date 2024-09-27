@@ -2,6 +2,8 @@ package org.example.notion.app.service
 
 import org.example.notion.app.dto.NoteDto
 import org.example.notion.app.entity.Note
+import org.example.notion.app.exceptions.BadEntityRequestException
+import org.example.notion.app.exceptions.EntityNotFoundException
 import org.example.notion.app.repository.NoteRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -10,28 +12,36 @@ import org.springframework.transaction.annotation.Transactional
 class NoteService(
     private val noteRepository: NoteRepository,
 ) {
+
     fun create(noteDto: NoteDto) =
         noteRepository.save(noteDto)
 
-    //TODO или лучше если нет note возвращать exception?
-    fun getByNoteId(noteId: Int): NoteDto? =
-        noteRepository.findByNoteId(noteId)?.toDto()
+    fun getByNoteId(noteId: Int): NoteDto {
+        return noteRepository.findByNoteId(noteId).let {
+            if (it == null) throw EntityNotFoundException("Note with id $noteId not found")
+            it.toDto()
+        }
+    }
 
-    fun getByOwner(owner: Int): List<NoteDto> =
-        noteRepository.findByOwner(owner).map { it.toDto() }
+
+    fun getByOwner(owner: Int): List<NoteDto> {
+        return noteRepository.findByOwner(owner).let {
+            if (it.isEmpty()) throw EntityNotFoundException("Notes with owner $owner not found")
+            it.map { el -> el.toDto() }
+        }
+    }
 
     fun deleteByNoteId(noteId: Int): Int =
         noteRepository.deleteByNoteId(noteId)
 
-    //TODO делать ли тут проверку на сущ owner?
-    fun deleteByOwner(owner: Int): Int =
-        noteRepository.deleteByOwner(owner)
-
-    //TODO Пока сделал общее обновление всей сущности, но можно подумать про динамическое обновление
     @Transactional
-    fun update(noteId: Int, noteDto: NoteDto): Int {
-        if (noteRepository.findByNoteId(noteId) == null) return 0
-        return noteRepository.updateNote(noteId, noteDto)
+    fun update(noteDto: NoteDto): Int {
+        val note = noteRepository.findByNoteId(noteDto.noteId)
+            ?: throw EntityNotFoundException("Note with id ${noteDto.noteId} not found")
+
+        if (noteDto.owner != note.owner) throw BadEntityRequestException("Bad request")
+
+        return noteRepository.updateNote(noteDto)
     }
 
     private fun Note.toDto(): NoteDto =
@@ -44,3 +54,4 @@ class NoteService(
             updatedAt = this.updatedAt
         )
 }
+

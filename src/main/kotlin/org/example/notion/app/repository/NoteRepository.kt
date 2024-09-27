@@ -54,11 +54,11 @@ class NoteRepository(
     private val rowMapper: RowMapper<Note> = RowMapper { rs, _ ->
         Note(
             noteId = rs.getInt("note_id"),
-            owner = rs.getString("owner").toIntOrNull(),
+            owner = rs.getString("owner").toInt(),
             title = rs.getString("title"),
             description = rs.getString("description"),
-            createdAt = rs.getTimestamp("created_at")?.toLocalDateTime(),
-            updatedAt = rs.getTimestamp("updated_at")?.toLocalDateTime()
+            createdAt = rs.getTimestamp("created_at").toLocalDateTime(),
+            updatedAt = rs.getTimestamp("updated_at").toLocalDateTime()
         )
     }
 
@@ -76,11 +76,11 @@ class NoteRepository(
             rowMapper
         )
 
-    fun updateNote(noteId: Int, noteDto: NoteDto): Int =
+    fun updateNote(noteDto: NoteDto): Int =
         namedParameterJdbcOperations.update(
             UPDATE_NOTE,
             mapOf(
-                "note_id" to noteId,
+                "note_id" to noteDto.noteId,
                 "description" to noteDto.description,
                 "title" to noteDto.title
             )
@@ -90,12 +90,6 @@ class NoteRepository(
         namedParameterJdbcOperations.update(
             DELETE_BY_NOTE_ID,
             mapOf("note_id" to noteId)
-        )
-
-    fun deleteByOwner(owner: Int): Int =
-        namedParameterJdbcOperations.update(
-            DELETE_BY_OWNER,
-            mapOf("owner" to owner)
         )
 
     fun save(noteDto: NoteDto): Int =
