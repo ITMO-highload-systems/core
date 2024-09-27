@@ -26,10 +26,6 @@ class NoteRepository(
         private const val FIND_NOTE_BY_NOTE_ID = "$SELECT_FROM_NOTE where note_id = :note_id"
         private const val FIND_NOTES_BY_OWNER = "$SELECT_FROM_NOTE where owner = :owner"
 
-        private const val UPDATE_TITLE =
-            "update note set title = :new_title, updated_at = now() where note_id = :note_id"
-        private const val UPDATE_DESCRIPTION =
-            "update note set description = :new_description, updated_at = now() where note_id = :note_id"
         private const val UPDATE_NOTE =
             "update note set title = :new_title, description = :new_description, updated_at = now() where note_id = :note_id"
 
