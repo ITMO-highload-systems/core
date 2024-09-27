@@ -1,9 +1,7 @@
 package org.example.notion.app.dto
 
-import jakarta.validation.constraints.Email
-import jakarta.validation.constraints.Min
-import jakarta.validation.constraints.NotBlank
-import jakarta.validation.constraints.NotNull
+import jakarta.validation.constraints.*
+import java.io.Serializable
 
 data class UserDto(
     @Min(1)
@@ -13,9 +11,11 @@ data class UserDto(
     @NotNull
     @NotBlank
     @Email
+    @Size(max = 255)
     val email: String,
 
     @NotBlank
     @NotNull
+    @Size(max = 255)
     val password: String
-)
+): Serializable

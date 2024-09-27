@@ -41,7 +41,7 @@ class UserService(
     }
 
     @Transactional
-    fun save(userDto: UserDto): Int {
+    fun createUser(userDto: UserDto): Int {
         if (userRepository.findByEmail(userDto.email) != null)
             throw BadEntityRequestException("User with email ${userDto.email} already exists")
         return userRepository.save(userDto)

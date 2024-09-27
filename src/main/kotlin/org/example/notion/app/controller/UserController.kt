@@ -4,10 +4,9 @@ import jakarta.validation.Valid
 import org.example.notion.app.dto.UserDto
 import org.example.notion.app.service.UserService
 import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.*
 
-@Controller("api/user")
+@RestController("api/user")
 class UserController(
     private val userService: UserService
 ) {
@@ -24,7 +23,7 @@ class UserController(
 
     @PostMapping("register")
     fun registerUser(@Valid @RequestBody userDto: UserDto): ResponseEntity<Unit> {
-        userService.save(userDto)
+        userService.createUser(userDto)
         return ResponseEntity.ok().build()
     }
 
