@@ -19,19 +19,19 @@ class UserRepository(
                 password,
             from "user"
         """
-        private const val FIND_BY_USER_ID = "$SELECT_FROM_USER where user_id = :user_id"
-        private const val FIND_BY_EMAIL = "$SELECT_FROM_USER where email = :email"
+        private const val FIND_BY_USER_ID = "$SELECT_FROM_USER where user_id = :user_id;"
+        private const val FIND_BY_EMAIL = "$SELECT_FROM_USER where email = :email;"
 
-        private const val UPDATE_USER = "update user set email = :email, password = :password where user_id = :user_id"
+        private const val UPDATE_USER = "update user set email = :email, password = :password where user_id = :user_id;"
 
-        private const val DELETE_BY_USER_ID = "delete from user where user_id = :user_id"
+        private const val DELETE_BY_USER_ID = "delete from user where user_id = :user_id;"
 
-        private const val INSERT_INTO_USER = "insert into user (email, password) values (:email, :password)"
+        private const val INSERT_INTO_USER = "insert into user (email, password) values (:email, :password);"
     }
 
     private val rowMapper: RowMapper<User> = RowMapper { rs, _ ->
         User(
-            userId = rs.getString("user_id").toInt(),
+            userId = rs.getInt("user_id"),
             email = rs.getString("email"),
             password = rs.getString("password")
         )

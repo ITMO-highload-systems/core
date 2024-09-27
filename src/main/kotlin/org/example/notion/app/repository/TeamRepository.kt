@@ -19,22 +19,21 @@ class TeamRepository(
                 owner
         """
 
-        private const val FIND_BY_TEAM_ID = "$SELECT_FROM_TEAM where team_id = :team_id"
+        private const val FIND_BY_TEAM_ID = "$SELECT_FROM_TEAM where team_id = :team_id;"
+        private const val FIND_BY_NAME = "$SELECT_FROM_TEAM where name = :name;"
 
-        private const val FIND_BY_NAME = "$SELECT_FROM_TEAM where name = :name"
+        private const val DELETE_BY_TEAM_ID = "delete from team where team_id = :team_id;"
 
-        private const val DELETE_BY_TEAM_ID = "delete from team where team_id = :team_id"
+        private const val UPDATE_TEAM = "update team set name = :name, owner = :owner where team_id = :team_id;"
 
-        private const val UPDATE_TEAM = "update team set name = :name, owner = :owner where team_id = :team_id"
-
-        private const val INSERT_INTO_TEAM = "insert into team (name, owner) values (:name, :owner)"
+        private const val INSERT_INTO_TEAM = "insert into team (name, owner) values (:name, :owner);"
     }
 
     private val rowMapper: RowMapper<Team> = RowMapper { rs, _ ->
         Team(
-            teamId = rs.getString("team_id").toInt(),
+            teamId = rs.getInt("team_id"),
             name = rs.getString("name"),
-            owner = rs.getString("owner").toInt()
+            owner = rs.getInt("owner")
         )
     }
 

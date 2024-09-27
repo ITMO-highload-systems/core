@@ -23,14 +23,14 @@ class NoteRepository(
           updated_at
         from note
       """
-        private const val FIND_NOTE_BY_NOTE_ID = "$SELECT_FROM_NOTE where note_id = :note_id"
-        private const val FIND_NOTES_BY_OWNER = "$SELECT_FROM_NOTE where owner = :owner"
+        private const val FIND_NOTE_BY_NOTE_ID = "$SELECT_FROM_NOTE where note_id = :note_id;"
+        private const val FIND_NOTES_BY_OWNER = "$SELECT_FROM_NOTE where owner = :owner;"
 
         private const val UPDATE_NOTE =
-            "update note set title = :new_title, description = :new_description, updated_at = now() where note_id = :note_id"
+            "update note set title = :new_title, description = :new_description, updated_at = now() where note_id = :note_id;"
 
-        private const val DELETE_BY_NOTE_ID = "delete from note where note_id = :note_id"
-        private const val DELETE_BY_OWNER = "delete from note where owner = :owner"
+        private const val DELETE_BY_NOTE_ID = "delete from note where note_id = :note_id;"
+        private const val DELETE_BY_OWNER = "delete from note where owner = :owner;"
 
         private const val INSERT_INTO_NOTE =
             """
@@ -43,14 +43,14 @@ class NoteRepository(
           :owner,
           :title,
           :description
-        )
+        );
       """
     }
 
     private val rowMapper: RowMapper<Note> = RowMapper { rs, _ ->
         Note(
             noteId = rs.getInt("note_id"),
-            owner = rs.getString("owner").toInt(),
+            owner = rs.getInt("owner"),
             title = rs.getString("title"),
             description = rs.getString("description"),
             createdAt = rs.getTimestamp("created_at").toLocalDateTime(),
