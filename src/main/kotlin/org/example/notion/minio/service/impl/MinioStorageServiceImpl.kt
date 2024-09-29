@@ -3,6 +3,7 @@ package org.example.notion.minio.service.impl
 import io.minio.GetObjectArgs
 import io.minio.MinioClient
 import io.minio.PutObjectArgs
+import io.minio.RemoveObjectArgs
 import org.example.notion.config.MinioConnectionDetails
 import org.example.notion.minio.service.MinioStorageService
 import org.example.notion.minio.util.calculateFileHash
@@ -43,5 +44,20 @@ class MinioStorageServiceImpl(
                 .`object`(fileHash)
                 .build()
         )
+    }
+
+    override fun deleteImage(fileHash: String) {
+        try {
+            minioClient.removeObject(
+                RemoveObjectArgs.builder()
+                    .bucket(minioConnectionDetails.bucket)
+                    .`object`(fileHash)
+                    .build()
+            )
+            logger.info("File '$fileHash.jpg' deleted from bucket '${minioConnectionDetails.bucket}'")
+        } catch (e: Exception) {
+            logger.error("Error occurred while deleting file '$fileHash.jpg' from bucket '${minioConnectionDetails.bucket}': ${e.message}")
+            throw IllegalStateException("Failed to delete image with hash $fileHash", e)
+        }
     }
 }

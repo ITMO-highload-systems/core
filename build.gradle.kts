@@ -2,6 +2,7 @@ plugins {
     kotlin("jvm") version "1.9.25"
     kotlin("plugin.spring") version "1.9.25"
     kotlin("plugin.jpa") version "1.9.25"
+    kotlin("kapt") version "1.9.10"
     id("org.springframework.boot") version "3.3.3"
     id("io.spring.dependency-management") version "1.1.6"
 }
@@ -22,6 +23,8 @@ repositories {
 // Dependencies
 val minioVersion = "8.5.11"
 val testContainersVersion = "1.20.1"
+val mapstructVersion = "1.6.0"
+val opentelemetryVersion = "1.42.1"
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
@@ -32,8 +35,10 @@ dependencies {
     implementation("org.flywaydb:flyway-database-postgresql")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("io.minio:minio:$minioVersion")
-    implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure:1.42.1")
+    implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure:$opentelemetryVersion")
+    implementation("org.mapstruct:mapstruct:$mapstructVersion")
 
+    kapt("org.mapstruct:mapstruct-processor:$mapstructVersion")
     // Optional configuration processor
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 
@@ -73,4 +78,8 @@ tasks {
     {
         dependsOn(processResources)
     }
+}
+
+kapt {
+    correctErrorTypes = true
 }

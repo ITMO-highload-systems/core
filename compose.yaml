@@ -42,5 +42,10 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  python-exec:
+    image: python:3.10-slim
+    container_name: python-container
+    command: tail -f /dev/null
+
 volumes:
   postgres_data:
