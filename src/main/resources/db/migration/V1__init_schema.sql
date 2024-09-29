@@ -43,15 +43,16 @@ CREATE TABLE team
     owner   INT REFERENCES "user" (user_id)
 );
 
-CREATE TABLE permissions
+CREATE TABLE note_user_permission
 (
     permission_id SERIAL PRIMARY KEY,
     note_id       INT REFERENCES note (note_id),
     user_id       INT REFERENCES "user" (user_id),
-    permission    VARCHAR(50) NOT NULL
+    permission    VARCHAR(50) NOT NULL,
+    UNIQUE (user_id, note_id)
 );
 
-CREATE TABLE note_team
+CREATE TABLE note_team_permissions
 (
     permission_id SERIAL PRIMARY KEY,
     team_id       INT REFERENCES team (team_id),

@@ -1,7 +1,8 @@
 package org.example.notion
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import org.example.notion.app.note.dto.NoteDto
+import org.example.notion.app.user.dto.UserResponseDto
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.slf4j.LoggerFactory
@@ -21,6 +22,7 @@ import org.testcontainers.containers.MinIOContainer
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.containers.wait.strategy.Wait
 import java.io.IOException
+import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
@@ -30,7 +32,9 @@ import java.util.concurrent.TimeUnit
 abstract class AbstractIntegrationTest {
     @Autowired
     lateinit var mockMvc: MockMvc
-    var objectMapper: ObjectMapper = jacksonObjectMapper()
+
+    @Autowired
+    lateinit var mapper: ObjectMapper
 
     companion object {
         private val logger = LoggerFactory.getLogger(this::class.java)
@@ -56,8 +60,9 @@ abstract class AbstractIntegrationTest {
         @AfterAll
         @JvmStatic
         fun teardown() {
-            minio.stop()
-            postgres.stop()
+            //todo
+//            minio.stop()
+//            postgres.stop()
         }
     }
 
@@ -67,7 +72,7 @@ abstract class AbstractIntegrationTest {
     }
 
     fun sendSse(noteId: Long, message: Map<String, Any>) {
-        val valueAsBytes = objectMapper.writeValueAsBytes(message)
+        val valueAsBytes = mapper.writeValueAsBytes(message)
         logger.debug("Sending JSON: ${String(valueAsBytes)}")
         mockMvc.perform(
             MockMvcRequestBuilders.post("/sse/send/$noteId").content(valueAsBytes)
@@ -94,4 +99,36 @@ abstract class AbstractIntegrationTest {
 
     }
 
+
+    protected fun createNote(userId: Long): NoteDto {
+        val noteString = mockMvc.perform(
+            MockMvcRequestBuilders
+                .post("/api/note")
+                .header("user-id", userId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(mapOf("title" to "title", "description" to "description")))
+        ).andExpect(MockMvcResultMatchers.status().isOk).andReturn().response.contentAsString
+
+        val noteDtoResponse: NoteDto = mapper.readValue(noteString, NoteDto::class.java)
+        return noteDtoResponse
+    }
+
+    protected fun createUser(): UserResponseDto {
+        val userString = mockMvc.perform(
+            MockMvcRequestBuilders
+                .post("/api/user/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    mapper.writeValueAsString(
+                        mapOf(
+                            "email" to UUID.randomUUID().toString() + "email.com",
+                            "password" to UUID.randomUUID().toString()
+                        )
+                    )
+                )
+        ).andExpect(MockMvcResultMatchers.status().isOk).andReturn().response.contentAsString
+
+        val userDtoResponse: UserResponseDto = mapper.readValue(userString, UserResponseDto::class.java)
+        return userDtoResponse
+    }
 }
