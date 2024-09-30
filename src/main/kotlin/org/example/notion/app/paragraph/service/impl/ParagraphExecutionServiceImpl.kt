@@ -1,5 +1,6 @@
 package org.example.notion.app.paragraph.service.impl
 
+import org.example.notion.app.paragraph.service.DockerConfig
 import org.example.notion.app.paragraph.service.ParagraphExecutionService
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Async
@@ -7,7 +8,8 @@ import org.springframework.stereotype.Service
 import java.util.concurrent.CompletableFuture
 
 @Service
-class ParagraphExecutionServiceImpl: ParagraphExecutionService {
+class ParagraphExecutionServiceImpl(val dockerConfig: DockerConfig) : ParagraphExecutionService {
+
 
     companion object {
         private val logger = LoggerFactory.getLogger(ParagraphExecutionServiceImpl::class.java)
@@ -16,9 +18,10 @@ class ParagraphExecutionServiceImpl: ParagraphExecutionService {
 
     @Async
     override fun executeParagraph(code: String): CompletableFuture<String> {
+
         return CompletableFuture.supplyAsync {
             try {
-                val processBuilder = ProcessBuilder("docker", "exec", "python-container", "python3", "-c", code)
+                val processBuilder = ProcessBuilder("docker", "exec", dockerConfig.image, "python3", "-c", code)
                 processBuilder.redirectErrorStream(true)
 
                 val process = processBuilder.start()

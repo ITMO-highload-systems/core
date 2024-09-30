@@ -28,3 +28,6 @@ minio:
 
 sse:
   timeout: 3000
+
+docker:
+  image: "python-container"
