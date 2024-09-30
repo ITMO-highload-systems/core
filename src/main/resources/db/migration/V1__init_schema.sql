@@ -46,8 +46,8 @@ CREATE TABLE team
 CREATE TABLE note_user_permission
 (
     permission_id SERIAL PRIMARY KEY,
-    note_id       INT REFERENCES note (note_id),
-    user_id       INT REFERENCES "user" (user_id),
+    note_id INT REFERENCES note (note_id) on delete cascade,
+    user_id INT REFERENCES "user" (user_id) on delete cascade,
     permission    VARCHAR(50) NOT NULL,
     UNIQUE (user_id, note_id)
 );

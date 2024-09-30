@@ -1,9 +1,9 @@
 package org.example.notion.app.note
 
-import org.example.notion.app.user.UserContext
 import org.example.notion.app.note.dto.NoteCreateDto
 import org.example.notion.app.note.dto.NoteDto
 import org.example.notion.app.note.dto.NoteUpdateDto
+import org.example.notion.app.user.UserContext
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.validation.annotation.Validated
@@ -24,13 +24,12 @@ class NoteController(
         return ResponseEntity.ok(noteService.getByNoteId(noteId))
     }
 
-    @GetMapping("/owner/{owner}")
+    @GetMapping("/my")
     fun getNoteByOwnerId(
-        @PathVariable("owner") ownerId: Long,
         @RequestHeader("user-id") userId: Long
     ): ResponseEntity<List<NoteDto>> {
         UserContext.setCurrentUser(userId)
-        return ResponseEntity.ok(noteService.getByOwnerId(ownerId))
+        return ResponseEntity.ok(noteService.getByOwnerId(userId))
     }
 
     @DeleteMapping("{noteId}")
