@@ -20,7 +20,7 @@ data class ParagraphUpdateRequest(
     @NotBlank
     val paragraphType: ParagraphType,
 
-    val images: List<MultipartFile>
+    val images: List<MultipartFile> = emptyList()
 ) {
     class Builder {
         private var id: Long = 0

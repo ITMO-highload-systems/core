@@ -20,13 +20,13 @@ CREATE TABLE paragraph
     id        SERIAL PRIMARY KEY,
     note_id             INT REFERENCES note (note_id),
     title               VARCHAR(255),
-    nextParagraphId     INT REFERENCES paragraph(id),
+    next_paragraph_id     INT REFERENCES paragraph(id),
     text                TEXT NOT NULL,
     last_update_user_id INT REFERENCES "user" (user_id),
     created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    paragraph_type      varchar(3),
-    UNIQUE (nextParagraphId, note_id)
+    paragraph_type      varchar(255),
+    UNIQUE (next_paragraph_id, note_id)
 );
 
 CREATE TABLE image_record

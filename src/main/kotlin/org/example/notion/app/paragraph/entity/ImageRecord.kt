@@ -1,6 +1,11 @@
 package org.example.notion.app.paragraph.entity
 
+import org.springframework.data.annotation.Id
+import org.springframework.data.relational.core.mapping.Table
+
+@Table("image_record")
 data class ImageRecord(
+    @Id
     val id: Long,
     val imageHash: String,
     val paragraphId: Long

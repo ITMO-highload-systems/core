@@ -8,17 +8,14 @@ import org.example.notion.app.paragraph.entity.ParagraphType
 import org.springframework.web.multipart.MultipartFile
 
 data class ParagraphCreateRequest(
-    @NotNull
     @Min(1)
     val noteId: Long,
 
     @Size(max = 255)
     val title: String,
 
-    @NotNull
-    val nextParagraphId: Long,
+    val nextParagraphId: Long?,
 
-    @NotNull
     val text: String,
 
     @NotBlank
@@ -29,7 +26,7 @@ data class ParagraphCreateRequest(
     class Builder {
         private var noteId: Long = 0
         private var title: String = ""
-        private var nextParagraphId: Long = 0
+        private var nextParagraphId: Long? = null
         private var text: String = ""
         private var paragraphType: ParagraphType? = null
         private var images: List<MultipartFile> = emptyList()
@@ -44,7 +41,6 @@ data class ParagraphCreateRequest(
         fun build(): ParagraphCreateRequest {
             require(noteId > 0) { "Note ID must be greater than 0" }
             require(title.length <= 255) { "Title must not exceed 255 characters" }
-            require(nextParagraphId >= 0) { "nextParagraphId must be non-negative" }
             require(text.isNotBlank()) { "Text cannot be blank" }
             require(paragraphType != null) { "Paragraph type must not be null" }
 

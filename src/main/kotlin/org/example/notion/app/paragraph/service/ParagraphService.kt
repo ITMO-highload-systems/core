@@ -15,7 +15,7 @@ interface ParagraphService {
     /**
      * Create a paragraph.
      */
-    fun createParagraph(paragraphCreateRequest: ParagraphCreateRequest): ParagraphGetResponse
+    fun createParagraph(paragraphCreateRequest: ParagraphCreateRequest, userId: Long): ParagraphGetResponse
 
     /**
      * Execute a paragraph asynchronously.
@@ -35,7 +35,7 @@ interface ParagraphService {
     /**
      * Update a paragraph.
      */
-    fun updateParagraph(paragraphUpdateRequest: ParagraphUpdateRequest): ParagraphGetResponse
+    fun updateParagraph(paragraphUpdateRequest: ParagraphUpdateRequest, userId: Long): ParagraphGetResponse
 
     /**
      * change paragraph position.

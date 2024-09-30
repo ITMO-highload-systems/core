@@ -10,26 +10,25 @@ import org.example.notion.sse.Message
 import org.example.notion.sse.SseService
 import org.example.notion.sse.Type
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import java.util.concurrent.CompletableFuture
 
-@RestController("api/paragraph")
+@RestController
+@RequestMapping("api/paragraph")
 class ParagraphController(
     private val paragraphService: ParagraphService,
     private val sseService: SseService
 ) {
 
     @PostMapping("/create")
-    fun createParagraph(@Valid @RequestBody paragraphCreateRequest: ParagraphCreateRequest) {
-        paragraphService.createParagraph(paragraphCreateRequest)
+    fun createParagraph(
+        @RequestHeader("userId") userId: Long,
+        @Valid @ModelAttribute paragraphCreateRequest: ParagraphCreateRequest
+    ) : ResponseEntity<ParagraphGetResponse> {
+        return ResponseEntity.ok(paragraphService.createParagraph(paragraphCreateRequest, userId))
     }
 
-    @PostMapping("/execute/{paragraphId}")
+    @GetMapping("/execute/{paragraphId}")
     fun executeParagraph(@PathVariable paragraphId: Long): CompletableFuture<ResponseEntity<String>> {
         return paragraphService.executeParagraph(paragraphId)
             .thenApply { result ->
@@ -49,8 +48,11 @@ class ParagraphController(
     }
 
     @PostMapping("/update")
-    fun updateParagraph(@Valid @RequestBody paragraphUpdateRequest: ParagraphUpdateRequest): ResponseEntity<ParagraphGetResponse> {
-        return ResponseEntity.ok(paragraphService.updateParagraph(paragraphUpdateRequest))
+    fun updateParagraph(
+        @RequestHeader("userId") userId: Long,
+        @Valid @ModelAttribute paragraphUpdateRequest: ParagraphUpdateRequest
+    ): ResponseEntity<ParagraphGetResponse> {
+        return ResponseEntity.ok(paragraphService.updateParagraph(paragraphUpdateRequest, userId))
     }
 
     @PostMapping("/position")

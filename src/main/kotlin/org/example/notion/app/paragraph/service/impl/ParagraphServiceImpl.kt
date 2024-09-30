@@ -11,6 +11,7 @@ import org.example.notion.app.paragraph.entity.ParagraphType
 import org.example.notion.app.paragraph.service.ParagraphExecutionService
 import org.example.notion.app.paragraph.service.ParagraphService
 import org.example.notion.app.paragraph.entity.ImageRecord
+import org.example.notion.app.paragraph.entity.Paragraph
 import org.example.notion.app.paragraph.mapper.ParagraphMapper
 import org.example.notion.app.paragraph.repository.ImageRepository
 import org.example.notion.sse.Message
@@ -19,6 +20,7 @@ import org.example.notion.sse.Type
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
+import java.time.LocalDateTime
 import java.util.concurrent.CompletableFuture
 
 @Service
@@ -39,30 +41,30 @@ class ParagraphServiceImpl(
         private const val PARAGRAPH_CREATED = "Paragraph with id %d created"
         private const val PARAGRAPH_DELETED = "Paragraph with id %d deleted"
         private const val PARAGRAPH_CHANGED = "Paragraph with id %d changed"
+        private const val PARAGRAPH_NOT_FOUND_BY_NEXT_PARAGRAPH_ID = "Paragraph with next paragraph id %d not found that means that it is the first paragraph in the note"
     }
 
-    override fun createParagraph(paragraphCreateRequest: ParagraphCreateRequest): ParagraphGetResponse {
-        // TODO add userId
-
-        // получаем параграф который будет стоял на месте нового параграфа
-        val paragraph = paragraphRepository.findByNextParagraphId(paragraphCreateRequest.nextParagraphId)
-            ?: run {
-                logger.error(PARAGRAPH_NOT_FOUND.format(paragraphCreateRequest.nextParagraphId))
-                throw IllegalArgumentException(PARAGRAPH_NOT_FOUND.format(paragraphCreateRequest.nextParagraphId))
-            }
+    override fun createParagraph(paragraphCreateRequest: ParagraphCreateRequest, userId: Long): ParagraphGetResponse {
+        // получаем параграф который стоял на месте нового параграфа
+        var paragraph: Paragraph? = null
+        if (paragraphCreateRequest.nextParagraphId != null) {
+            paragraph = paragraphRepository.findByNextParagraphId(paragraphCreateRequest.nextParagraphId)
+            logger.info(PARAGRAPH_NOT_FOUND_BY_NEXT_PARAGRAPH_ID.format(paragraphCreateRequest.nextParagraphId))
+        }
 
         // сохраняем новый параграф
-        val paragraphEntity = paragraphRepository.save(paragraphCreateRequest, 2L)
-        paragraphCreateRequest.images.forEach { uploadImage(it, paragraphEntity.id) }
+        val paragraphEntity = paragraphRepository.save(paragraphMapper.toEntity(paragraphCreateRequest, userId))
+        paragraphCreateRequest.images.forEach { uploadImage(it, paragraphEntity.id!!) }
 
-        // обнвляем значения параграфа который стоял на месте нового параграфа, чтобы он ссылался на текущий параграф
-        paragraph.nextParagraphId = paragraphEntity.id
-        paragraphRepository.update(paragraph, 2L)
-
+        // обновляем значения параграфа который стоял на месте нового параграфа, чтобы он ссылался на текущий параграф
+        if (paragraph != null) {
+            paragraph.nextParagraphId = paragraphEntity.id!!
+            paragraphRepository.save(paragraph)
+        }
 
         sseService.sendMessage(
             paragraphCreateRequest.noteId,
-            Message(Type.PARAGRAPH_CREATED, PARAGRAPH_CREATED.format(paragraphEntity.id))
+            Message(Type.PARAGRAPH_CREATED, PARAGRAPH_CREATED.format(paragraphEntity.id!!))
         )
         return getParagraph(paragraphEntity.id)
     }
@@ -78,12 +80,12 @@ class ParagraphServiceImpl(
         imageRecords.forEach {
             deleteImage(it)
         }
-        paragraphRepository.deleteByParagraphId(paragraphId)
+        paragraphRepository.deleteById(paragraphId)
 
         // обновляем ссылку на следующий параграф у параграфа, который стоит перед удаляемым
         val paragraphBefore = paragraphRepository.findByNextParagraphId(paragraphId)
         paragraphBefore?.nextParagraphId = paragraph.nextParagraphId
-        paragraphRepository.update(paragraphBefore!!, 2L)
+        paragraphRepository.save(paragraphBefore!!)
 
         sseService.sendMessage(
             paragraph.noteId,
@@ -99,15 +101,16 @@ class ParagraphServiceImpl(
         }
 
         val images = imageRepository.findByParagraphId(paragraphId)
-        val imagesResponse = images.asSequence().map { minioStorageService.getImage(it.imageHash) }.toList()
+        val imageUrls = images.asSequence().map { minioStorageService.getImageUrl(it.imageHash) }.toList()
 
         return ParagraphGetResponse.Builder()
+            .id(paragraph.id!!)
             .noteId(paragraph.noteId)
             .title(paragraph.title)
             .nextParagraphId(paragraph.nextParagraphId)
             .text(paragraph.text)
             .paragraphType(paragraph.paragraphType)
-            .images(imagesResponse)
+            .imageUrls(imageUrls)
             .build()
     }
 
@@ -132,8 +135,7 @@ class ParagraphServiceImpl(
         return executionResult
     }
 
-    override fun updateParagraph(paragraphUpdateRequest: ParagraphUpdateRequest): ParagraphGetResponse {
-        // TODO add userId
+    override fun updateParagraph(paragraphUpdateRequest: ParagraphUpdateRequest, userId: Long): ParagraphGetResponse {
         val paragraph = paragraphRepository.findByParagraphId(paragraphUpdateRequest.id)
         require(paragraph != null) {
             logger.error(PARAGRAPH_NOT_FOUND.format(paragraphUpdateRequest.id))
@@ -156,7 +158,7 @@ class ParagraphServiceImpl(
             .filter { "${it.calculateFileHash()}.jpg" in imagesToUpload }
             .forEach { uploadImage(it, paragraphUpdateRequest.id) }
 
-        paragraphRepository.update(paragraphMapper.toEntity(paragraphUpdateRequest), 2L)
+        paragraphRepository.save(updateParagraphEntity(paragraph, paragraphUpdateRequest, userId))
         sseService.sendMessage(
             paragraph.noteId,
             Message(Type.PARAGRAPH_CHANGED, PARAGRAPH_CHANGED.format(paragraphUpdateRequest.id))
@@ -179,23 +181,23 @@ class ParagraphServiceImpl(
             }
 
         // обновляем next_paragraph_id следующего параграфа у параграфа, который стоит перед перемещаемым
-        val paragraphBefore = paragraphRepository.findByNextParagraphId(paragraph.id)
+        val paragraphBefore = paragraphRepository.findByNextParagraphId(paragraph.id!!)
         paragraphBefore?.nextParagraphId = paragraph.nextParagraphId
-        paragraphRepository.update(paragraphBefore!!, 2L)
+        paragraphRepository.save(paragraphBefore!!)
 
         // обновляем next_paragraph_id параграфа, который раньше стоял перед тем параграфом, перед которым мы хотим поставить перемещаемый
         val paragraphAfter = paragraphRepository.findByNextParagraphId(changeParagraphPositionRequest.nextParagraphId)
-        paragraphAfter?.nextParagraphId = paragraph.id
-        paragraphRepository.update(paragraphAfter!!, 2L)
+        paragraphAfter?.nextParagraphId = paragraph.id!!
+        paragraphRepository.save(paragraphAfter!!)
 
         // обновляем next_paragraph_id перемещаемого параграфа
         paragraph.nextParagraphId = changeParagraphPositionRequest.nextParagraphId
-        paragraphRepository.update(paragraph, 2L)
+        paragraphRepository.save(paragraph)
     }
 
     private fun uploadImage(image: MultipartFile, paragraphId: Long) {
         minioStorageService.uploadImg(image)
-        imageRepository.insert(
+        imageRepository.save(
             ImageRecord.Builder()
                 .paragraphId(paragraphId)
                 .imageHash("${image.calculateFileHash()}.jpg")
@@ -205,6 +207,19 @@ class ParagraphServiceImpl(
 
     private fun deleteImage(imageRecord: ImageRecord) {
         minioStorageService.deleteImage(imageRecord.imageHash)
-        imageRepository.deleteByImageId(imageRecord.id)
+        imageRepository.deleteById(imageRecord.id)
     }
+
+    private fun updateParagraphEntity(paragraphOrigin: Paragraph, paragraphUpdateRequest: ParagraphUpdateRequest, userId: Long): Paragraph =
+        Paragraph.Builder()
+            .id(paragraphOrigin.id)
+            .noteId(paragraphOrigin.noteId)
+            .title(paragraphUpdateRequest.title)
+            .text(paragraphUpdateRequest.text)
+            .lastUpdateUserId(userId)
+            .nextParagraphId(paragraphOrigin.nextParagraphId)
+            .createdAt(paragraphOrigin.createdAt)
+            .updatedAt(LocalDateTime.now())
+            .paragraphType(paragraphUpdateRequest.paragraphType)
+            .build()
 }

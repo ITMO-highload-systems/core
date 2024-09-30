@@ -1,9 +1,7 @@
 package org.example.notion.minio.service.impl
 
-import io.minio.GetObjectArgs
-import io.minio.MinioClient
-import io.minio.PutObjectArgs
-import io.minio.RemoveObjectArgs
+import io.minio.*
+import io.minio.http.Method
 import org.example.notion.config.MinioConnectionDetails
 import org.example.notion.minio.service.MinioStorageService
 import org.example.notion.minio.util.calculateFileHash
@@ -37,11 +35,21 @@ class MinioStorageServiceImpl(
         logger.info("File '${file.originalFilename}' uploaded to bucket '$minioConnectionDetails.bucket'")
     }
 
-    override fun getImage(fileHash: String): InputStream {
+    override fun getImageContent(fileHash: String): InputStream {
         return minioClient.getObject(
             GetObjectArgs.builder()
                 .bucket(minioConnectionDetails.bucket)
                 .`object`(fileHash)
+                .build()
+        )
+    }
+
+    override fun getImageUrl(fileHash: String): String {
+        return minioClient.getPresignedObjectUrl(
+            GetPresignedObjectUrlArgs.builder()
+                .bucket(minioConnectionDetails.bucket)
+                .`object`(fileHash)
+                .method(Method.GET)
                 .build()
         )
     }
