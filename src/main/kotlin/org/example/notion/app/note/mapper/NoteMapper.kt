@@ -29,6 +29,10 @@ abstract class NoteMapper {
     @Mapping(target = "updatedAt", expression = "java(currentTime())")
     abstract fun toEntity(source: NoteUpdateDto): Note
 
+    @Mapping(target = "updatedAt", expression = "java(currentTime())")
+    @Mapping(target = "createdAt", source = "createAt")
+    abstract fun toEntity(source: NoteUpdateDto, createAt: LocalDateTime): Note
+
     abstract fun toDto(source: Note): NoteDto
 
     fun currentTime(): LocalDateTime {
