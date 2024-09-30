@@ -4,7 +4,8 @@ import com.jayway.jsonpath.JsonPath
 import org.example.notion.AbstractIntegrationTest
 import org.example.notion.app.user.dto.UserResponseDto
 import org.example.notion.app.userPermission.entity.Permission
-import org.hamcrest.Matchers.*
+import org.hamcrest.Matchers.`is`
+import org.hamcrest.Matchers.not
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
@@ -114,7 +115,7 @@ class NoteControllerTest : AbstractIntegrationTest() {
             .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.title").value(newTitle)).andExpect(jsonPath("$.description").value(newDescription))
             .andExpect(jsonPath("$.owner").value(note.owner))
-            .andExpect(jsonPath("$.createdAt").value(note.createdAt))
+            .andExpect(jsonPath("$.createdAt", `is`(note.createdAt.toString())))
             .andExpect(jsonPath("$.updatedAt", not(`is`(note.updatedAt.toString()))))
     }
 
@@ -162,8 +163,8 @@ class NoteControllerTest : AbstractIntegrationTest() {
             .andExpect(jsonPath("$.noteId").value(note.noteId)).andExpect(jsonPath("$.title").value(newTitle))
             .andExpect(jsonPath("$.description").value(newDescription))
             .andExpect(jsonPath("$.owner").value(existingNewOwner.userId))
-            .andExpect(jsonPath("$.createdAt").value(note.createdAt))
-            .andExpect(jsonPath("$.updatedAt", not(`is`(note.updatedAt))))
+            .andExpect(jsonPath("$.createdAt", `is`(note.createdAt.toString())))
+            .andExpect(jsonPath("$.updatedAt", not(`is`(note.updatedAt.toString()))))
 
         val notes = getNoteById(existingNewOwner.userId, note.noteId)
 
@@ -235,7 +236,7 @@ class NoteControllerTest : AbstractIntegrationTest() {
             .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.title").value(newTitle)).andExpect(jsonPath("$.description").value(newDescription))
             .andExpect(jsonPath("$.owner").value(note.owner))
-            .andExpect(jsonPath("$.createdAt").value(note.createdAt.toString().replace("0+$", "")))
+            .andExpect(jsonPath("$.createdAt", `is`(note.createdAt.toString())))
             .andExpect(jsonPath("$.updatedAt", not(`is`(note.updatedAt.toString()))))
     }
 
@@ -270,7 +271,7 @@ class NoteControllerTest : AbstractIntegrationTest() {
     }
 
     @Test
-    fun `delete by note id - owner delete existing note -success delete`() {
+    fun `delete by note id - owner delete existing note - success delete`() {
         val note = createNote(testUser.userId)
         mockMvc.perform(
             MockMvcRequestBuilders.delete("/api/note/${note.noteId}").header("user-id", testUser.userId)
@@ -279,7 +280,7 @@ class NoteControllerTest : AbstractIntegrationTest() {
     }
 
     @Test
-    fun `delete by note id - owner delete twice existing note -forbidden delete`() {
+    fun `delete by note id - owner delete twice existing note - forbidden delete`() {
         val note = createNote(testUser.userId)
         mockMvc.perform(
             MockMvcRequestBuilders.delete("/api/note/${note.noteId}").header("user-id", testUser.userId)
@@ -344,8 +345,8 @@ class NoteControllerTest : AbstractIntegrationTest() {
             .andExpect(jsonPath("$.owner").value(note.owner)).andExpect(jsonPath("$.noteId").value(note.noteId))
             .andExpect(jsonPath("$.title").value(note.title))
             .andExpect(jsonPath("$.description").value(note.description))
-            .andExpect(jsonPath("$.createdAt", containsString(note.createdAt.toString().replace("0+$", ""))))
-            .andExpect(jsonPath("$.updatedAt", containsString(note.updatedAt.toString().replace("0+$", ""))))
+            .andExpect(jsonPath("$.createdAt", `is`(note.createdAt.toString())))
+            .andExpect(jsonPath("$.updatedAt", `is`(note.updatedAt.toString())))
     }
 
     @Test
@@ -370,8 +371,8 @@ class NoteControllerTest : AbstractIntegrationTest() {
             .andExpect(jsonPath("[0].owner").value(note.owner)).andExpect(jsonPath("[0].noteId").value(note.noteId))
             .andExpect(jsonPath("[0].title").value(note.title))
             .andExpect(jsonPath("[0].description").value(note.description))
-            .andExpect(jsonPath("[0].createdAt").value(note.createdAt.toString().replace("0+$", "")))
-            .andExpect(jsonPath("[0].updatedAt").value(note.updatedAt.toString().replace("0+$", "")))
+            .andExpect(jsonPath("[0].createdAt", `is`(note.createdAt.toString())))
+            .andExpect(jsonPath("[0].updatedAt", `is`(note.updatedAt.toString())))
     }
 
     @Test
