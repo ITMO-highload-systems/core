@@ -6,6 +6,7 @@ import org.example.notion.app.paragraph.dto.ParagraphCreateRequest
 import org.example.notion.app.paragraph.dto.ParagraphGetResponse
 import org.example.notion.app.paragraph.dto.ParagraphUpdateRequest
 import org.example.notion.app.paragraph.service.ParagraphService
+import org.example.notion.app.user.UserContext
 import org.example.notion.sse.Message
 import org.example.notion.sse.SseService
 import org.example.notion.sse.Type
@@ -22,14 +23,19 @@ class ParagraphController(
 
     @PostMapping("/create")
     fun createParagraph(
-        @RequestHeader("userId") userId: Long,
+        @RequestHeader("user-id") userId: Long,
         @Valid @ModelAttribute paragraphCreateRequest: ParagraphCreateRequest
     ) : ResponseEntity<ParagraphGetResponse> {
-        return ResponseEntity.ok(paragraphService.createParagraph(paragraphCreateRequest, userId))
+        UserContext.setCurrentUser(userId)
+        return ResponseEntity.ok(paragraphService.createParagraph(paragraphCreateRequest))
     }
 
     @GetMapping("/execute/{paragraphId}")
-    fun executeParagraph(@PathVariable paragraphId: Long): CompletableFuture<ResponseEntity<String>> {
+    fun executeParagraph(
+        @RequestHeader("user-id") userId: Long,
+        @PathVariable paragraphId: Long
+    ): CompletableFuture<ResponseEntity<String>> {
+        UserContext.setCurrentUser(userId)
         return paragraphService.executeParagraph(paragraphId)
             .thenApply { result ->
                 sseService.sendMessage(2, Message(Type.PARAGRAPH_EXECUTED, result))
@@ -38,25 +44,38 @@ class ParagraphController(
     }
 
     @DeleteMapping("/delete/{paragraphId}")
-    fun deleteParagraph(@PathVariable paragraphId: Long) {
+    fun deleteParagraph(
+        @RequestHeader("user-id") userId: Long,
+        @PathVariable paragraphId: Long
+    ) {
+        UserContext.setCurrentUser(userId)
         paragraphService.deleteParagraph(paragraphId)
     }
 
     @GetMapping("/get/{paragraphId}")
-    fun getParagraph(@PathVariable paragraphId: Long): ResponseEntity<ParagraphGetResponse> {
+    fun getParagraph(
+        @RequestHeader("user-id") userId: Long,
+        @PathVariable paragraphId: Long
+    ): ResponseEntity<ParagraphGetResponse> {
+        UserContext.setCurrentUser(userId)
         return ResponseEntity.ok(paragraphService.getParagraph(paragraphId))
     }
 
     @PostMapping("/update")
     fun updateParagraph(
-        @RequestHeader("userId") userId: Long,
+        @RequestHeader("user-id") userId: Long,
         @Valid @ModelAttribute paragraphUpdateRequest: ParagraphUpdateRequest
     ): ResponseEntity<ParagraphGetResponse> {
-        return ResponseEntity.ok(paragraphService.updateParagraph(paragraphUpdateRequest, userId))
+        UserContext.setCurrentUser(userId)
+        return ResponseEntity.ok(paragraphService.updateParagraph(paragraphUpdateRequest))
     }
 
     @PostMapping("/position")
-    fun changeParagraphPosition(@Valid @RequestBody changeParagraphPositionRequest: ChangeParagraphPositionRequest) {
+    fun changeParagraphPosition(
+        @RequestHeader("user-id") userId: Long,
+        @Valid @RequestBody changeParagraphPositionRequest: ChangeParagraphPositionRequest
+    ) {
+        UserContext.setCurrentUser(userId)
         paragraphService.changeParagraphPosition(changeParagraphPositionRequest)
     }
 }

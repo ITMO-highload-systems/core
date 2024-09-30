@@ -41,6 +41,7 @@ class ParagraphTest : AbstractIntegrationTest() {
         val paragraph = `create paragraph`(ParagraphType.PYTHON_PARAGRAPH, "print('Hello, World!')")
         val mvcResult = mockMvc.perform(
             MockMvcRequestBuilders.get("/api/paragraph/execute/${paragraph.id}")
+                .header("user-id", testUser.userId)
         )
             .andExpect(MockMvcResultMatchers.request().asyncStarted())  // Убедиться, что запрос асинхронный
             .andReturn()
@@ -64,6 +65,7 @@ class ParagraphTest : AbstractIntegrationTest() {
 
         val mvcResult = mockMvc.perform(
             MockMvcRequestBuilders.get("/api/paragraph/execute/${paragraph.id}")
+                .header("user-id", testUser.userId)
         )
             .andExpect(MockMvcResultMatchers.request().asyncStarted())  // Убедиться, что запрос асинхронный
             .andReturn()
@@ -95,7 +97,7 @@ class ParagraphTest : AbstractIntegrationTest() {
                 .param("title", paragraphUpdateRequest.title)
                 .param("text", paragraphUpdateRequest.text)
                 .param("paragraphType", paragraphUpdateRequest.paragraphType.name)
-                .header("userId", testUser.userId)
+                .header("user-id", testUser.userId)
                 .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
         )
 
@@ -112,7 +114,7 @@ class ParagraphTest : AbstractIntegrationTest() {
     private fun `get paragraph`(paragraphId: Long): ParagraphGetResponse {
         mockMvc.perform(
             MockMvcRequestBuilders.get("/api/paragraph/get/$paragraphId")
-                .header("userId", testUser.userId)
+                .header("user-id", testUser.userId)
         ).andReturn().response.contentAsString
             .let { return mapper.readValue(it, ParagraphGetResponse::class.java) }
     }
@@ -120,6 +122,7 @@ class ParagraphTest : AbstractIntegrationTest() {
     private fun `delete paragraph`(paragraphId: Long) {
         mockMvc.perform(
             MockMvcRequestBuilders.delete("/api/paragraph/delete/$paragraphId")
+                .header("user-id", testUser.userId)
         )
     }
 
@@ -151,7 +154,7 @@ class ParagraphTest : AbstractIntegrationTest() {
                 .param("title", paragraphCreateRequest.title)
                 .param("text", paragraphCreateRequest.text)
                 .param("paragraphType", paragraphCreateRequest.paragraphType.name)
-                .header("userId", testUser.userId)
+                .header("user-id", testUser.userId)
                 .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
         )
             .andExpect(MockMvcResultMatchers.status().isOk)
