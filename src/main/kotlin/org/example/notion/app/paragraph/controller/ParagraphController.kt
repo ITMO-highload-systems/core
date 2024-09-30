@@ -1,11 +1,11 @@
-package org.example.notion.paragraph.controller
+package org.example.notion.app.paragraph.controller
 
 import jakarta.validation.Valid
-import org.example.notion.paragraph.dto.ChangeParagraphPositionRequest
-import org.example.notion.paragraph.dto.ParagraphCreateRequest
-import org.example.notion.paragraph.dto.ParagraphGetResponse
-import org.example.notion.paragraph.dto.ParagraphUpdateRequest
-import org.example.notion.paragraph.service.ParagraphService
+import org.example.notion.app.paragraph.dto.ChangeParagraphPositionRequest
+import org.example.notion.app.paragraph.dto.ParagraphCreateRequest
+import org.example.notion.app.paragraph.dto.ParagraphGetResponse
+import org.example.notion.app.paragraph.dto.ParagraphUpdateRequest
+import org.example.notion.app.paragraph.service.ParagraphService
 import org.example.notion.sse.Message
 import org.example.notion.sse.SseService
 import org.example.notion.sse.Type

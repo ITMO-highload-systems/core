@@ -1,6 +1,6 @@
-package org.example.notion.paragraph.repository
+package org.example.notion.app.paragraph.repository
 
-import org.example.notion.paragraph.entity.ImageRecord
+import org.example.notion.app.paragraph.entity.ImageRecord
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations
 import org.springframework.stereotype.Repository

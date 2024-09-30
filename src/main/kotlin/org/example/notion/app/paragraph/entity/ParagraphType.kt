@@ -1,4 +1,4 @@
-package org.example.notion.paragraph.entity
+package org.example.notion.app.paragraph.entity
 
 enum class ParagraphType {
     PLAIN_TEXT_PARAGRAPH,

@@ -1,6 +1,6 @@
-package org.example.notion.paragraph.service.impl
+package org.example.notion.app.paragraph.service.impl
 
-import org.example.notion.paragraph.service.ParagraphExecutionService
+import org.example.notion.app.paragraph.service.ParagraphExecutionService
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service

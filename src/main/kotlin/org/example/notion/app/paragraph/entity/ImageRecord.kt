@@ -1,4 +1,4 @@
-package org.example.notion.paragraph.entity
+package org.example.notion.app.paragraph.entity
 
 data class ImageRecord(
     val id: Long,

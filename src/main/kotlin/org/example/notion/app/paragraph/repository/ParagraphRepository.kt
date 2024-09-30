@@ -1,8 +1,8 @@
-package org.example.notion.paragraph.repository
+package org.example.notion.app.paragraph.repository
 
-import org.example.notion.paragraph.dto.ParagraphCreateRequest
-import org.example.notion.paragraph.entity.Paragraph
-import org.example.notion.paragraph.entity.ParagraphType
+import org.example.notion.app.paragraph.dto.ParagraphCreateRequest
+import org.example.notion.app.paragraph.entity.Paragraph
+import org.example.notion.app.paragraph.entity.ParagraphType
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations
 import org.springframework.stereotype.Component

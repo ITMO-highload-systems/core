@@ -1,4 +1,4 @@
-package org.example.notion.paragraph.entity
+package org.example.notion.app.paragraph.entity
 
 import java.time.LocalDateTime
 

@@ -1,4 +1,4 @@
-package org.example.notion.paragraph.dto
+package org.example.notion.app.paragraph.dto
 
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotNull

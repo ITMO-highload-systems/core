@@ -1,4 +1,4 @@
-package org.example.notion.paragraph.service
+package org.example.notion.app.paragraph.service
 
 import java.util.concurrent.CompletableFuture
 

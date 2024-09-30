@@ -1,10 +1,10 @@
-package org.example.notion.paragraph.dto
+package org.example.notion.app.paragraph.dto
 
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Size
-import org.example.notion.paragraph.entity.ParagraphType
+import org.example.notion.app.paragraph.entity.ParagraphType
 import java.io.InputStream
 
 data class ParagraphGetResponse(

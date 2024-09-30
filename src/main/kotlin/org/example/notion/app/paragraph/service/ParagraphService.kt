@@ -1,9 +1,9 @@
-package org.example.notion.paragraph.service
+package org.example.notion.app.paragraph.service
 
-import org.example.notion.paragraph.dto.ChangeParagraphPositionRequest
-import org.example.notion.paragraph.dto.ParagraphCreateRequest
-import org.example.notion.paragraph.dto.ParagraphGetResponse
-import org.example.notion.paragraph.dto.ParagraphUpdateRequest
+import org.example.notion.app.paragraph.dto.ChangeParagraphPositionRequest
+import org.example.notion.app.paragraph.dto.ParagraphCreateRequest
+import org.example.notion.app.paragraph.dto.ParagraphGetResponse
+import org.example.notion.app.paragraph.dto.ParagraphUpdateRequest
 import java.util.concurrent.CompletableFuture
 
 /**

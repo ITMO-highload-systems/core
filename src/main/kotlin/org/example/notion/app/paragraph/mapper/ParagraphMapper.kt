@@ -1,7 +1,7 @@
-package org.example.notion.paragraph.mapper
+package org.example.notion.app.paragraph.mapper
 
-import org.example.notion.paragraph.dto.ParagraphUpdateRequest
-import org.example.notion.paragraph.entity.Paragraph
+import org.example.notion.app.paragraph.dto.ParagraphUpdateRequest
+import org.example.notion.app.paragraph.entity.Paragraph
 import org.mapstruct.Mapper
 
 @Mapper
