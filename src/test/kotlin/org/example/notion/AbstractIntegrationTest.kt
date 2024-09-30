@@ -3,8 +3,10 @@ package org.example.notion
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.example.notion.app.note.dto.NoteDto
 import org.example.notion.app.user.dto.UserResponseDto
+import org.example.notion.app.userPermission.entity.Permission
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
@@ -21,6 +23,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import org.testcontainers.containers.MinIOContainer
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.containers.wait.strategy.Wait
+import ru.tinkoff.helicopter.core.ClockTestConfiguration.TestClockProxy
 import java.io.IOException
 import java.util.*
 import java.util.concurrent.Executors
@@ -64,6 +67,11 @@ abstract class AbstractIntegrationTest {
 //            minio.stop()
 //            postgres.stop()
         }
+    }
+
+    @BeforeEach
+    fun prepareEnv() {
+        TestClockProxy.setToFixedClock()
     }
 
     fun subscribe(noteId: Long): MvcResult {
@@ -130,5 +138,35 @@ abstract class AbstractIntegrationTest {
 
         val userDtoResponse: UserResponseDto = mapper.readValue(userString, UserResponseDto::class.java)
         return userDtoResponse
+    }
+    protected fun createPermission(
+        ownerId: Long,
+        userId: Long,
+        noteId: Long,
+        permission: Permission
+    ) {
+        mockMvc.perform(
+            MockMvcRequestBuilders
+                .post("/api/user/permissions")
+                .header("user-id", ownerId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    mapper.writeValueAsString(
+                        mapOf(
+                            "userId" to userId,
+                            "noteId" to noteId,
+                            "permission" to permission
+                        )
+                    )
+                )
+        ).andExpect(MockMvcResultMatchers.status().isCreated)
+    }
+
+    protected fun getNoteById(userId: Long, noteId: Long): NoteDto {
+        val contentAsString = mockMvc.perform(
+            MockMvcRequestBuilders.get("/api/note/$noteId").header("user-id", userId)
+                .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(MockMvcResultMatchers.status().isOk).andReturn().response.contentAsString
+        return mapper.readValue(contentAsString, NoteDto::class.java)
     }
 }

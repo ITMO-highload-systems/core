@@ -1,4 +1,4 @@
-package org.example.notion.userPermission
+package org.example.notion.app.userPermission
 
 import com.fasterxml.jackson.core.type.TypeReference
 import org.example.notion.AbstractIntegrationTest
@@ -336,26 +336,4 @@ class UserPermissionTest : AbstractIntegrationTest() {
         return mapper.readValue(contentAsString, object : TypeReference<List<NoteUserPermissionDto>>() {})
     }
 
-    private fun createPermission(
-        ownerId: Long,
-        userId: Long,
-        noteId: Long,
-        permission: Permission
-    ) {
-        mockMvc.perform(
-            MockMvcRequestBuilders
-                .post("/api/user/permissions")
-                .header("user-id", ownerId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(
-                    mapper.writeValueAsString(
-                        mapOf(
-                            "userId" to userId,
-                            "noteId" to noteId,
-                            "permission" to permission
-                        )
-                    )
-                )
-        ).andExpect(MockMvcResultMatchers.status().isCreated)
-    }
 }
