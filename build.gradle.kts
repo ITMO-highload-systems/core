@@ -27,7 +27,6 @@ val mapstructVersion = "1.6.0"
 val opentelemetryVersion = "1.42.1"
 
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.springframework.boot:spring-boot-starter-validation")
@@ -37,6 +36,11 @@ dependencies {
     implementation("io.minio:minio:$minioVersion")
     implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure:$opentelemetryVersion")
     implementation("org.mapstruct:mapstruct:$mapstructVersion")
+    // https://mvnrepository.com/artifact/org.springframework.data/spring-data-jdbc
+    implementation("org.springframework.data:spring-data-jdbc")
+    // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-data-jdbc
+    implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
+
 
     kapt("org.mapstruct:mapstruct-processor:$mapstructVersion")
     // Optional configuration processor
@@ -60,7 +64,11 @@ dependencies {
     testImplementation("org.testcontainers:minio:$testContainersVersion")
     testImplementation("org.testcontainers:postgresql:$testContainersVersion")
 }
-
+kapt {
+    arguments {
+        arg("mapstruct.defaultComponentModel", "spring")
+    }
+}
 // Compiler options for Kotlin
 kotlin {
     compilerOptions {
@@ -78,8 +86,4 @@ tasks {
     {
         dependsOn(processResources)
     }
-}
-
-kapt {
-    correctErrorTypes = true
 }
