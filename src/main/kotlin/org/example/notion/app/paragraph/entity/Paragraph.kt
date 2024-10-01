@@ -1,5 +1,6 @@
 package org.example.notion.app.paragraph.entity
 
+import jakarta.validation.constraints.Size
 import org.springframework.data.annotation.Id
 import org.springframework.data.relational.core.mapping.Table
 import java.time.LocalDateTime
@@ -9,7 +10,10 @@ data class Paragraph(
     @Id
     val id: Long?,
     val noteId: Long,
+
+    @field:Size(max = 255)
     var title: String,
+
     var nextParagraphId: Long?,
     var text: String,
     var lastUpdateUserId: Long,

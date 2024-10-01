@@ -5,10 +5,7 @@ import jakarta.validation.constraints.NotNull
 
 data class ChangeParagraphPositionRequest(
     @Min(1)
-    @NotNull
     val paragraphId: Long,
 
-    @Min(2)
-    @NotNull
-    val nextParagraphId: Long
+    val nextParagraphId: Long?
 )

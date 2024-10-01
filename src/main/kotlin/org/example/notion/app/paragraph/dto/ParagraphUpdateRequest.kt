@@ -14,7 +14,6 @@ data class ParagraphUpdateRequest(
     @Size(max = 255)
     val title: String,
 
-    @NotNull
     val text: String,
 
     @NotBlank

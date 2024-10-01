@@ -21,7 +21,7 @@ data class ParagraphCreateRequest(
     @NotBlank
     val paragraphType: ParagraphType,
 
-    val images: List<MultipartFile>
+    val images: List<MultipartFile> = emptyList()
 ) {
     class Builder {
         private var noteId: Long = 0

@@ -17,10 +17,8 @@ data class ParagraphGetResponse(
     @Size(max = 255)
     val title: String,
 
-    @NotNull
     val nextParagraphId: Long?,
 
-    @NotNull
     val text: String,
 
     @NotBlank

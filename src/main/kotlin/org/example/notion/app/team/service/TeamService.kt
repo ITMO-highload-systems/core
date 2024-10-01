@@ -15,16 +15,16 @@ class TeamService(
     val teamMapper: TeamMapper
 ) {
     fun getByTeamId(teamId: Long): TeamDto {
-        val team = teamRepository.findTeamByTeamId(teamId).orElseThrow({
+        val team = teamRepository.findTeamByTeamId(teamId).orElseThrow {
             EntityNotFoundException("Team with id $teamId not found")
-        })
+        }
         return teamMapper.toDto(team)
     }
 
     fun getByName(name: String): TeamDto {
-        val team = teamRepository.findTeamByName(name).orElseThrow({
+        val team = teamRepository.findTeamByName(name).orElseThrow {
             EntityNotFoundException("Team with name $name not found")
-        })
+        }
         return teamMapper.toDto(team)
     }
 

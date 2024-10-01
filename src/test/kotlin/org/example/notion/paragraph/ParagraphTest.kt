@@ -92,7 +92,7 @@ class ParagraphTest : AbstractIntegrationTest() {
         )
 
         mockMvc.perform(
-            MockMvcRequestBuilders.multipart("/api/paragraph/update")
+            MockMvcRequestBuilders.put("/api/paragraph/update")
                 .param("id", paragraphUpdateRequest.id.toString())
                 .param("title", paragraphUpdateRequest.title)
                 .param("text", paragraphUpdateRequest.text)
@@ -171,4 +171,10 @@ class ParagraphTest : AbstractIntegrationTest() {
             .andReturn().response.contentAsString
         return mapper.readValue(result, ParagraphGetResponse::class.java)
     }
+
+
+    // Добавить тесты на изменение позиции параграфа
+    // Каждый findAll должен иметь пагинацию. Нельзя отдавать больше 50 записей за один запрос.
+    // Должен быть минимум один запрос, который вернет findAll в виде бесконечной прокрутки без указания общего количества записей.
+    // Должен быть минимум один запрос, который вернет findAll с пагинацией и с указанием общего количества записей в http хедере.
 }

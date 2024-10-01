@@ -61,7 +61,7 @@ class ParagraphController(
         return ResponseEntity.ok(paragraphService.getParagraph(paragraphId))
     }
 
-    @PostMapping("/update")
+    @PutMapping("/update")
     fun updateParagraph(
         @RequestHeader("user-id") userId: Long,
         @Valid @ModelAttribute paragraphUpdateRequest: ParagraphUpdateRequest

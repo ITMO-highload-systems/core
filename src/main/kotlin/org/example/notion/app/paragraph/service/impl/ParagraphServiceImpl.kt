@@ -1,5 +1,7 @@
 package org.example.notion.app.paragraph.service.impl
 
+import org.example.notion.app.exceptions.EntityNotFoundException
+import org.example.notion.app.exceptions.ParagraphErrorTypeException
 import org.example.notion.minio.service.MinioStorageService
 import org.example.notion.minio.util.calculateFileHash
 import org.example.notion.app.paragraph.dto.ChangeParagraphPositionRequest
@@ -46,7 +48,8 @@ class ParagraphServiceImpl(
         private const val PARAGRAPH_CREATED = "Paragraph with id %d created"
         private const val PARAGRAPH_DELETED = "Paragraph with id %d deleted"
         private const val PARAGRAPH_CHANGED = "Paragraph with id %d changed"
-        private const val PARAGRAPH_NOT_FOUND_BY_NEXT_PARAGRAPH_ID = "Paragraph with next paragraph id %d not found that means that it is the first paragraph in the note"
+        private const val PARAGRAPH_NOT_FOUND_BY_NEXT_PARAGRAPH_ID =
+            "Paragraph with next paragraph id %d not found that means that it is the first paragraph in the note"
     }
 
     override fun createParagraph(paragraphCreateRequest: ParagraphCreateRequest): ParagraphGetResponse {
@@ -60,7 +63,8 @@ class ParagraphServiceImpl(
         }
 
         // сохраняем новый параграф
-        val paragraphEntity = paragraphRepository.save(paragraphMapper.toEntity(paragraphCreateRequest, UserContext.getCurrentUser()!!))
+        val paragraphEntity =
+            paragraphRepository.save(paragraphMapper.toEntity(paragraphCreateRequest, UserContext.getCurrentUser()!!))
         paragraphCreateRequest.images.forEach { uploadImage(it, paragraphEntity.id!!) }
 
         // обновляем значения параграфа который стоял на месте нового параграфа, чтобы он ссылался на текущий параграф
@@ -80,7 +84,7 @@ class ParagraphServiceImpl(
         val paragraph = paragraphRepository.findByParagraphId(paragraphId)
         require(paragraph != null) {
             logger.error(PARAGRAPH_NOT_FOUND.format(paragraphId))
-            PARAGRAPH_NOT_FOUND.format(paragraphId)
+            throw EntityNotFoundException(PARAGRAPH_NOT_FOUND.format(paragraphId))
         }
 
         userPermissionService.requireUserPermission(paragraph.noteId, Permission.WRITER)
@@ -106,7 +110,7 @@ class ParagraphServiceImpl(
         val paragraph = paragraphRepository.findByParagraphId(paragraphId)
         require(paragraph != null) {
             logger.error(PARAGRAPH_NOT_FOUND.format(paragraphId))
-            PARAGRAPH_NOT_FOUND.format(paragraphId)
+            throw EntityNotFoundException(PARAGRAPH_NOT_FOUND.format(paragraphId))
         }
 
         userPermissionService.requireUserPermission(paragraph.noteId, Permission.READER)
@@ -136,7 +140,7 @@ class ParagraphServiceImpl(
 
         require(paragraph.paragraphType == ParagraphType.PYTHON_PARAGRAPH) {
             logger.error(PARAGRAPH_TYPE_NOT_PYTHON.format(paragraphId))
-            throw IllegalArgumentException(PARAGRAPH_TYPE_NOT_PYTHON.format(paragraphId))
+            throw ParagraphErrorTypeException(PARAGRAPH_TYPE_NOT_PYTHON.format(paragraphId))
         }
 
         val executionResult = paragraphExecutionService.executeParagraph(paragraph.text)
@@ -152,7 +156,7 @@ class ParagraphServiceImpl(
         val paragraph = paragraphRepository.findByParagraphId(paragraphUpdateRequest.id)
         require(paragraph != null) {
             logger.error(PARAGRAPH_NOT_FOUND.format(paragraphUpdateRequest.id))
-            PARAGRAPH_NOT_FOUND.format(paragraphUpdateRequest.id)
+            throw EntityNotFoundException(PARAGRAPH_NOT_FOUND.format(paragraphUpdateRequest.id))
         }
         userPermissionService.requireUserPermission(paragraph.noteId, Permission.WRITER)
 
@@ -172,7 +176,13 @@ class ParagraphServiceImpl(
             .filter { "${it.calculateFileHash()}.jpg" in imagesToUpload }
             .forEach { uploadImage(it, paragraphUpdateRequest.id) }
 
-        paragraphRepository.save(updateParagraphEntity(paragraph, paragraphUpdateRequest, UserContext.getCurrentUser()!!))
+        paragraphRepository.save(
+            updateParagraphEntity(
+                paragraph,
+                paragraphUpdateRequest,
+                UserContext.getCurrentUser()!!
+            )
+        )
         sseService.sendMessage(
             paragraph.noteId,
             Message(Type.PARAGRAPH_CHANGED, PARAGRAPH_CHANGED.format(paragraphUpdateRequest.id))
@@ -182,18 +192,20 @@ class ParagraphServiceImpl(
 
     override fun changeParagraphPosition(changeParagraphPositionRequest: ChangeParagraphPositionRequest) {
         val paragraph = paragraphRepository.findByParagraphId(changeParagraphPositionRequest.paragraphId)
-            ?: run {
-                logger.error(PARAGRAPH_NOT_FOUND.format(changeParagraphPositionRequest.paragraphId))
-                throw IllegalArgumentException(PARAGRAPH_NOT_FOUND.format(changeParagraphPositionRequest.paragraphId))
-            }
+        require(paragraph != null) {
+            logger.error(PARAGRAPH_NOT_FOUND.format(changeParagraphPositionRequest.paragraphId))
+            throw EntityNotFoundException(PARAGRAPH_NOT_FOUND.format(changeParagraphPositionRequest.paragraphId))
+        }
 
         userPermissionService.requireUserPermission(paragraph.noteId, Permission.WRITER)
 
-        paragraphRepository.findByParagraphId(changeParagraphPositionRequest.nextParagraphId)
-            ?: run {
+        if (changeParagraphPositionRequest.nextParagraphId != null) {
+            val nextParagraph = paragraphRepository.findByParagraphId(changeParagraphPositionRequest.nextParagraphId)
+            require(nextParagraph != null) {
                 logger.error(PARAGRAPH_NOT_FOUND.format(changeParagraphPositionRequest.nextParagraphId))
-                throw IllegalArgumentException(PARAGRAPH_NOT_FOUND.format(changeParagraphPositionRequest.nextParagraphId))
+                throw EntityNotFoundException(PARAGRAPH_NOT_FOUND.format(changeParagraphPositionRequest.nextParagraphId))
             }
+        }
 
         // обновляем next_paragraph_id следующего параграфа у параграфа, который стоит перед перемещаемым
         val paragraphBefore = paragraphRepository.findByNextParagraphId(paragraph.id!!)
@@ -225,7 +237,11 @@ class ParagraphServiceImpl(
         imageRepository.deleteById(imageRecord.id)
     }
 
-    private fun updateParagraphEntity(paragraphOrigin: Paragraph, paragraphUpdateRequest: ParagraphUpdateRequest, userId: Long): Paragraph =
+    private fun updateParagraphEntity(
+        paragraphOrigin: Paragraph,
+        paragraphUpdateRequest: ParagraphUpdateRequest,
+        userId: Long
+    ): Paragraph =
         Paragraph.Builder()
             .id(paragraphOrigin.id)
             .noteId(paragraphOrigin.noteId)
