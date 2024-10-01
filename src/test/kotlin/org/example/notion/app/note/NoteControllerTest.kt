@@ -20,8 +20,11 @@ import kotlin.test.assertTrue
 
 class NoteControllerTest : AbstractIntegrationTest() {
 
+    companion object {
+        private val FORMATTER: DateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
+    }
+
     lateinit var testUser: UserResponseDto
-    val formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
 
     @BeforeEach
     fun setUp() {
@@ -117,8 +120,8 @@ class NoteControllerTest : AbstractIntegrationTest() {
             .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.title").value(newTitle)).andExpect(jsonPath("$.description").value(newDescription))
             .andExpect(jsonPath("$.owner").value(note.owner))
-            .andExpect(jsonPath("$.createdAt", `is`(note.createdAt.format(formatter))))
-            .andExpect(jsonPath("$.updatedAt", not(`is`(note.updatedAt.format(formatter)))))
+            .andExpect(jsonPath("$.createdAt", `is`(note.createdAt.format(FORMATTER))))
+            .andExpect(jsonPath("$.updatedAt", not(`is`(note.updatedAt.format(FORMATTER)))))
     }
 
     @Test
@@ -165,8 +168,8 @@ class NoteControllerTest : AbstractIntegrationTest() {
             .andExpect(jsonPath("$.noteId").value(note.noteId)).andExpect(jsonPath("$.title").value(newTitle))
             .andExpect(jsonPath("$.description").value(newDescription))
             .andExpect(jsonPath("$.owner").value(existingNewOwner.userId))
-            .andExpect(jsonPath("$.createdAt", `is`(note.createdAt.format(formatter))))
-            .andExpect(jsonPath("$.updatedAt", not(`is`(note.updatedAt.format(formatter)))))
+            .andExpect(jsonPath("$.createdAt", `is`(note.createdAt.format(FORMATTER))))
+            .andExpect(jsonPath("$.updatedAt", not(`is`(note.updatedAt.format(FORMATTER)))))
 
         val notes = getNoteById(existingNewOwner.userId, note.noteId)
 
@@ -238,8 +241,8 @@ class NoteControllerTest : AbstractIntegrationTest() {
             .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.title").value(newTitle)).andExpect(jsonPath("$.description").value(newDescription))
             .andExpect(jsonPath("$.owner").value(note.owner))
-            .andExpect(jsonPath("$.createdAt", `is`(note.createdAt.format(formatter))))
-            .andExpect(jsonPath("$.updatedAt", not(`is`(note.updatedAt.format(formatter)))))
+            .andExpect(jsonPath("$.createdAt", `is`(note.createdAt.format(FORMATTER))))
+            .andExpect(jsonPath("$.updatedAt", not(`is`(note.updatedAt.format(FORMATTER)))))
     }
 
     @Test
@@ -347,8 +350,8 @@ class NoteControllerTest : AbstractIntegrationTest() {
             .andExpect(jsonPath("$.owner").value(note.owner)).andExpect(jsonPath("$.noteId").value(note.noteId))
             .andExpect(jsonPath("$.title").value(note.title))
             .andExpect(jsonPath("$.description").value(note.description))
-            .andExpect(jsonPath("$.createdAt", `is`(note.createdAt.format(formatter))))
-            .andExpect(jsonPath("$.updatedAt", `is`(note.updatedAt.format(formatter))))
+            .andExpect(jsonPath("$.createdAt", `is`(note.createdAt.format(FORMATTER))))
+            .andExpect(jsonPath("$.updatedAt", `is`(note.updatedAt.format(FORMATTER))))
     }
 
     @Test
@@ -373,8 +376,8 @@ class NoteControllerTest : AbstractIntegrationTest() {
             .andExpect(jsonPath("[0].owner").value(note.owner)).andExpect(jsonPath("[0].noteId").value(note.noteId))
             .andExpect(jsonPath("[0].title").value(note.title))
             .andExpect(jsonPath("[0].description").value(note.description))
-            .andExpect(jsonPath("[0].createdAt", `is`(note.createdAt.format(formatter))))
-            .andExpect(jsonPath("[0].updatedAt", `is`(note.updatedAt.format(formatter))))
+            .andExpect(jsonPath("[0].createdAt", `is`(note.createdAt.format(FORMATTER))))
+            .andExpect(jsonPath("[0].updatedAt", `is`(note.updatedAt.format(FORMATTER))))
     }
 
     @Test
