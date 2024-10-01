@@ -17,23 +17,23 @@ CREATE TABLE note
 
 CREATE TABLE paragraph
 (
-    paragraph_id        SERIAL PRIMARY KEY,
+    id        SERIAL PRIMARY KEY,
     note_id             INT REFERENCES note (note_id),
     title               VARCHAR(255),
-    position            INT NOT NULL,
+    next_paragraph_id     INT REFERENCES paragraph(id),
     text                TEXT NOT NULL,
     last_update_user_id INT REFERENCES "user" (user_id),
     created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    paragraph_type      varchar(3),
-    UNIQUE (position, note_id)
+    paragraph_type      varchar(255),
+    UNIQUE (next_paragraph_id, note_id)
 );
 
 CREATE TABLE image_record
 (
     id           SERIAL PRIMARY KEY,
     image_hash   VARCHAR(255) NOT NULL,
-    paragraph_id INT REFERENCES paragraph (paragraph_id)
+    paragraph_id INT REFERENCES paragraph (id)
 );
 
 CREATE TABLE team

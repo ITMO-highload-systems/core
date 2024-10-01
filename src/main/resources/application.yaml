@@ -1,10 +1,12 @@
 spring:
     application:
         name: ${SPRING_APPLICATION_NAME:notion}
+        port: ${PORT:8080}
     servlet:
         multipart:
             max-file-size: ${SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE:200MB}
             max-request-size: ${SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE:200MB}
+            enabled: true
     datasource:
         url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/postgres}
         username: ${DATABASE_USERNAME:postgres}
@@ -26,3 +28,6 @@ minio:
 
 sse:
   timeout: 3000
+
+docker:
+  image: "python-container"

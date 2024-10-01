@@ -42,5 +42,23 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  python-exec:
+    image: python:3.10-slim
+    container_name: python-container
+    command: tail -f /dev/null
+
+  app: # Ваше Spring-приложение
+    build:
+      context: .  # Контекст сборки - директория с Dockerfile
+      dockerfile: Dockerfile  # Имя Dockerfile (по умолчанию Dockerfile)
+    container_name: spring-app
+    ports:
+      - '8080:8080'  # Порт для доступа к вашему приложению
+    depends_on:
+      - postgres  # Убедитесь, что Postgres доступен перед запуском приложения
+      - minio1    # Убедитесь, что MinIO доступен перед запуском приложения
+      - python-exec # Убедитесь, что Python доступен перед запуском приложения
+
+
 volumes:
   postgres_data:

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.example.notion.app.note.dto.NoteDto
 import org.example.notion.app.user.dto.UserResponseDto
 import org.example.notion.app.userPermission.entity.Permission
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.slf4j.LoggerFactory
@@ -15,19 +14,24 @@ import org.springframework.boot.testcontainers.service.connection.ServiceConnect
 import org.springframework.http.MediaType
 import org.springframework.mock.web.MockAsyncContext
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.DynamicPropertyRegistry
+import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.MvcResult
 import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
+import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.MinIOContainer
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.containers.wait.strategy.Wait
+import org.testcontainers.utility.DockerImageName
 import ru.tinkoff.helicopter.core.ClockTestConfiguration.TestClockProxy
 import java.io.IOException
 import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+
 
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
@@ -52,20 +56,22 @@ abstract class AbstractIntegrationTest {
         @ServiceConnection
         internal var postgres = PostgreSQLContainer("postgres:latest")
 
+        internal val genericContainer = GenericContainer(DockerImageName.parse("python:3.10-slim"))
+            .withCommand("tail", "-f", "/dev/null")
+
 
         @BeforeAll
         @JvmStatic
         fun setup() {
             minio.start()
             postgres.start()
+            genericContainer.start()
         }
 
-        @AfterAll
+        @DynamicPropertySource
         @JvmStatic
-        fun teardown() {
-            //todo
-//            minio.stop()
-//            postgres.stop()
+        fun registerDockerProperties(registry: DynamicPropertyRegistry) {
+            registry.add("docker.image") { genericContainer.containerName }
         }
     }
 

@@ -32,5 +32,12 @@ interface MinioStorageService {
      * @param fileHash The unique hash of the image.
      * @return An `InputStream` for reading the image content.
      */
-    fun getImage(fileHash: String): InputStream
+    fun getImageContent(fileHash: String): InputStream
+
+    fun getImageUrl(fileHash: String): String
+
+    /**
+     * Deletes an image from MinIO by its unique hash.
+     */
+    fun deleteImage(fileHash: String)
 }

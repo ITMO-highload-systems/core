@@ -37,7 +37,7 @@ class MinioContainerTest : AbstractIntegrationTest() {
         val fileHash = multipartFile.calculateFileHash()
         minioStorageService.uploadImg(multipartFile)
 
-        val imgResultInputStream = minioStorageService.getImage("$fileHash.jpg")
+        val imgResultInputStream = minioStorageService.getImageContent("$fileHash.jpg")
 
         val downloadedBytes = imgResultInputStream.readBytes()
 
