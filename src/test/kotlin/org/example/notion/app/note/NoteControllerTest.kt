@@ -13,6 +13,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
@@ -20,6 +21,7 @@ import kotlin.test.assertTrue
 class NoteControllerTest : AbstractIntegrationTest() {
 
     lateinit var testUser: UserResponseDto
+    val formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
 
     @BeforeEach
     fun setUp() {
@@ -115,8 +117,8 @@ class NoteControllerTest : AbstractIntegrationTest() {
             .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.title").value(newTitle)).andExpect(jsonPath("$.description").value(newDescription))
             .andExpect(jsonPath("$.owner").value(note.owner))
-            .andExpect(jsonPath("$.createdAt", `is`(note.createdAt.toString())))
-            .andExpect(jsonPath("$.updatedAt", not(`is`(note.updatedAt.toString()))))
+            .andExpect(jsonPath("$.createdAt", `is`(note.createdAt.format(formatter))))
+            .andExpect(jsonPath("$.updatedAt", not(`is`(note.updatedAt.format(formatter)))))
     }
 
     @Test
@@ -163,8 +165,8 @@ class NoteControllerTest : AbstractIntegrationTest() {
             .andExpect(jsonPath("$.noteId").value(note.noteId)).andExpect(jsonPath("$.title").value(newTitle))
             .andExpect(jsonPath("$.description").value(newDescription))
             .andExpect(jsonPath("$.owner").value(existingNewOwner.userId))
-            .andExpect(jsonPath("$.createdAt", `is`(note.createdAt.toString())))
-            .andExpect(jsonPath("$.updatedAt", not(`is`(note.updatedAt.toString()))))
+            .andExpect(jsonPath("$.createdAt", `is`(note.createdAt.format(formatter))))
+            .andExpect(jsonPath("$.updatedAt", not(`is`(note.updatedAt.format(formatter)))))
 
         val notes = getNoteById(existingNewOwner.userId, note.noteId)
 
@@ -236,8 +238,8 @@ class NoteControllerTest : AbstractIntegrationTest() {
             .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.title").value(newTitle)).andExpect(jsonPath("$.description").value(newDescription))
             .andExpect(jsonPath("$.owner").value(note.owner))
-            .andExpect(jsonPath("$.createdAt", `is`(note.createdAt.toString())))
-            .andExpect(jsonPath("$.updatedAt", not(`is`(note.updatedAt.toString()))))
+            .andExpect(jsonPath("$.createdAt", `is`(note.createdAt.format(formatter))))
+            .andExpect(jsonPath("$.updatedAt", not(`is`(note.updatedAt.format(formatter)))))
     }
 
     @Test
@@ -345,8 +347,8 @@ class NoteControllerTest : AbstractIntegrationTest() {
             .andExpect(jsonPath("$.owner").value(note.owner)).andExpect(jsonPath("$.noteId").value(note.noteId))
             .andExpect(jsonPath("$.title").value(note.title))
             .andExpect(jsonPath("$.description").value(note.description))
-            .andExpect(jsonPath("$.createdAt", `is`(note.createdAt.toString())))
-            .andExpect(jsonPath("$.updatedAt", `is`(note.updatedAt.toString())))
+            .andExpect(jsonPath("$.createdAt", `is`(note.createdAt.format(formatter))))
+            .andExpect(jsonPath("$.updatedAt", `is`(note.updatedAt.format(formatter))))
     }
 
     @Test
@@ -371,8 +373,8 @@ class NoteControllerTest : AbstractIntegrationTest() {
             .andExpect(jsonPath("[0].owner").value(note.owner)).andExpect(jsonPath("[0].noteId").value(note.noteId))
             .andExpect(jsonPath("[0].title").value(note.title))
             .andExpect(jsonPath("[0].description").value(note.description))
-            .andExpect(jsonPath("[0].createdAt", `is`(note.createdAt.toString())))
-            .andExpect(jsonPath("[0].updatedAt", `is`(note.updatedAt.toString())))
+            .andExpect(jsonPath("[0].createdAt", `is`(note.createdAt.format(formatter))))
+            .andExpect(jsonPath("[0].updatedAt", `is`(note.updatedAt.format(formatter))))
     }
 
     @Test
