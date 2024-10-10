@@ -1,4 +1,4 @@
-package org.example.notion.paragraph
+package org.example.notion.app.paragraph
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.example.notion.AbstractIntegrationTest
