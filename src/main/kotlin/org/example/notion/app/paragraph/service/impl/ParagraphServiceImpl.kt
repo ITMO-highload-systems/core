@@ -24,10 +24,10 @@ import org.example.notion.sse.SseService
 import org.example.notion.sse.Type
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
 import java.time.LocalDateTime
 import java.util.concurrent.CompletableFuture
-import kotlin.reflect.jvm.internal.impl.descriptors.Visibilities.Private
 
 @Service
 class ParagraphServiceImpl(
@@ -56,11 +56,12 @@ class ParagraphServiceImpl(
         // получаем параграф который стоял на месте нового параграфа
         userPermissionService.requireUserPermission(paragraphCreateRequest.noteId, Permission.WRITER)
 
-        var paragraph: Paragraph? = null
-        if (paragraphCreateRequest.nextParagraphId != null) {
-            paragraph = paragraphRepository.findByNextParagraphId(paragraphCreateRequest.nextParagraphId)
-            logger.info(PARAGRAPH_NOT_FOUND_BY_NEXT_PARAGRAPH_ID.format(paragraphCreateRequest.nextParagraphId))
+        val paragraph = if (paragraphCreateRequest.nextParagraphId != null) {
+            paragraphRepository.findByNextParagraphId(paragraphCreateRequest.nextParagraphId)
+        } else {
+            paragraphRepository.findByNextParagraphIdNull()
         }
+        logger.info(PARAGRAPH_NOT_FOUND_BY_NEXT_PARAGRAPH_ID.format(paragraphCreateRequest.nextParagraphId))
 
         // сохраняем новый параграф
         val paragraphEntity =
@@ -114,19 +115,7 @@ class ParagraphServiceImpl(
         }
 
         userPermissionService.requireUserPermission(paragraph.noteId, Permission.READER)
-
-        val images = imageRepository.findByParagraphId(paragraphId)
-        val imageUrls = images.asSequence().map { minioStorageService.getImageUrl(it.imageHash) }.toList()
-
-        return ParagraphGetResponse.Builder()
-            .id(paragraph.id!!)
-            .noteId(paragraph.noteId)
-            .title(paragraph.title)
-            .nextParagraphId(paragraph.nextParagraphId)
-            .text(paragraph.text)
-            .paragraphType(paragraph.paragraphType)
-            .imageUrls(imageUrls)
-            .build()
+        return paragraphToResponse(paragraph)
     }
 
     override fun executeParagraph(paragraphId: Long): CompletableFuture<String> {
@@ -190,6 +179,7 @@ class ParagraphServiceImpl(
         return this.getParagraph(paragraphUpdateRequest.id)
     }
 
+    @Transactional
     override fun changeParagraphPosition(changeParagraphPositionRequest: ChangeParagraphPositionRequest) {
         val paragraph = paragraphRepository.findByParagraphId(changeParagraphPositionRequest.paragraphId)
         require(paragraph != null) {
@@ -209,17 +199,28 @@ class ParagraphServiceImpl(
 
         // обновляем next_paragraph_id следующего параграфа у параграфа, который стоит перед перемещаемым
         val paragraphBefore = paragraphRepository.findByNextParagraphId(paragraph.id!!)
-        paragraphBefore?.nextParagraphId = paragraph.nextParagraphId
-        paragraphRepository.save(paragraphBefore!!)
+
+        if (paragraphBefore != null) { // paragraphBefore может быть null-ом если текущий параграф стоит в самом начале
+            paragraphBefore.nextParagraphId = paragraph.nextParagraphId
+            paragraphRepository.save(paragraphBefore)
+        }
 
         // обновляем next_paragraph_id параграфа, который раньше стоял перед тем параграфом, перед которым мы хотим поставить перемещаемый
-        val paragraphAfter = paragraphRepository.findByNextParagraphId(changeParagraphPositionRequest.nextParagraphId)
-        paragraphAfter?.nextParagraphId = paragraph.id!!
+        val paragraphAfter = if (changeParagraphPositionRequest.nextParagraphId != null) {
+            paragraphRepository.findByNextParagraphId(changeParagraphPositionRequest.nextParagraphId)
+        } else {
+            paragraphRepository.findByNextParagraphIdNull()
+        }
+        paragraphAfter?.nextParagraphId = paragraph.id
         paragraphRepository.save(paragraphAfter!!)
 
         // обновляем next_paragraph_id перемещаемого параграфа
         paragraph.nextParagraphId = changeParagraphPositionRequest.nextParagraphId
         paragraphRepository.save(paragraph)
+    }
+
+    override fun findAllParagraphs(pageSize: Long, pageNumber: Long): List<ParagraphGetResponse> {
+        return paragraphRepository.findAllParagraphs(pageSize,pageNumber * pageSize).asSequence().map { paragraphToResponse(it) }.toList()
     }
 
     private fun uploadImage(image: MultipartFile, paragraphId: Long) {
@@ -253,4 +254,19 @@ class ParagraphServiceImpl(
             .updatedAt(LocalDateTime.now())
             .paragraphType(paragraphUpdateRequest.paragraphType)
             .build()
+
+    private fun paragraphToResponse(paragraph: Paragraph): ParagraphGetResponse {
+        val images = imageRepository.findByParagraphId(paragraph.id!!)
+        val imageUrls = images.asSequence().map { minioStorageService.getImageUrl(it.imageHash) }.toList()
+
+        return ParagraphGetResponse.Builder()
+            .id(paragraph.id)
+            .noteId(paragraph.noteId)
+            .title(paragraph.title)
+            .nextParagraphId(paragraph.nextParagraphId)
+            .text(paragraph.text)
+            .paragraphType(paragraph.paragraphType)
+            .imageUrls(imageUrls)
+            .build()
+    }
 }

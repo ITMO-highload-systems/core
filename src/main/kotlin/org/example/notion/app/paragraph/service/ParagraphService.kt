@@ -4,6 +4,7 @@ import org.example.notion.app.paragraph.dto.ChangeParagraphPositionRequest
 import org.example.notion.app.paragraph.dto.ParagraphCreateRequest
 import org.example.notion.app.paragraph.dto.ParagraphGetResponse
 import org.example.notion.app.paragraph.dto.ParagraphUpdateRequest
+import org.springframework.data.domain.Pageable
 import java.util.concurrent.CompletableFuture
 
 /**
@@ -41,4 +42,9 @@ interface ParagraphService {
      * change paragraph position.
      */
     fun changeParagraphPosition(changeParagraphPositionRequest: ChangeParagraphPositionRequest)
+
+    /**
+     * Find all paragraphs.
+     */
+    fun findAllParagraphs(pageSize: Long, pageNumber: Long): List<ParagraphGetResponse>
 }

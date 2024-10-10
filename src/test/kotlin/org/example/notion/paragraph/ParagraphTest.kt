@@ -1,19 +1,26 @@
 package org.example.notion.paragraph
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.example.notion.AbstractIntegrationTest
 import org.example.notion.app.note.dto.NoteDto
+import org.example.notion.app.paragraph.dto.ChangeParagraphPositionRequest
 import org.example.notion.app.paragraph.dto.ParagraphCreateRequest
 import org.example.notion.app.paragraph.dto.ParagraphGetResponse
 import org.example.notion.app.paragraph.dto.ParagraphUpdateRequest
 import org.example.notion.app.paragraph.entity.ParagraphType
+import org.example.notion.app.paragraph.repository.ImageRepository
+import org.example.notion.app.paragraph.repository.ParagraphRepository
 import org.example.notion.app.user.dto.UserResponseDto
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.mock.web.MockMultipartFile
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.io.File
 
 class ParagraphTest : AbstractIntegrationTest() {
@@ -21,10 +28,25 @@ class ParagraphTest : AbstractIntegrationTest() {
     lateinit var testUser: UserResponseDto
     lateinit var testNote: NoteDto
 
+    @Autowired
+    private lateinit var paragraphRepository: ParagraphRepository
+
+    @Autowired
+    private lateinit var imageRepository: ImageRepository
+
+    @Autowired
+    lateinit var objectMapper: ObjectMapper
+
     @BeforeEach
     fun setUp() {
         testUser = createUser()
         testNote = createNote(testUser.userId)
+    }
+
+    @AfterEach
+    fun clear() {
+        imageRepository.deleteAll()
+        paragraphRepository.deleteAll()
     }
 
     @Test
@@ -32,7 +54,10 @@ class ParagraphTest : AbstractIntegrationTest() {
         val paragraphGetResponseExpected = `create paragraph`()
         val paragraphGetResponseActual = `get paragraph`(paragraphGetResponseExpected.id)
         Assertions.assertEquals(paragraphGetResponseExpected, paragraphGetResponseActual)
-        `delete paragraph`(paragraphGetResponseActual.id)
+        mockMvc.perform(
+            MockMvcRequestBuilders.delete("/api/paragraph/delete/${paragraphGetResponseActual.id}")
+                .header("user-id", testUser.userId)
+        )
         Assertions.assertThrows(Exception::class.java) { `get paragraph`(paragraphGetResponseActual.id) }
     }
 
@@ -49,7 +74,6 @@ class ParagraphTest : AbstractIntegrationTest() {
         mockMvc.perform(MockMvcRequestBuilders.asyncDispatch(mvcResult))
             .andExpect(MockMvcResultMatchers.status().isOk)
             .andExpect(MockMvcResultMatchers.content().string("Hello, World!\n"))
-        `delete paragraph`(paragraph.id)
     }
 
     @Test
@@ -74,7 +98,6 @@ class ParagraphTest : AbstractIntegrationTest() {
         mockMvc.perform(MockMvcRequestBuilders.asyncDispatch(mvcResult))
             .andExpect(MockMvcResultMatchers.status().isOk)  // Проверяем статус
             .andExpect(MockMvcResultMatchers.content().string("2.0\n"))  // Ожидаем результат
-        `delete paragraph`(paragraph.id)
     }
 
     @Test
@@ -107,7 +130,125 @@ class ParagraphTest : AbstractIntegrationTest() {
         Assertions.assertEquals("print('Now I am updated!')", paragraphGetResponseUpdated.text)
         Assertions.assertEquals(ParagraphType.PYTHON_PARAGRAPH, paragraphGetResponseUpdated.paragraphType)
         Assertions.assertEquals(true, paragraphGetResponseUpdated.imageUrls.isEmpty())
-        `delete paragraph`(paragraphGetResponseActual.id)
+    }
+
+    @Test
+    fun `change position - 12 - 21 - success change`() {
+        val paragraphGetResponse1 = `create paragraph`() // на 1-м месте
+        val paragraphGetResponse2 = `create paragraph`() // на 2-м месте
+
+        val changeParagraphPositionRequest = ChangeParagraphPositionRequest(paragraphGetResponse1.id, null)
+
+        val paragraph2before = paragraphRepository.findByParagraphId(paragraphGetResponse2.id)
+        Assertions.assertNotNull(paragraph2before) // последующее использование !! оправдано
+        Assertions.assertEquals(
+            null,
+            paragraph2before!!.nextParagraphId
+        ) // paragraph2 должен оказаться на последнем месте
+
+        val paragraph1before = paragraphRepository.findByParagraphId(paragraphGetResponse1.id)
+        Assertions.assertNotNull(paragraph1before) // последующее использования !! оправдано
+        Assertions.assertEquals(
+            paragraph2before.id,
+            paragraph1before!!.nextParagraphId
+        ) // paragraph1 должен стоять перед paragraph2
+
+        mockMvc.perform(
+            MockMvcRequestBuilders.post("/api/paragraph/position")
+                .header("user-id", testUser.userId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(changeParagraphPositionRequest))
+        ).andExpect(status().isOk)
+
+        val paragraph2after = paragraphRepository.findByParagraphId(paragraphGetResponse2.id)
+        Assertions.assertNotNull(paragraph2after) // последующее использование !! оправдано
+        Assertions.assertEquals(
+            paragraphGetResponse1.id,
+            paragraph2after!!.nextParagraphId
+        ) // paragraph2 должен оказаться на 1-м месте
+
+        val paragraph1after = paragraphRepository.findByParagraphId(paragraphGetResponse1.id)
+        Assertions.assertNotNull(paragraph1after) // последующее использования !! оправдано
+        Assertions.assertEquals(null, paragraph1after!!.nextParagraphId) // paragraph1 должен стоять на последнем месте
+    }
+
+    @Test
+    fun `change position - 123 - 132 - success change`() {
+        val paragraphGetResponse1 = `create paragraph`() // на 1-м месте
+        val paragraphGetResponse2 = `create paragraph`() // на 2-м месте
+        val paragraphGetResponse3 = `create paragraph`() // на 3-м месте
+
+        val changeParagraphPositionRequest =
+            ChangeParagraphPositionRequest(paragraphGetResponse3.id, paragraphGetResponse2.id)
+
+        val paragraph3before = paragraphRepository.findByParagraphId(paragraphGetResponse3.id)
+        Assertions.assertNotNull(paragraph3before) // последующее использование !! оправдано
+        Assertions.assertEquals(null, paragraph3before!!.nextParagraphId) // paragraph3 должен стоять на последнем месте
+
+        val paragraph2before = paragraphRepository.findByParagraphId(paragraphGetResponse2.id)
+        Assertions.assertNotNull(paragraph2before) // последующее использование !! оправдано
+        Assertions.assertEquals(
+            paragraph3before.id,
+            paragraph2before!!.nextParagraphId
+        ) // paragraph2 должен стоять перед paragraph3
+
+        val paragraph1before = paragraphRepository.findByParagraphId(paragraphGetResponse1.id)
+        Assertions.assertNotNull(paragraph1before) // последующее использования !! оправдано
+        Assertions.assertEquals(
+            paragraph2before.id,
+            paragraph1before!!.nextParagraphId
+        ) // paragraph1 должен стоять перед paragraph2
+
+        mockMvc.perform(
+            MockMvcRequestBuilders.post("/api/paragraph/position")
+                .header("user-id", testUser.userId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(changeParagraphPositionRequest))
+        ).andExpect(status().isOk)
+
+        val paragraph3after = paragraphRepository.findByParagraphId(paragraphGetResponse3.id)
+        Assertions.assertNotNull(paragraph3after) // последующее использование !! оправдано
+        Assertions.assertEquals(
+            paragraphGetResponse2.id,
+            paragraph3after!!.nextParagraphId
+        ) // paragraph3 должен стоять перед paragraph2
+
+        val paragraph2after = paragraphRepository.findByParagraphId(paragraphGetResponse2.id)
+        Assertions.assertNotNull(paragraph2after) // последующее использование !! оправдано
+        Assertions.assertEquals(null, paragraph2after!!.nextParagraphId) // paragraph2 должен стоять последним
+
+        val paragraph1after = paragraphRepository.findByParagraphId(paragraphGetResponse1.id)
+        Assertions.assertNotNull(paragraph1after) // последующее использования !! оправдано
+        Assertions.assertEquals(
+            paragraph3after.id,
+            paragraph1after!!.nextParagraphId
+        ) // paragraph1 должен стоять перед paragraph3
+    }
+
+    @Test
+    fun `getAllParagraphs - valid data - success get all paragraphs`() {
+        for (i in 1..52) `create paragraph`()
+
+        val result0 = mockMvc.perform(
+            MockMvcRequestBuilders.get("/api/paragraph/all")
+                .param("page", "0")
+        )
+            .andExpect(status().isOk)
+            .andReturn().response.contentAsString
+
+        val paragraphs = mapper.readValue(result0, Array<ParagraphGetResponse>::class.java)
+        Assertions.assertEquals(50, paragraphs.size)
+
+        val result1 = mockMvc.perform(
+            MockMvcRequestBuilders.get("/api/paragraph/all")
+                .param("page", "1")
+                .param("pageSize", "4")
+        )
+            .andExpect(status().isOk)
+            .andReturn().response.contentAsString
+
+        val paragraphs1 = mapper.readValue(result1, Array<ParagraphGetResponse>::class.java)
+        Assertions.assertEquals(4, paragraphs1.size)
     }
 
 
@@ -117,13 +258,6 @@ class ParagraphTest : AbstractIntegrationTest() {
                 .header("user-id", testUser.userId)
         ).andReturn().response.contentAsString
             .let { return mapper.readValue(it, ParagraphGetResponse::class.java) }
-    }
-
-    private fun `delete paragraph`(paragraphId: Long) {
-        mockMvc.perform(
-            MockMvcRequestBuilders.delete("/api/paragraph/delete/$paragraphId")
-                .header("user-id", testUser.userId)
-        )
     }
 
     private fun `create paragraph`(
@@ -171,10 +305,4 @@ class ParagraphTest : AbstractIntegrationTest() {
             .andReturn().response.contentAsString
         return mapper.readValue(result, ParagraphGetResponse::class.java)
     }
-
-
-    // Добавить тесты на изменение позиции параграфа
-    // Каждый findAll должен иметь пагинацию. Нельзя отдавать больше 50 записей за один запрос.
-    // Должен быть минимум один запрос, который вернет findAll в виде бесконечной прокрутки без указания общего количества записей.
-    // Должен быть минимум один запрос, который вернет findAll с пагинацией и с указанием общего количества записей в http хедере.
 }

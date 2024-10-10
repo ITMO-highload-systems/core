@@ -10,6 +10,7 @@ import org.example.notion.app.user.UserContext
 import org.example.notion.sse.Message
 import org.example.notion.sse.SseService
 import org.example.notion.sse.Type
+import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import java.util.concurrent.CompletableFuture
@@ -20,6 +21,10 @@ class ParagraphController(
     private val paragraphService: ParagraphService,
     private val sseService: SseService
 ) {
+
+    companion object {
+        private const val MAX_PAGE_SIZE = 50L
+    }
 
     @PostMapping("/create")
     fun createParagraph(
@@ -63,7 +68,7 @@ class ParagraphController(
 
     @PutMapping("/update")
     fun updateParagraph(
-        @RequestHeader("user-id") userId: Long,
+        @Valid @RequestHeader("user-id") userId: Long,
         @Valid @ModelAttribute paragraphUpdateRequest: ParagraphUpdateRequest
     ): ResponseEntity<ParagraphGetResponse> {
         UserContext.setCurrentUser(userId)
@@ -72,10 +77,22 @@ class ParagraphController(
 
     @PostMapping("/position")
     fun changeParagraphPosition(
-        @RequestHeader("user-id") userId: Long,
+        @Valid @RequestHeader("user-id") userId: Long,
         @Valid @RequestBody changeParagraphPositionRequest: ChangeParagraphPositionRequest
     ) {
         UserContext.setCurrentUser(userId)
         paragraphService.changeParagraphPosition(changeParagraphPositionRequest)
+    }
+
+    @GetMapping("/all")
+    fun getAllParagraphs(
+        @Valid @RequestParam("page", defaultValue = "0") page: Long,
+        @Valid @RequestParam("pageSize", defaultValue = "50") pageSize: Long,
+    ): ResponseEntity<List<ParagraphGetResponse>> {
+        val limitedPageSize = pageSize.coerceAtMost(MAX_PAGE_SIZE)
+        val paragraphs = paragraphService.findAllParagraphs(limitedPageSize, page)
+        val headers = HttpHeaders()
+        headers.add("X-Total-Count", paragraphs.size.toString())
+        return ResponseEntity.ok().headers(headers).body(paragraphs)
     }
 }
