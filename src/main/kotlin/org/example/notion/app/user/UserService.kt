@@ -20,6 +20,10 @@ class UserService(
             .orElseThrow { throw EntityNotFoundException("User with id $userId not found") }
         return userMapper.toDto(user)
     }
+    fun requareUserExistence(userId: Long) {
+        userRepository.findById(userId)
+            .orElseThrow { throw EntityNotFoundException("User with id $userId not found") }
+    }
 
     fun getByEmail(email: String): UserResponseDto {
         val user = userRepository.findByEmail(email)

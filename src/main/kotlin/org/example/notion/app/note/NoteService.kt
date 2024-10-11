@@ -81,7 +81,10 @@ class NoteService(
 
     fun isOwner(noteId: Long, userId: Long): Boolean {
         val result = noteRepository.findByNoteId(noteId)
-        return result.isPresent && result.get().owner == userId
+        if (result.isEmpty) {
+            throw EntityNotFoundException("Note with id $noteId does not exist")
+        }
+        return result.get().owner == userId
     }
 }
 
