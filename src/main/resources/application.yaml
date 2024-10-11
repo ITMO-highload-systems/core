@@ -1,7 +1,6 @@
 spring:
     application:
         name: ${SPRING_APPLICATION_NAME:notion}
-        port: ${PORT:8080}
     servlet:
         multipart:
             max-file-size: ${SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE:200MB}
@@ -31,3 +30,6 @@ sse:
 
 docker:
   image: "python-container"
+
+server:
+    port: {$PORT:8090}

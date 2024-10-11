@@ -292,16 +292,16 @@ class ParagraphTest : AbstractIntegrationTest() {
                 .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
         )
             .andExpect(MockMvcResultMatchers.status().isOk)
-            .andExpect(MockMvcResultMatchers.jsonPath("$.noteId").value(paragraphCreateRequest.noteId))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.note_id").value(paragraphCreateRequest.noteId))
             .andExpect(MockMvcResultMatchers.jsonPath("$.title").value(paragraphCreateRequest.title))
             .andExpect(
-                MockMvcResultMatchers.jsonPath("$.nextParagraphId").value(paragraphCreateRequest.nextParagraphId)
+                MockMvcResultMatchers.jsonPath("$.next_paragraph_id").value(paragraphCreateRequest.nextParagraphId)
             )
             .andExpect(MockMvcResultMatchers.jsonPath("$.text").value(paragraphCreateRequest.text))
             .andExpect(
-                MockMvcResultMatchers.jsonPath("$.paragraphType").value(paragraphCreateRequest.paragraphType.name)
+                MockMvcResultMatchers.jsonPath("$.paragraph_type").value(paragraphCreateRequest.paragraphType.name)
             )
-            .andExpect(MockMvcResultMatchers.jsonPath("$.imageUrls").isNotEmpty)
+            .andExpect(MockMvcResultMatchers.jsonPath("$.image_urls").isNotEmpty)
             .andReturn().response.contentAsString
         return mapper.readValue(result, ParagraphGetResponse::class.java)
     }

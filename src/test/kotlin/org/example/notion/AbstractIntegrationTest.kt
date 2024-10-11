@@ -159,8 +159,8 @@ abstract class AbstractIntegrationTest {
                 .content(
                     mapper.writeValueAsString(
                         mapOf(
-                            "userId" to userId,
-                            "noteId" to noteId,
+                            "user_id" to userId,
+                            "note_id" to noteId,
                             "permission" to permission
                         )
                     )

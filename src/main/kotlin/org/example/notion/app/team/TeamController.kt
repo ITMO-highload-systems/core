@@ -1,10 +1,10 @@
 package org.example.notion.app.team
 
 import jakarta.validation.Valid
-import org.example.notion.app.user.UserContext
 import org.example.notion.app.team.dto.TeamCreateDto
 import org.example.notion.app.team.dto.TeamDto
 import org.example.notion.app.team.service.TeamService
+import org.example.notion.app.user.UserContext
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
@@ -18,6 +18,13 @@ class TeamController(
     fun getByTeamId(@PathVariable("teamId") teamId: Long,  @RequestHeader("user-id") userId: Long): ResponseEntity<TeamDto> {
         UserContext.setCurrentUser(userId)
         return ResponseEntity.ok().body(teamService.getByTeamId(teamId))
+    }
+
+    @GetMapping("my")
+    fun getMyTeams(@RequestHeader("user-id") userId: Long): ResponseEntity<List<TeamDto>> {
+        UserContext.setCurrentUser(userId)
+        //todo
+        return ResponseEntity.ok().build()
     }
 
     @GetMapping("name/{name}")

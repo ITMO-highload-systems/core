@@ -1,16 +1,11 @@
 package org.example.notion.app.paragraph.mapper
 
 import org.example.notion.app.paragraph.dto.ParagraphCreateRequest
-import org.example.notion.app.paragraph.dto.ParagraphUpdateRequest
 import org.example.notion.app.paragraph.entity.Paragraph
-import org.mapstruct.Mapper
+import org.springframework.stereotype.Component
 
-@Mapper
-abstract class ParagraphMapper {
-
-    abstract fun toEntity(dto: ParagraphUpdateRequest): Paragraph
-
-    abstract fun toDto(entity: Paragraph): ParagraphUpdateRequest
+@Component
+class ParagraphMapper {
 
     fun toEntity(dto: ParagraphCreateRequest, userId: Long): Paragraph {
         return Paragraph.Builder()
