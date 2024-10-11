@@ -114,8 +114,8 @@ class UserPermissionTest : AbstractIntegrationTest() {
                 .content(
                     mapper.writeValueAsString(
                         mapOf(
-                            "userId" to someUserDtoResponse.userId,
-                            "noteId" to noteDtoResponse.noteId
+                            "user_id" to someUserDtoResponse.userId,
+                            "note_id" to noteDtoResponse.noteId
                         )
                     )
                 )
@@ -142,8 +142,8 @@ class UserPermissionTest : AbstractIntegrationTest() {
                 .content(
                     mapper.writeValueAsString(
                         mapOf(
-                            "userId" to someUserDtoResponse.userId,
-                            "noteId" to noteDtoResponse.noteId
+                            "user_id" to someUserDtoResponse.userId,
+                            "note_id" to noteDtoResponse.noteId
                         )
                     )
                 )
@@ -157,8 +157,8 @@ class UserPermissionTest : AbstractIntegrationTest() {
                 .content(
                     mapper.writeValueAsString(
                         mapOf(
-                            "userId" to someUserDtoResponse.userId,
-                            "noteId" to noteDtoResponse.noteId
+                            "user_id" to someUserDtoResponse.userId,
+                            "note_id" to noteDtoResponse.noteId
                         )
                     )
                 )
@@ -181,8 +181,8 @@ class UserPermissionTest : AbstractIntegrationTest() {
                 .content(
                     mapper.writeValueAsString(
                         mapOf(
-                            "userId" to "-1",
-                            "noteId" to noteDtoResponse.noteId
+                            "user_id" to "-1",
+                            "note_id" to noteDtoResponse.noteId
                         )
                     )
                 )
@@ -238,8 +238,8 @@ class UserPermissionTest : AbstractIntegrationTest() {
                 .content(
                     mapper.writeValueAsString(
                         mapOf(
-                            "userId" to someUserDtoResponse.userId,
-                            "noteId" to noteDtoResponse.noteId,
+                            "user_id" to someUserDtoResponse.userId,
+                            "note_id" to noteDtoResponse.noteId,
                             "permission" to Permission.WRITER
                         )
                     )

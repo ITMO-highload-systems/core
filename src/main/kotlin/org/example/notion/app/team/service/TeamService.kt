@@ -20,6 +20,10 @@ class TeamService(
         }
         return teamMapper.toDto(team)
     }
+    fun getMyTeams(): List<TeamDto> {
+        //todo
+        return listOf()
+    }
 
     fun getByName(name: String): TeamDto {
         val team = teamRepository.findTeamByName(name).orElseThrow {
