@@ -18,4 +18,5 @@ minio:
   accessKey: minioadmin
   secretKey: minioadmin
   bucket: my-bucket
-
+server:
+  port: 8090

@@ -22,33 +22,4 @@ data class ParagraphUpdateRequest(
     val paragraphType: ParagraphType,
 
     val images: List<MultipartFile> = emptyList()
-) {
-    class Builder {
-        private var id: Long = 0
-        private var title: String = ""
-        private var text: String = ""
-        private var paragraphType: ParagraphType? = null
-        private var images: List<MultipartFile> = emptyList()
-
-        fun id(id: Long) = apply { this.id = id }
-        fun title(title: String) = apply { this.title = title }
-        fun text(text: String) = apply { this.text = text }
-        fun paragraphType(paragraphType: ParagraphType) = apply { this.paragraphType = paragraphType }
-        fun images(images: List<MultipartFile>) = apply { this.images = images }
-
-        fun build(): ParagraphUpdateRequest {
-            require(id > 0) { "ID must be greater than 0" }
-            require(title.length <= 255) { "Title must not exceed 255 characters" }
-            require(text.isNotBlank()) { "Text cannot be blank" }
-            require(paragraphType != null) { "Paragraph type must not be null" }
-
-            return ParagraphUpdateRequest(
-                id = id,
-                title = title,
-                text = text,
-                paragraphType = paragraphType!!,
-                images = images
-            )
-        }
-    }
-}
+)
