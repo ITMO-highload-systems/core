@@ -15,7 +15,7 @@ import org.example.notion.app.paragraph.repository.ParagraphRepository
 import org.example.notion.app.paragraph.service.ParagraphExecutionService
 import org.example.notion.app.paragraph.service.ParagraphService
 import org.example.notion.app.user.UserContext
-import org.example.notion.app.userPermission.TeamPermissionService
+import org.example.notion.app.userPermission.UserPermissionService
 import org.example.notion.app.userPermission.entity.Permission
 import org.example.notion.minio.service.MinioStorageService
 import org.example.notion.minio.util.calculateFileHash
@@ -37,7 +37,7 @@ class ParagraphServiceImpl(
     private val paragraphRepository: ParagraphRepository,
     private val sseService: SseService,
     private val paragraphMapper: ParagraphMapper,
-    private val userPermissionService: TeamPermissionService
+    private val userPermissionService: UserPermissionService
 ) : ParagraphService {
 
     companion object {
