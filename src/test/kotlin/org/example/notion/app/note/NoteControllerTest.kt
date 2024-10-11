@@ -73,12 +73,13 @@ class NoteControllerTest : AbstractIntegrationTest() {
 
     @Test
     fun `update note - user not exist - forbidden update`() {
+        val createNote = createNote(testUser.userId)
         mockMvc.perform(
             MockMvcRequestBuilders.put("/api/note").header("user-id", "12345").contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
                         mapOf(
-                            "noteId" to "12345", "owner" to "123", "title" to "title", "description" to "description"
+                            "note_id" to createNote.noteId, "owner" to "123", "title" to "title", "description" to "description"
                         )
                     )
                 )
@@ -86,17 +87,17 @@ class NoteControllerTest : AbstractIntegrationTest() {
     }
 
     @Test
-    fun `update note - note not exist - forbidden update`() {
+    fun `update note - note not exist - not found update`() {
         mockMvc.perform(
             MockMvcRequestBuilders.put("/api/note").header("user-id", testUser.userId)
                 .contentType(MediaType.APPLICATION_JSON).content(
                     mapper.writeValueAsString(
                         mapOf(
-                            "noteId" to "12345", "owner" to "123", "title" to "title", "description" to "description"
+                            "noteId" to "123", "owner" to "123", "title" to "title", "description" to "description"
                         )
                     )
                 )
-        ).andExpect(MockMvcResultMatchers.status().isForbidden)
+        ).andExpect(MockMvcResultMatchers.status().isNotFound)
     }
 
     @Test
@@ -268,11 +269,11 @@ class NoteControllerTest : AbstractIntegrationTest() {
     }
 
     @Test
-    fun `delete by note id - owner delete not existing note -forbidden delete`() {
+    fun `delete by note id - owner delete not existing note -not found delete`() {
         mockMvc.perform(
             MockMvcRequestBuilders.delete("/api/note/1234").header("user-id", testUser.userId)
                 .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(MockMvcResultMatchers.status().isForbidden)
+        ).andExpect(MockMvcResultMatchers.status().isNotFound)
     }
 
     @Test
@@ -285,7 +286,7 @@ class NoteControllerTest : AbstractIntegrationTest() {
     }
 
     @Test
-    fun `delete by note id - owner delete twice existing note - forbidden delete`() {
+    fun `delete by note id - owner delete twice existing note - not found delete`() {
         val note = createNote(testUser.userId)
         mockMvc.perform(
             MockMvcRequestBuilders.delete("/api/note/${note.noteId}").header("user-id", testUser.userId)
@@ -295,7 +296,7 @@ class NoteControllerTest : AbstractIntegrationTest() {
         mockMvc.perform(
             MockMvcRequestBuilders.delete("/api/note/${note.noteId}").header("user-id", testUser.userId)
                 .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(MockMvcResultMatchers.status().isForbidden)
+        ).andExpect(MockMvcResultMatchers.status().isNotFound)
     }
 
     @Test
@@ -319,12 +320,11 @@ class NoteControllerTest : AbstractIntegrationTest() {
     }
 
     @Test
-    fun `get note by id - note not exist - forbidden get`() {
-
+    fun `get note by id - note not exist - not found get`() {
         mockMvc.perform(
-            MockMvcRequestBuilders.get("/api/note/1234").header("user-id", testUser.userId)
+            MockMvcRequestBuilders.get("/api/note/123").header("user-id", testUser.userId)
                 .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(MockMvcResultMatchers.status().isForbidden)
+        ).andExpect(MockMvcResultMatchers.status().isNotFound)
 
     }
 
