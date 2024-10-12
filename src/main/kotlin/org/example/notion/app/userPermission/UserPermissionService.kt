@@ -29,7 +29,7 @@ class UserPermissionService(
             throw ForbiddenException("Can not change owner permissions")
         }
         requireOwnerPermission(userPermissionDto.noteId)
-        userService.requareUserExistence(userPermissionDto.userId)
+        userService.requireUserExistence(userPermissionDto.userId)
         userPermissionRepository.save(userPermissionMapper.toEntity(userPermissionDto))
     }
 

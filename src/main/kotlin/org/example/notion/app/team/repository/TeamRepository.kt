@@ -8,4 +8,5 @@ import java.util.*
 interface TeamRepository : CrudRepository<Team, Long> {
     fun findTeamByTeamId(id: Long): Optional<Team>
     fun findTeamByName(name: String): Optional<Team>
+    fun findByOwner(id: Long): List<Team>
 }

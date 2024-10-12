@@ -6,6 +6,7 @@ import org.example.notion.app.team.dto.TeamCreateDto
 import org.example.notion.app.team.dto.TeamDto
 import org.example.notion.app.team.mapper.TeamMapper
 import org.example.notion.app.team.repository.TeamRepository
+import org.example.notion.app.user.UserContext
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -20,9 +21,15 @@ class TeamService(
         }
         return teamMapper.toDto(team)
     }
+    fun requireTeamExistence(teamId: Long) {
+        teamRepository.findTeamByTeamId(teamId).orElseThrow {
+            EntityNotFoundException("Team with id $teamId not found")
+        }
+    }
+
     fun getMyTeams(): List<TeamDto> {
-        //todo
-        return listOf()
+        val teamList = UserContext.getCurrentUser().let { teamRepository.findByOwner(it) }
+        return teamList.map { teamMapper.toDto(it) }
     }
 
     fun getByName(name: String): TeamDto {
@@ -50,5 +57,13 @@ class TeamService(
         if (teamRepository.findTeamByName(teamDto.name).isPresent)
             throw EntityAlreadyExistException("Team with name ${teamDto.name} already exists")
         return teamMapper.toDto(teamRepository.save(teamMapper.toEntity(teamDto)))
+    }
+
+    fun isOwner(teamId: Long, userId: Long): Boolean {
+        val result = teamRepository.findTeamByTeamId(teamId)
+        if (result.isEmpty) {
+            throw EntityNotFoundException("Team with id $teamId does not exist")
+        }
+        return result.get().owner == userId
     }
 }

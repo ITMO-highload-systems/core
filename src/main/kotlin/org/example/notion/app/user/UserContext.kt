@@ -1,13 +1,13 @@
 package org.example.notion.app.user
 
 object UserContext {
-    private val currentUser: ThreadLocal<Long?> = ThreadLocal()
+    private val currentUser: ThreadLocal<Long> = ThreadLocal()
 
-    fun setCurrentUser(user: Long?) {
+    fun setCurrentUser(user: Long) {
         currentUser.set(user)
     }
 
-    fun getCurrentUser(): Long? {
+    fun getCurrentUser(): Long {
         return currentUser.get()
     }
 

@@ -6,7 +6,7 @@ import org.springframework.data.relational.core.mapping.Table
 @Table(name = "team")
 data class Team(
     @Id
-    val teamId: Int,
+    val teamId: Long,
     val name: String,
-    val owner: Int
+    val owner: Long
 )

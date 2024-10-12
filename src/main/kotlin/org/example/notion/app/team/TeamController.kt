@@ -23,8 +23,7 @@ class TeamController(
     @GetMapping("my")
     fun getMyTeams(@RequestHeader("user-id") userId: Long): ResponseEntity<List<TeamDto>> {
         UserContext.setCurrentUser(userId)
-        //todo
-        return ResponseEntity.ok().build()
+        return ResponseEntity.ok().body(teamService.getMyTeams())
     }
 
     @GetMapping("name/{name}")

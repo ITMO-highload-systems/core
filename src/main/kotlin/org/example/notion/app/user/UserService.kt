@@ -20,7 +20,7 @@ class UserService(
             .orElseThrow { throw EntityNotFoundException("User with id $userId not found") }
         return userMapper.toDto(user)
     }
-    fun requareUserExistence(userId: Long) {
+    fun requireUserExistence(userId: Long) {
         userRepository.findById(userId)
             .orElseThrow { throw EntityNotFoundException("User with id $userId not found") }
     }
@@ -63,8 +63,12 @@ class UserService(
         return userMapper.toDto(saved)
     }
 
-    fun getCurrentUser(): Long =
-        UserContext.getCurrentUser() ?: throw EntityNotFoundException("User not found")
+    fun getCurrentUser(): Long {
+        val userId = UserContext.getCurrentUser()
+        userRepository.findById(userId)
+            .orElseThrow { throw EntityNotFoundException("User with id $userId not found") }
+        return userId
+    }
 
 
 }
