@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*
 import java.util.concurrent.CompletableFuture
 
 @RestController
-@RequestMapping("api/paragraph")
+@RequestMapping("api/v1/paragraph")
 class ParagraphController(
     private val paragraphService: ParagraphService,
     private val sseService: SseService

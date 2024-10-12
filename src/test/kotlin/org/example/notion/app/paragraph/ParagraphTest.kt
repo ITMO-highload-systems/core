@@ -55,7 +55,7 @@ class ParagraphTest : AbstractIntegrationTest() {
         val paragraphGetResponseActual = `get paragraph`(paragraphGetResponseExpected.id)
         Assertions.assertEquals(paragraphGetResponseExpected, paragraphGetResponseActual)
         mockMvc.perform(
-            MockMvcRequestBuilders.delete("/api/paragraph/delete/${paragraphGetResponseActual.id}")
+            MockMvcRequestBuilders.delete("/api/v1/paragraph/delete/${paragraphGetResponseActual.id}")
                 .header("user-id", testUser.userId)
         )
         Assertions.assertThrows(Exception::class.java) { `get paragraph`(paragraphGetResponseActual.id) }
@@ -65,7 +65,7 @@ class ParagraphTest : AbstractIntegrationTest() {
     fun `execute paragraph - valid paragraph id - success executed`() {
         val paragraph = `create paragraph`(ParagraphType.PYTHON_PARAGRAPH, "print('Hello, World!')")
         val mvcResult = mockMvc.perform(
-            MockMvcRequestBuilders.get("/api/paragraph/execute/${paragraph.id}")
+            MockMvcRequestBuilders.get("/api/v1/paragraph/execute/${paragraph.id}")
                 .header("user-id", testUser.userId)
         )
             .andExpect(MockMvcResultMatchers.request().asyncStarted())  // Убедиться, что запрос асинхронный
@@ -88,7 +88,7 @@ class ParagraphTest : AbstractIntegrationTest() {
         val paragraph = `create paragraph`(ParagraphType.PYTHON_PARAGRAPH, pythonCode)
 
         val mvcResult = mockMvc.perform(
-            MockMvcRequestBuilders.get("/api/paragraph/execute/${paragraph.id}")
+            MockMvcRequestBuilders.get("/api/v1/paragraph/execute/${paragraph.id}")
                 .header("user-id", testUser.userId)
         )
             .andExpect(MockMvcResultMatchers.request().asyncStarted())  // Убедиться, что запрос асинхронный
@@ -115,7 +115,7 @@ class ParagraphTest : AbstractIntegrationTest() {
         )
 
         mockMvc.perform(
-            MockMvcRequestBuilders.put("/api/paragraph/update")
+            MockMvcRequestBuilders.put("/api/v1/paragraph/update")
                 .param("id", paragraphUpdateRequest.id.toString())
                 .param("title", paragraphUpdateRequest.title)
                 .param("text", paragraphUpdateRequest.text)
@@ -154,7 +154,7 @@ class ParagraphTest : AbstractIntegrationTest() {
         ) // paragraph1 должен стоять перед paragraph2
 
         mockMvc.perform(
-            MockMvcRequestBuilders.post("/api/paragraph/position")
+            MockMvcRequestBuilders.post("/api/v1/paragraph/position")
                 .header("user-id", testUser.userId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(changeParagraphPositionRequest))
@@ -200,7 +200,7 @@ class ParagraphTest : AbstractIntegrationTest() {
         ) // paragraph1 должен стоять перед paragraph2
 
         mockMvc.perform(
-            MockMvcRequestBuilders.post("/api/paragraph/position")
+            MockMvcRequestBuilders.post("/api/v1/paragraph/position")
                 .header("user-id", testUser.userId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(changeParagraphPositionRequest))
@@ -230,7 +230,7 @@ class ParagraphTest : AbstractIntegrationTest() {
         for (i in 1..52) `create paragraph`()
 
         val result0 = mockMvc.perform(
-            MockMvcRequestBuilders.get("/api/paragraph/all")
+            MockMvcRequestBuilders.get("/api/v1/paragraph/all")
                 .param("page", "0")
         )
             .andExpect(status().isOk)
@@ -240,7 +240,7 @@ class ParagraphTest : AbstractIntegrationTest() {
         Assertions.assertEquals(50, paragraphs.size)
 
         val result1 = mockMvc.perform(
-            MockMvcRequestBuilders.get("/api/paragraph/all")
+            MockMvcRequestBuilders.get("/api/v1/paragraph/all")
                 .param("page", "1")
                 .param("pageSize", "4")
         )
@@ -254,7 +254,7 @@ class ParagraphTest : AbstractIntegrationTest() {
 
     private fun `get paragraph`(paragraphId: Long): ParagraphGetResponse {
         mockMvc.perform(
-            MockMvcRequestBuilders.get("/api/paragraph/get/$paragraphId")
+            MockMvcRequestBuilders.get("/api/v1/paragraph/get/$paragraphId")
                 .header("user-id", testUser.userId)
         ).andReturn().response.contentAsString
             .let { return mapper.readValue(it, ParagraphGetResponse::class.java) }
@@ -282,7 +282,7 @@ class ParagraphTest : AbstractIntegrationTest() {
         )
 
         val result = mockMvc.perform(
-            MockMvcRequestBuilders.multipart("/api/paragraph/create")
+            MockMvcRequestBuilders.multipart("/api/v1/paragraph/create")
                 .file(image)  // Передача файла
                 .param("noteId", paragraphCreateRequest.noteId.toString())
                 .param("title", paragraphCreateRequest.title)

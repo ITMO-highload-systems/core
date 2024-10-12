@@ -117,7 +117,7 @@ abstract class AbstractIntegrationTest {
     protected fun createNote(userId: Long): NoteDto {
         val noteString = mockMvc.perform(
             MockMvcRequestBuilders
-                .post("/api/note")
+                .post("/api/v1/note")
                 .header("user-id", userId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(mapOf("title" to "title", "description" to "description")))
@@ -130,7 +130,7 @@ abstract class AbstractIntegrationTest {
     protected fun createUser(): UserResponseDto {
         val userString = mockMvc.perform(
             MockMvcRequestBuilders
-                .post("/api/user/register")
+                .post("/api/v1/user/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
@@ -153,7 +153,7 @@ abstract class AbstractIntegrationTest {
     ) {
         mockMvc.perform(
             MockMvcRequestBuilders
-                .post("/api/user/permissions")
+                .post("/api/v1/user/permissions")
                 .header("user-id", ownerId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
@@ -170,7 +170,7 @@ abstract class AbstractIntegrationTest {
 
     protected fun getNoteById(userId: Long, noteId: Long): NoteDto {
         val contentAsString = mockMvc.perform(
-            MockMvcRequestBuilders.get("/api/note/$noteId").header("user-id", userId)
+            MockMvcRequestBuilders.get("/api/v1/note/$noteId").header("user-id", userId)
                 .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(MockMvcResultMatchers.status().isOk).andReturn().response.contentAsString
         return mapper.readValue(contentAsString, NoteDto::class.java)

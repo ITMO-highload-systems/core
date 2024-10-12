@@ -11,8 +11,6 @@ spring:
         username: ${DATABASE_USERNAME:postgres}
         password: ${DATABASE_PASSWORD:postgres}
         driver-class-name: org.postgresql.Driver
-    jpa:
-        open-in-view: true
 
     flyway:
         enabled: true

@@ -10,7 +10,7 @@ import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
 
 @RestController
-@RequestMapping("api/note")
+@RequestMapping("api/v1/note")
 class NoteController(
     private val noteService: NoteService
 ) {

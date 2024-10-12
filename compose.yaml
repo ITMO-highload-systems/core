@@ -1,7 +1,7 @@
 version: '3.7'
 
 x-minio-common: &minio-common
-  image: quay.io/minio/minio:latest
+  image: quay.io/minio/minio:RELEASE.2024-09-22T00-33-43Z
   command: server --console-address ":9090" ./mnt/data
   container_name: "minio"
   environment:
@@ -31,7 +31,7 @@ services:
         target: /mnt/data
 
   postgres:
-    image: postgres:latest
+    image: postgres:16-alpine
     container_name: "postgres"
     environment:
       POSTGRES_USER: postgres

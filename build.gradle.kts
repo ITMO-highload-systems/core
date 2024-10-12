@@ -1,7 +1,6 @@
 plugins {
-    kotlin("jvm") version "1.9.25"
+    kotlin("jvm") version "1.9.10"
     kotlin("plugin.spring") version "1.9.25"
-    kotlin("plugin.jpa") version "1.9.25"
     kotlin("kapt") version "1.9.10"
     id("org.springframework.boot") version "3.3.3"
     id("io.spring.dependency-management") version "1.1.6"
@@ -24,7 +23,6 @@ repositories {
 val minioVersion = "8.5.11"
 val testContainersVersion = "1.20.1"
 val mapstructVersion = "1.6.0"
-val opentelemetryVersion = "1.42.1"
 val flyWayVersion = "10.10.0"
 val postgresqlVersion = "42.7.3"
 val jacksonVersion = "2.17.2"
@@ -37,18 +35,13 @@ dependencies {
     implementation("org.springframework.data:spring-data-jdbc")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
     implementation("org.flywaydb:flyway-core:$flyWayVersion")
-    implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinJetBrainsVersion")
     implementation("io.minio:minio:$minioVersion")
-    implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure:$opentelemetryVersion")
     implementation("org.mapstruct:mapstruct:$mapstructVersion")
 
 
     kapt("org.mapstruct:mapstruct-processor:$mapstructVersion")
     // Optional configuration processor
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
-
-    // Development dependencies
-    developmentOnly("org.springframework.boot:spring-boot-docker-compose")
 
     // Runtime dependencies
     runtimeOnly("org.postgresql:postgresql:$postgresqlVersion")

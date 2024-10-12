@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
 @RestController
-@RequestMapping("api/team")
+@RequestMapping("api/v1/team")
 class TeamController(
     private val teamService: TeamService
 ) {

@@ -37,7 +37,7 @@ class UserPermissionTest : AbstractIntegrationTest() {
 
         mockMvc.perform(
             MockMvcRequestBuilders
-                .post("/api/user/permissions")
+                .post("/api/v1/user/permissions")
                 .header("user-id", userDtoResponse.userId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
@@ -78,7 +78,7 @@ class UserPermissionTest : AbstractIntegrationTest() {
 
         mockMvc.perform(
             MockMvcRequestBuilders
-                .post("/api/user/permissions")
+                .post("/api/v1/user/permissions")
                 .header("user-id", someUserDtoResponse2.userId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
@@ -108,7 +108,7 @@ class UserPermissionTest : AbstractIntegrationTest() {
 
         mockMvc.perform(
             MockMvcRequestBuilders
-                .delete("/api/user/permissions")
+                .delete("/api/v1/user/permissions")
                 .header("user-id", ownerDtoResponse.userId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
@@ -136,7 +136,7 @@ class UserPermissionTest : AbstractIntegrationTest() {
 
         mockMvc.perform(
             MockMvcRequestBuilders
-                .delete("/api/user/permissions")
+                .delete("/api/v1/user/permissions")
                 .header("user-id", ownerDtoResponse.userId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
@@ -151,7 +151,7 @@ class UserPermissionTest : AbstractIntegrationTest() {
 
         mockMvc.perform(
             MockMvcRequestBuilders
-                .delete("/api/user/permissions")
+                .delete("/api/v1/user/permissions")
                 .header("user-id", ownerDtoResponse.userId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
@@ -175,7 +175,7 @@ class UserPermissionTest : AbstractIntegrationTest() {
 
         mockMvc.perform(
             MockMvcRequestBuilders
-                .delete("/api/user/permissions")
+                .delete("/api/v1/user/permissions")
                 .header("user-id", ownerDtoResponse.userId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
@@ -202,7 +202,7 @@ class UserPermissionTest : AbstractIntegrationTest() {
 
         mockMvc.perform(
             MockMvcRequestBuilders
-                .delete("/api/user/permissions")
+                .delete("/api/v1/user/permissions")
                 .header("user-id", someUserDtoResponse2.userId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
@@ -232,7 +232,7 @@ class UserPermissionTest : AbstractIntegrationTest() {
 
         mockMvc.perform(
             MockMvcRequestBuilders
-                .put("/api/user/permissions")
+                .put("/api/v1/user/permissions")
                 .header("user-id", ownerDtoResponse.userId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
@@ -267,7 +267,7 @@ class UserPermissionTest : AbstractIntegrationTest() {
 
         mockMvc.perform(
             MockMvcRequestBuilders
-                .put("/api/user/permissions")
+                .put("/api/v1/user/permissions")
                 .header("user-id", someUserDtoResponse2.userId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
@@ -295,7 +295,7 @@ class UserPermissionTest : AbstractIntegrationTest() {
 
         mockMvc.perform(
             MockMvcRequestBuilders
-                .get("/api/user/permissions/{noteId}", noteDtoResponse.noteId)
+                .get("/api/v1/user/permissions/{noteId}", noteDtoResponse.noteId)
                 .header("user-id", someUserDtoResponse2.userId) // Ensure userId is in string format
                 .contentType(MediaType.APPLICATION_JSON)
         )
@@ -313,7 +313,7 @@ class UserPermissionTest : AbstractIntegrationTest() {
 
         mockMvc.perform(
             MockMvcRequestBuilders
-                .get("/api/user/permissions/{noteId}", noteDtoResponse.noteId)
+                .get("/api/v1/user/permissions/{noteId}", noteDtoResponse.noteId)
                 .header("user-id", someUserDtoResponse.userId) // Ensure userId is in string format
                 .contentType(MediaType.APPLICATION_JSON)
         )
@@ -323,7 +323,7 @@ class UserPermissionTest : AbstractIntegrationTest() {
     private fun getNotePermission(noteId: Long, userId: Long): List<NoteUserPermissionDto> {
         val contentAsString = mockMvc.perform(
             MockMvcRequestBuilders
-                .get("/api/user/permissions/{noteId}", noteId)
+                .get("/api/v1/user/permissions/{noteId}", noteId)
                 .header("user-id", userId.toString()) // Ensure userId is in string format
                 .contentType(MediaType.APPLICATION_JSON)
         )
