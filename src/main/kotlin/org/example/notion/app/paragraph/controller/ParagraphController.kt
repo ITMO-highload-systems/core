@@ -30,7 +30,7 @@ class ParagraphController(
     fun createParagraph(
         @RequestHeader("user-id") userId: Long,
         @Valid @ModelAttribute paragraphCreateRequest: ParagraphCreateRequest
-    ) : ResponseEntity<ParagraphGetResponse> {
+    ): ResponseEntity<ParagraphGetResponse> {
         UserContext.setCurrentUser(userId)
         return ResponseEntity.ok(paragraphService.createParagraph(paragraphCreateRequest))
     }

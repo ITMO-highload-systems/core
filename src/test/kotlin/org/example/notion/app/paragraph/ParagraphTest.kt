@@ -15,6 +15,8 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.mock.web.MockMultipartFile
@@ -53,12 +55,31 @@ class ParagraphTest : AbstractIntegrationTest() {
     fun `delete paragraph - valid paragraph id - success deleted`() {
         val paragraphGetResponseExpected = `create paragraph`()
         val paragraphGetResponseActual = `get paragraph`(paragraphGetResponseExpected.id)
+        val image = imageRepository.findByParagraphId(paragraphGetResponseActual.id).first()
         Assertions.assertEquals(paragraphGetResponseExpected, paragraphGetResponseActual)
         mockMvc.perform(
             MockMvcRequestBuilders.delete("/api/v1/paragraph/delete/${paragraphGetResponseActual.id}")
                 .header("user-id", testUser.userId)
         )
         Assertions.assertThrows(Exception::class.java) { `get paragraph`(paragraphGetResponseActual.id) }
+        Assertions.assertNull(imageRepository.findByImageHash(image.imageHash))
+    }
+
+    @Test
+    fun `delete paragraph - 2 paragraphs with same images - images not deleted`() {
+        val paragraphGetResponse1 = `create paragraph`()
+        val paragraphGetResponse2 = `create paragraph`()
+
+        val image1 = imageRepository.findByParagraphId(paragraphGetResponse1.id).first()
+        val image2 = imageRepository.findByParagraphId(paragraphGetResponse2.id).first()
+
+        Assertions.assertEquals(image1.imageHash, image2.imageHash)
+
+        mockMvc.perform(
+            MockMvcRequestBuilders.delete("/api/v1/paragraph/delete/${paragraphGetResponse1.id}")
+                .header("user-id", testUser.userId)
+        )
+        Assertions.assertNotNull(imageRepository.findByImageHash(image1.imageHash))
     }
 
     @Test
@@ -72,7 +93,7 @@ class ParagraphTest : AbstractIntegrationTest() {
             .andReturn()
 
         mockMvc.perform(MockMvcRequestBuilders.asyncDispatch(mvcResult))
-            .andExpect(MockMvcResultMatchers.status().isOk)
+            .andExpect(status().isOk)
             .andExpect(MockMvcResultMatchers.content().string("Hello, World!\n"))
     }
 
@@ -96,7 +117,7 @@ class ParagraphTest : AbstractIntegrationTest() {
 
         // Ожидание завершения асинхронного выполнения
         mockMvc.perform(MockMvcRequestBuilders.asyncDispatch(mvcResult))
-            .andExpect(MockMvcResultMatchers.status().isOk)  // Проверяем статус
+            .andExpect(status().isOk)  // Проверяем статус
             .andExpect(MockMvcResultMatchers.content().string("2.0\n"))  // Ожидаем результат
     }
 
@@ -124,7 +145,7 @@ class ParagraphTest : AbstractIntegrationTest() {
                 .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
         )
 
-            .andExpect(MockMvcResultMatchers.status().isOk)
+            .andExpect(status().isOk)
         val paragraphGetResponseUpdated = `get paragraph`(paragraphGetResponseActual.id)
         Assertions.assertEquals("Updated Title", paragraphGetResponseUpdated.title)
         Assertions.assertEquals("print('Now I am updated!')", paragraphGetResponseUpdated.text)
@@ -226,29 +247,37 @@ class ParagraphTest : AbstractIntegrationTest() {
     }
 
     @Test
-    fun `getAllParagraphs - valid data - success get all paragraphs`() {
+    fun `change position - same ids - bad request`() {
+        val changeParagraphPositionRequest =
+            ChangeParagraphPositionRequest(1L, 1L)
+        mockMvc.perform(
+            MockMvcRequestBuilders.post("/api/v1/paragraph/position")
+                .header("user-id", testUser.userId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(changeParagraphPositionRequest))
+        ).andExpect(status().isBadRequest)
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+        // pageNumber, pageSize, expectedSize
+        "0, 50, 50",
+        "0, 53, 50",
+        "1, 27, 25",
+    )
+    fun `getAllParagraphs - valid data - success get all paragraphs`(pageNumber: Long, pageSize: Long, expectedSize: Int) {
         for (i in 1..52) `create paragraph`()
 
         val result0 = mockMvc.perform(
             MockMvcRequestBuilders.get("/api/v1/paragraph/all")
-                .param("page", "0")
+                .param("page", pageNumber.toString())
+                .param("pageSize", pageSize.toString())
         )
             .andExpect(status().isOk)
             .andReturn().response.contentAsString
 
         val paragraphs = mapper.readValue(result0, Array<ParagraphGetResponse>::class.java)
-        Assertions.assertEquals(50, paragraphs.size)
-
-        val result1 = mockMvc.perform(
-            MockMvcRequestBuilders.get("/api/v1/paragraph/all")
-                .param("page", "1")
-                .param("pageSize", "4")
-        )
-            .andExpect(status().isOk)
-            .andReturn().response.contentAsString
-
-        val paragraphs1 = mapper.readValue(result1, Array<ParagraphGetResponse>::class.java)
-        Assertions.assertEquals(4, paragraphs1.size)
+        Assertions.assertEquals(expectedSize, paragraphs.size)
     }
 
 
@@ -291,7 +320,7 @@ class ParagraphTest : AbstractIntegrationTest() {
                 .header("user-id", testUser.userId)
                 .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
         )
-            .andExpect(MockMvcResultMatchers.status().isOk)
+            .andExpect(status().isOk)
             .andExpect(MockMvcResultMatchers.jsonPath("$.note_id").value(paragraphCreateRequest.noteId))
             .andExpect(MockMvcResultMatchers.jsonPath("$.title").value(paragraphCreateRequest.title))
             .andExpect(
