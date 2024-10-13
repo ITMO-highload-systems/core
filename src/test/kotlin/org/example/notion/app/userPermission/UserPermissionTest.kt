@@ -19,7 +19,7 @@ class UserPermissionTest : AbstractIntegrationTest() {
 
     //create
     @Test
-    fun `fnot found create permission if no user and note`() {
+    fun `not found create permission if no user and note`() {
         mockMvc.perform(
             MockMvcRequestBuilders
                 .post("/api/user/permissions")

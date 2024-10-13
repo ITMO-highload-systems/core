@@ -10,15 +10,15 @@ import java.io.Serializable
 
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 data class TeamDto(
-    @Min(1)
-    @NotNull
+    @field:Min(1)
+    @field:NotNull
     val teamId: Long,
 
-    @NotBlank
-    @Size(max = 255)
+    @field:NotBlank
+    @field:Size(max = 255)
     val name: String,
 
-    @Min(1)
-    @NotNull
+    @field:Min(1)
+    @field:NotNull
     val owner: Long
 ) : Serializable
