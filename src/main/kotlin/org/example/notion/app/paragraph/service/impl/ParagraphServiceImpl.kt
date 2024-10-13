@@ -1,6 +1,7 @@
 package org.example.notion.app.paragraph.service.impl
 
 import org.example.notion.app.exceptions.EntityNotFoundException
+import org.example.notion.app.exceptions.IdSimilarException
 import org.example.notion.app.exceptions.ParagraphErrorTypeException
 import org.example.notion.app.paragraph.dto.ChangeParagraphPositionRequest
 import org.example.notion.app.paragraph.dto.ParagraphCreateRequest
@@ -183,6 +184,10 @@ class ParagraphServiceImpl(
 
     @Transactional
     override fun changeParagraphPosition(changeParagraphPositionRequest: ChangeParagraphPositionRequest) {
+        require (changeParagraphPositionRequest.paragraphId != changeParagraphPositionRequest.nextParagraphId) {
+            logger.error("Paragraph id and next paragraph id must be different")
+            throw IdSimilarException("Paragraph id and next paragraph id must be different")
+        }
         val paragraph = paragraphRepository.findByParagraphId(changeParagraphPositionRequest.paragraphId)
         require(paragraph != null) {
             logger.error(PARAGRAPH_NOT_FOUND.format(changeParagraphPositionRequest.paragraphId))
@@ -192,7 +197,7 @@ class ParagraphServiceImpl(
         userPermissionService.requireUserPermission(paragraph.noteId, Permission.WRITER)
 
         if (changeParagraphPositionRequest.nextParagraphId != null) {
-            val nextParagraph = paragraphRepository.findByParagraphId(changeParagraphPositionRequest.nextParagraphId)
+            val nextParagraph = paragraphRepository.findByParagraphIdAndNoteId(changeParagraphPositionRequest.nextParagraphId, paragraph.noteId)
             require(nextParagraph != null) {
                 logger.error(PARAGRAPH_NOT_FOUND.format(changeParagraphPositionRequest.nextParagraphId))
                 throw EntityNotFoundException(PARAGRAPH_NOT_FOUND.format(changeParagraphPositionRequest.nextParagraphId))
@@ -236,8 +241,10 @@ class ParagraphServiceImpl(
     }
 
     private fun deleteImage(imageRecord: ImageRecord) {
-        minioStorageService.deleteImage(imageRecord.imageHash)
         imageRepository.deleteById(imageRecord.id)
+        if (imageRepository.findByImageHash(imageRecord.imageHash) == null) {
+            minioStorageService.deleteImage(imageRecord.imageHash)
+        }
     }
 
     private fun updateParagraphEntity(
