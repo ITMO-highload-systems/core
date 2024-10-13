@@ -1,11 +1,12 @@
 package org.example.notion.app.team
 
-import jakarta.validation.Valid
 import org.example.notion.app.team.dto.TeamCreateDto
 import org.example.notion.app.team.dto.TeamDto
 import org.example.notion.app.team.service.TeamService
 import org.example.notion.app.user.UserContext
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
 
 @RestController
@@ -26,21 +27,20 @@ class TeamController(
         return ResponseEntity.ok().body(teamService.getMyTeams())
     }
 
-    @GetMapping("name/{name}")
-    fun getByName(@PathVariable("name") name: String,  @RequestHeader("user-id") userId: Long): ResponseEntity<TeamDto> {
-        UserContext.setCurrentUser(userId)
-        return ResponseEntity.ok().body(teamService.getByName(name))
-    }
-
     @PostMapping
-    fun createTeam(@Valid @RequestBody teamCreateDto: TeamCreateDto, @RequestHeader("user-id") userId: Long): ResponseEntity<Unit> {
+    fun createTeam(
+        @Validated @RequestBody teamCreateDto: TeamCreateDto,
+        @RequestHeader("user-id") userId: Long
+    ): ResponseEntity<TeamDto> {
         UserContext.setCurrentUser(userId)
-        teamService.createTeam(teamCreateDto)
-        return ResponseEntity.ok().build()
+        return ResponseEntity<TeamDto>(teamService.createTeam(teamCreateDto), HttpStatus.CREATED)
     }
 
     @PutMapping
-    fun updateTeam(@Valid @RequestBody teamDto: TeamDto,  @RequestHeader("user-id") userId: Long): ResponseEntity<TeamDto> {
+    fun updateTeam(
+        @Validated @RequestBody teamDto: TeamDto,
+        @RequestHeader("user-id") userId: Long
+    ): ResponseEntity<TeamDto> {
         UserContext.setCurrentUser(userId)
         return ResponseEntity.ok().body(teamService.update(teamDto))
     }

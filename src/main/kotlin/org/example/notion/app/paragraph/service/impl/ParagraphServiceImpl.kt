@@ -14,11 +14,11 @@ import org.example.notion.app.paragraph.repository.ImageRepository
 import org.example.notion.app.paragraph.repository.ParagraphRepository
 import org.example.notion.app.paragraph.service.ParagraphExecutionService
 import org.example.notion.app.paragraph.service.ParagraphService
-import org.example.notion.app.user.UserContext
-import org.example.notion.app.userPermission.UserPermissionService
+import org.example.notion.app.user.UserService
 import org.example.notion.app.userPermission.entity.Permission
 import org.example.notion.minio.service.MinioStorageService
 import org.example.notion.minio.util.calculateFileHash
+import org.example.notion.permission.PermissionService
 import org.example.notion.sse.Message
 import org.example.notion.sse.SseService
 import org.example.notion.sse.Type
@@ -37,7 +37,8 @@ class ParagraphServiceImpl(
     private val paragraphRepository: ParagraphRepository,
     private val sseService: SseService,
     private val paragraphMapper: ParagraphMapper,
-    private val userPermissionService: UserPermissionService
+    private val permissionService: PermissionService,
+    private val userService: UserService
 ) : ParagraphService {
 
     companion object {
@@ -54,7 +55,7 @@ class ParagraphServiceImpl(
 
     override fun createParagraph(paragraphCreateRequest: ParagraphCreateRequest): ParagraphGetResponse {
         // получаем параграф который стоял на месте нового параграфа
-        userPermissionService.requireUserPermission(paragraphCreateRequest.noteId, Permission.WRITER)
+        permissionService.requireUserPermission(paragraphCreateRequest.noteId, Permission.WRITER)
 
         val paragraph = if (paragraphCreateRequest.nextParagraphId != null) {
             paragraphRepository.findByNextParagraphId(paragraphCreateRequest.nextParagraphId)
@@ -65,7 +66,7 @@ class ParagraphServiceImpl(
 
         // сохраняем новый параграф
         val paragraphEntity =
-            paragraphRepository.save(paragraphMapper.toEntity(paragraphCreateRequest, UserContext.getCurrentUser()!!))
+            paragraphRepository.save(paragraphMapper.toEntity(paragraphCreateRequest, userService.getCurrentUser()))
         paragraphCreateRequest.images.forEach { uploadImage(it, paragraphEntity.id!!) }
 
         // обновляем значения параграфа который стоял на месте нового параграфа, чтобы он ссылался на текущий параграф
@@ -88,7 +89,7 @@ class ParagraphServiceImpl(
             throw EntityNotFoundException(PARAGRAPH_NOT_FOUND.format(paragraphId))
         }
 
-        userPermissionService.requireUserPermission(paragraph.noteId, Permission.WRITER)
+        permissionService.requireUserPermission(paragraph.noteId, Permission.WRITER)
 
         val imageRecords = imageRepository.findByParagraphId(paragraphId)
         imageRecords.forEach {
@@ -114,7 +115,7 @@ class ParagraphServiceImpl(
             throw EntityNotFoundException(PARAGRAPH_NOT_FOUND.format(paragraphId))
         }
 
-        userPermissionService.requireUserPermission(paragraph.noteId, Permission.READER)
+        permissionService.requireUserPermission(paragraph.noteId, Permission.READER)
         return paragraphToResponse(paragraph)
     }
 
@@ -125,7 +126,7 @@ class ParagraphServiceImpl(
                 throw IllegalArgumentException(PARAGRAPH_NOT_FOUND.format(paragraphId))
             }
 
-        userPermissionService.requireUserPermission(paragraph.noteId, Permission.EXECUTOR)
+        permissionService.requireUserPermission(paragraph.noteId, Permission.EXECUTOR)
 
         require(paragraph.paragraphType == ParagraphType.PYTHON_PARAGRAPH) {
             logger.error(PARAGRAPH_TYPE_NOT_PYTHON.format(paragraphId))
@@ -147,7 +148,7 @@ class ParagraphServiceImpl(
             logger.error(PARAGRAPH_NOT_FOUND.format(paragraphUpdateRequest.id))
             throw EntityNotFoundException(PARAGRAPH_NOT_FOUND.format(paragraphUpdateRequest.id))
         }
-        userPermissionService.requireUserPermission(paragraph.noteId, Permission.WRITER)
+        permissionService.requireUserPermission(paragraph.noteId, Permission.WRITER)
 
         val imagesBeforeUpdate =
             imageRepository.findByParagraphId(paragraphUpdateRequest.id).map { it.imageHash }.toSet()
@@ -169,7 +170,7 @@ class ParagraphServiceImpl(
             updateParagraphEntity(
                 paragraph,
                 paragraphUpdateRequest,
-                UserContext.getCurrentUser()!!
+                userService.getCurrentUser()
             )
         )
         sseService.sendMessage(
@@ -187,7 +188,7 @@ class ParagraphServiceImpl(
             throw EntityNotFoundException(PARAGRAPH_NOT_FOUND.format(changeParagraphPositionRequest.paragraphId))
         }
 
-        userPermissionService.requireUserPermission(paragraph.noteId, Permission.WRITER)
+        permissionService.requireUserPermission(paragraph.noteId, Permission.WRITER)
 
         if (changeParagraphPositionRequest.nextParagraphId != null) {
             val nextParagraph = paragraphRepository.findByParagraphId(changeParagraphPositionRequest.nextParagraphId)

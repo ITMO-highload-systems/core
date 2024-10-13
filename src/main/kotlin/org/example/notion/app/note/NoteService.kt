@@ -7,18 +7,18 @@ import org.example.notion.app.note.dto.NoteUpdateDto
 import org.example.notion.app.note.mapper.NoteMapper
 import org.example.notion.app.user.UserRepository
 import org.example.notion.app.user.UserService
-import org.example.notion.app.userPermission.UserPermissionService
 import org.example.notion.app.userPermission.entity.Permission
+import org.example.notion.permission.PermissionService
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
 class NoteService(
     private val noteRepository: NoteRepository,
-    private val userPermissionService: UserPermissionService,
     private val noteMapper: NoteMapper,
     private val userRepository: UserRepository,
-    private val userService: UserService
+    private val userService: UserService,
+    private val permissionService: PermissionService
 ) {
 
     @Transactional
@@ -36,9 +36,9 @@ class NoteService(
 
     @Transactional
     fun getByNoteId(noteId: Long): NoteDto {
-        userPermissionService.requireUserPermission(noteId, Permission.READER)
-        val note = noteRepository.findByNoteId(noteId)
-            .orElseThrow { EntityNotFoundException("Note with id $noteId not found") }
+        permissionService.requireUserPermission(noteId, Permission.READER)
+        val note =
+            noteRepository.findByNoteId(noteId) ?: throw EntityNotFoundException("Note with id $noteId not found")
 
         return noteMapper.toDto(note)
     }
@@ -55,18 +55,18 @@ class NoteService(
 
     @Transactional
     fun deleteByNoteId(noteId: Long) {
-        userPermissionService.requireOwnerPermission(noteId)
+        permissionService.requireOwnerPermission(noteId)
         noteRepository.deleteByNoteId(noteId)
     }
 
     @Transactional
     fun update(noteDto: NoteUpdateDto): NoteDto {
-        userPermissionService.requireUserPermission(noteDto.noteId, Permission.EXECUTOR)
+        permissionService.requireUserPermission(noteDto.noteId, Permission.EXECUTOR)
         val note = noteRepository.findByNoteId(noteDto.noteId)
-            .orElseThrow { EntityNotFoundException("Note with id ${noteDto.noteId} not found") }
+            ?: throw EntityNotFoundException("Note with id ${noteDto.noteId} not found")
 
         if (noteDto.owner != note.owner) {
-            userPermissionService.requireOwnerPermission(noteDto.noteId)
+            permissionService.requireOwnerPermission(noteDto.noteId)
             if (userRepository.findById(noteDto.owner).isEmpty) {
                 throw EntityNotFoundException("User with id ${noteDto.owner} does not exist")
             }
@@ -80,11 +80,10 @@ class NoteService(
     }
 
     fun isOwner(noteId: Long, userId: Long): Boolean {
-        val result = noteRepository.findByNoteId(noteId)
-        if (result.isEmpty) {
+        val result = noteRepository.findByNoteId(noteId) ?:
             throw EntityNotFoundException("Note with id $noteId does not exist")
-        }
-        return result.get().owner == userId
+
+        return result.owner == userId
     }
 }
 

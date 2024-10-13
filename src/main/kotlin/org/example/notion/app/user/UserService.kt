@@ -26,19 +26,15 @@ class UserService(
     }
 
     fun getByEmail(email: String): UserResponseDto {
-        val user = userRepository.findByEmail(email)
-            .orElseThrow { throw EntityNotFoundException("User with email $email not found") }
+        val user =
+            userRepository.findByEmail(email) ?: throw EntityNotFoundException("User with email $email not found")
         return userMapper.toDto(user)
     }
 
     @Transactional
     fun update(userCreateDto: UserCreateDto): UserResponseDto {
-        val userOptional = userRepository.findByEmail(userCreateDto.email)
-
-        if (userOptional.isEmpty)
+        val user = userRepository.findByEmail(userCreateDto.email) ?:
             throw EntityNotFoundException("User with email ${userCreateDto.email} not found")
-
-        val user = userOptional.get()
 
         return userMapper.toDto(
             userRepository.save(
@@ -57,7 +53,7 @@ class UserService(
 
     @Transactional
     fun createUser(userCreateDto: UserCreateDto): UserResponseDto {
-        if (userRepository.findByEmail(userCreateDto.email).isPresent)
+        if (userRepository.findByEmail(userCreateDto.email) != null)
             throw EntityAlreadyExistException("User with email ${userCreateDto.email} already exists")
         val saved = userRepository.save(userMapper.toEntity(userCreateDto))
         return userMapper.toDto(saved)
