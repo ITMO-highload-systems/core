@@ -57,15 +57,15 @@ class ParagraphServiceImpl(
         userPermissionService.requireUserPermission(paragraphCreateRequest.noteId, Permission.WRITER)
 
         val paragraph = if (paragraphCreateRequest.nextParagraphId != null) {
-            paragraphRepository.findByNextParagraphId(paragraphCreateRequest.nextParagraphId)
+            paragraphRepository.findByNextParagraphIdAndNoteId(paragraphCreateRequest.nextParagraphId, paragraphCreateRequest.noteId)
         } else {
-            paragraphRepository.findByNextParagraphIdNull()
+            paragraphRepository.findByNextParagraphIdNullAndNoteId(paragraphCreateRequest.noteId)
         }
         logger.info(PARAGRAPH_NOT_FOUND_BY_NEXT_PARAGRAPH_ID.format(paragraphCreateRequest.nextParagraphId))
 
         // сохраняем новый параграф
         val paragraphEntity =
-            paragraphRepository.save(paragraphMapper.toEntity(paragraphCreateRequest, UserContext.getCurrentUser()!!))
+            paragraphRepository.save(paragraphMapper.toEntity(paragraphCreateRequest, UserContext.getCurrentUser()))
         paragraphCreateRequest.images.forEach { uploadImage(it, paragraphEntity.id!!) }
 
         // обновляем значения параграфа который стоял на месте нового параграфа, чтобы он ссылался на текущий параграф
@@ -81,6 +81,7 @@ class ParagraphServiceImpl(
         return getParagraph(paragraphEntity.id)
     }
 
+    @Transactional
     override fun deleteParagraph(paragraphId: Long) {
         val paragraph = paragraphRepository.findByParagraphId(paragraphId)
         require(paragraph != null) {
@@ -90,16 +91,16 @@ class ParagraphServiceImpl(
 
         userPermissionService.requireUserPermission(paragraph.noteId, Permission.WRITER)
 
+        // обновляем ссылку на следующий параграф у параграфа, который стоит перед удаляемым
+        paragraphRepository.findByNextParagraphIdAndNoteId(paragraphId, paragraph.noteId)?.let {
+            it.nextParagraphId = paragraph.nextParagraphId
+            paragraphRepository.save(it)
+        }
         val imageRecords = imageRepository.findByParagraphId(paragraphId)
         imageRecords.forEach {
             deleteImage(it)
         }
         paragraphRepository.deleteById(paragraphId)
-
-        // обновляем ссылку на следующий параграф у параграфа, который стоит перед удаляемым
-        val paragraphBefore = paragraphRepository.findByNextParagraphId(paragraphId)
-        paragraphBefore?.nextParagraphId = paragraph.nextParagraphId
-        paragraphRepository.save(paragraphBefore!!)
 
         sseService.sendMessage(
             paragraph.noteId,
@@ -141,6 +142,7 @@ class ParagraphServiceImpl(
         return executionResult
     }
 
+    @Transactional
     override fun updateParagraph(paragraphUpdateRequest: ParagraphUpdateRequest): ParagraphGetResponse {
         val paragraph = paragraphRepository.findByParagraphId(paragraphUpdateRequest.id)
         require(paragraph != null) {
@@ -169,7 +171,7 @@ class ParagraphServiceImpl(
             updateParagraphEntity(
                 paragraph,
                 paragraphUpdateRequest,
-                UserContext.getCurrentUser()!!
+                UserContext.getCurrentUser()
             )
         )
         sseService.sendMessage(
@@ -198,7 +200,7 @@ class ParagraphServiceImpl(
         }
 
         // обновляем next_paragraph_id следующего параграфа у параграфа, который стоит перед перемещаемым
-        val paragraphBefore = paragraphRepository.findByNextParagraphId(paragraph.id!!)
+        val paragraphBefore = paragraphRepository.findByNextParagraphIdAndNoteId(paragraph.id!!, paragraph.noteId)
 
         if (paragraphBefore != null) { // paragraphBefore может быть null-ом если текущий параграф стоит в самом начале
             paragraphBefore.nextParagraphId = paragraph.nextParagraphId
@@ -207,9 +209,9 @@ class ParagraphServiceImpl(
 
         // обновляем next_paragraph_id параграфа, который раньше стоял перед тем параграфом, перед которым мы хотим поставить перемещаемый
         val paragraphAfter = if (changeParagraphPositionRequest.nextParagraphId != null) {
-            paragraphRepository.findByNextParagraphId(changeParagraphPositionRequest.nextParagraphId)
+            paragraphRepository.findByNextParagraphIdAndNoteId(changeParagraphPositionRequest.nextParagraphId, paragraph.noteId)
         } else {
-            paragraphRepository.findByNextParagraphIdNull()
+            paragraphRepository.findByNextParagraphIdNullAndNoteId(paragraph.noteId)
         }
         paragraphAfter?.nextParagraphId = paragraph.id
         paragraphRepository.save(paragraphAfter!!)
