@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Min
 
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 data class ChangeParagraphPositionRequest(
-    @Min(1)
+    @field:Min(1)
     val paragraphId: Long,
 
     val nextParagraphId: Long?
