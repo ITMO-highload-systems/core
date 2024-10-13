@@ -17,7 +17,6 @@ data class ParagraphCreateRequest(
 
     val text: String,
 
-    @field:NotBlank
     val paragraphType: ParagraphType,
 
     val images: List<MultipartFile> = emptyList()
