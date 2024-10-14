@@ -1,6 +1,7 @@
 package org.example.notion.app.paragraph.service.impl
 
 import org.example.notion.app.exceptions.EntityNotFoundException
+import org.example.notion.app.exceptions.IdSimilarException
 import org.example.notion.app.exceptions.ParagraphErrorTypeException
 import org.example.notion.app.paragraph.dto.ChangeParagraphPositionRequest
 import org.example.notion.app.paragraph.dto.ParagraphCreateRequest
@@ -58,9 +59,9 @@ class ParagraphServiceImpl(
         permissionService.requireUserPermission(paragraphCreateRequest.noteId, Permission.WRITER)
 
         val paragraph = if (paragraphCreateRequest.nextParagraphId != null) {
-            paragraphRepository.findByNextParagraphId(paragraphCreateRequest.nextParagraphId)
+            paragraphRepository.findByNextParagraphIdAndNoteId(paragraphCreateRequest.nextParagraphId, paragraphCreateRequest.noteId)
         } else {
-            paragraphRepository.findByNextParagraphIdNull()
+            paragraphRepository.findByNextParagraphIdNullAndNoteId(paragraphCreateRequest.noteId)
         }
         logger.info(PARAGRAPH_NOT_FOUND_BY_NEXT_PARAGRAPH_ID.format(paragraphCreateRequest.nextParagraphId))
 
@@ -82,6 +83,7 @@ class ParagraphServiceImpl(
         return getParagraph(paragraphEntity.id)
     }
 
+    @Transactional
     override fun deleteParagraph(paragraphId: Long) {
         val paragraph = paragraphRepository.findByParagraphId(paragraphId)
         require(paragraph != null) {
@@ -91,16 +93,16 @@ class ParagraphServiceImpl(
 
         permissionService.requireUserPermission(paragraph.noteId, Permission.WRITER)
 
+        // обновляем ссылку на следующий параграф у параграфа, который стоит перед удаляемым
+        paragraphRepository.findByNextParagraphIdAndNoteId(paragraphId, paragraph.noteId)?.let {
+            it.nextParagraphId = paragraph.nextParagraphId
+            paragraphRepository.save(it)
+        }
         val imageRecords = imageRepository.findByParagraphId(paragraphId)
         imageRecords.forEach {
             deleteImage(it)
         }
         paragraphRepository.deleteById(paragraphId)
-
-        // обновляем ссылку на следующий параграф у параграфа, который стоит перед удаляемым
-        val paragraphBefore = paragraphRepository.findByNextParagraphId(paragraphId)
-        paragraphBefore?.nextParagraphId = paragraph.nextParagraphId
-        paragraphRepository.save(paragraphBefore!!)
 
         sseService.sendMessage(
             paragraph.noteId,
@@ -142,6 +144,7 @@ class ParagraphServiceImpl(
         return executionResult
     }
 
+    @Transactional
     override fun updateParagraph(paragraphUpdateRequest: ParagraphUpdateRequest): ParagraphGetResponse {
         val paragraph = paragraphRepository.findByParagraphId(paragraphUpdateRequest.id)
         require(paragraph != null) {
@@ -182,6 +185,10 @@ class ParagraphServiceImpl(
 
     @Transactional
     override fun changeParagraphPosition(changeParagraphPositionRequest: ChangeParagraphPositionRequest) {
+        require (changeParagraphPositionRequest.paragraphId != changeParagraphPositionRequest.nextParagraphId) {
+            logger.error("Paragraph id and next paragraph id must be different")
+            throw IdSimilarException("Paragraph id and next paragraph id must be different")
+        }
         val paragraph = paragraphRepository.findByParagraphId(changeParagraphPositionRequest.paragraphId)
         require(paragraph != null) {
             logger.error(PARAGRAPH_NOT_FOUND.format(changeParagraphPositionRequest.paragraphId))
@@ -191,7 +198,7 @@ class ParagraphServiceImpl(
         permissionService.requireUserPermission(paragraph.noteId, Permission.WRITER)
 
         if (changeParagraphPositionRequest.nextParagraphId != null) {
-            val nextParagraph = paragraphRepository.findByParagraphId(changeParagraphPositionRequest.nextParagraphId)
+            val nextParagraph = paragraphRepository.findByParagraphIdAndNoteId(changeParagraphPositionRequest.nextParagraphId, paragraph.noteId)
             require(nextParagraph != null) {
                 logger.error(PARAGRAPH_NOT_FOUND.format(changeParagraphPositionRequest.nextParagraphId))
                 throw EntityNotFoundException(PARAGRAPH_NOT_FOUND.format(changeParagraphPositionRequest.nextParagraphId))
@@ -199,7 +206,7 @@ class ParagraphServiceImpl(
         }
 
         // обновляем next_paragraph_id следующего параграфа у параграфа, который стоит перед перемещаемым
-        val paragraphBefore = paragraphRepository.findByNextParagraphId(paragraph.id!!)
+        val paragraphBefore = paragraphRepository.findByNextParagraphIdAndNoteId(paragraph.id!!, paragraph.noteId)
 
         if (paragraphBefore != null) { // paragraphBefore может быть null-ом если текущий параграф стоит в самом начале
             paragraphBefore.nextParagraphId = paragraph.nextParagraphId
@@ -208,9 +215,9 @@ class ParagraphServiceImpl(
 
         // обновляем next_paragraph_id параграфа, который раньше стоял перед тем параграфом, перед которым мы хотим поставить перемещаемый
         val paragraphAfter = if (changeParagraphPositionRequest.nextParagraphId != null) {
-            paragraphRepository.findByNextParagraphId(changeParagraphPositionRequest.nextParagraphId)
+            paragraphRepository.findByNextParagraphIdAndNoteId(changeParagraphPositionRequest.nextParagraphId, paragraph.noteId)
         } else {
-            paragraphRepository.findByNextParagraphIdNull()
+            paragraphRepository.findByNextParagraphIdNullAndNoteId(paragraph.noteId)
         }
         paragraphAfter?.nextParagraphId = paragraph.id
         paragraphRepository.save(paragraphAfter!!)
@@ -235,8 +242,10 @@ class ParagraphServiceImpl(
     }
 
     private fun deleteImage(imageRecord: ImageRecord) {
-        minioStorageService.deleteImage(imageRecord.imageHash)
         imageRepository.deleteById(imageRecord.id)
+        if (imageRepository.findByImageHash(imageRecord.imageHash) == null) {
+            minioStorageService.deleteImage(imageRecord.imageHash)
+        }
     }
 
     private fun updateParagraphEntity(

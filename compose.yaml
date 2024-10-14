@@ -58,6 +58,8 @@ services:
       - postgres
       - minio1
       - python-exec
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
 
 
 volumes:

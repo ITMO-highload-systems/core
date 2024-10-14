@@ -25,8 +25,7 @@ CREATE TABLE paragraph
     last_update_user_id INT REFERENCES "user" (user_id),
     created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    paragraph_type      varchar(255),
-    UNIQUE (next_paragraph_id, note_id)
+    paragraph_type      varchar(255)
 );
 
 CREATE TABLE image_record

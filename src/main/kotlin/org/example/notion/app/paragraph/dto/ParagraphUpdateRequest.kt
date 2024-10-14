@@ -10,15 +10,14 @@ import org.springframework.web.multipart.MultipartFile
 
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 data class ParagraphUpdateRequest(
-    @Min(1)
+    @field:Min(1)
     val id: Long,
 
-    @Size(max = 255)
+    @field:Size(max = 255)
     val title: String,
 
     val text: String,
 
-    @NotBlank
     val paragraphType: ParagraphType,
 
     val images: List<MultipartFile> = emptyList()

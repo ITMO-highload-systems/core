@@ -3,6 +3,9 @@ FROM openjdk:21-jdk-slim
 
 WORKDIR /app
 
+# Установка Docker CLI в контейнер
+RUN apt-get update && apt-get install -y docker.io
+
 # Копируем jar файл в контейнер
 COPY build.gradle.kts /app/
 COPY gradlew gradlew
@@ -31,7 +34,7 @@ ENV MINIO_SECRET_KEY=minioadmin
 ENV MINIO_BUCKET=my-bucket
 
 # Откройте порт, который будет использоваться приложением
-EXPOSE 8080
+EXPOSE $PORT
 
 # Запустите приложение
 ENTRYPOINT ["java", "-jar", "app.jar"]
