@@ -11,6 +11,7 @@ import org.example.notion.sse.Message
 import org.example.notion.sse.SseService
 import org.example.notion.sse.Type
 import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import java.util.concurrent.CompletableFuture
@@ -32,7 +33,7 @@ class ParagraphController(
         @Valid @ModelAttribute paragraphCreateRequest: ParagraphCreateRequest
     ): ResponseEntity<ParagraphGetResponse> {
         UserContext.setCurrentUser(userId)
-        return ResponseEntity.ok(paragraphService.createParagraph(paragraphCreateRequest))
+        return ResponseEntity(paragraphService.createParagraph(paragraphCreateRequest), HttpStatus.CREATED)
     }
 
     @GetMapping("/execute/{paragraphId}")
@@ -52,9 +53,10 @@ class ParagraphController(
     fun deleteParagraph(
         @RequestHeader("user-id") userId: Long,
         @PathVariable paragraphId: Long
-    ) {
+    ): ResponseEntity<Unit> {
         UserContext.setCurrentUser(userId)
         paragraphService.deleteParagraph(paragraphId)
+        return ResponseEntity.ok().build()
     }
 
     @GetMapping("/get/{paragraphId}")
@@ -79,9 +81,10 @@ class ParagraphController(
     fun changeParagraphPosition(
         @Valid @RequestHeader("user-id") userId: Long,
         @Valid @RequestBody changeParagraphPositionRequest: ChangeParagraphPositionRequest
-    ) {
+    ): ResponseEntity<Unit> {
         UserContext.setCurrentUser(userId)
         paragraphService.changeParagraphPosition(changeParagraphPositionRequest)
+        return ResponseEntity.ok().build()
     }
 
     @GetMapping("/all")

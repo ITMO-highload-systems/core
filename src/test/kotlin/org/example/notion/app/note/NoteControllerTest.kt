@@ -37,7 +37,7 @@ class NoteControllerTest : AbstractIntegrationTest() {
             MockMvcRequestBuilders.post("/api/v1/note").header("user-id", testUser.userId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(mapOf("title" to "title", "description" to "description")))
-        ).andExpect(MockMvcResultMatchers.status().isOk)
+        ).andExpect(MockMvcResultMatchers.status().isCreated)
             .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.title").value("title")).andExpect(jsonPath("$.description").value("description"))
             .andExpect(jsonPath("$.owner").value(testUser.userId)).andReturn()

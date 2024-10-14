@@ -320,7 +320,7 @@ class ParagraphTest : AbstractIntegrationTest() {
                 .header("user-id", testUser.userId)
                 .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
         )
-            .andExpect(status().isOk)
+            .andExpect(MockMvcResultMatchers.status().isCreated)
             .andExpect(MockMvcResultMatchers.jsonPath("$.note_id").value(paragraphCreateRequest.noteId))
             .andExpect(MockMvcResultMatchers.jsonPath("$.title").value(paragraphCreateRequest.title))
             .andExpect(

@@ -125,7 +125,7 @@ abstract class AbstractIntegrationTest {
                 .header("user-id", userId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(mapOf("title" to "title", "description" to "description")))
-        ).andExpect(MockMvcResultMatchers.status().isOk).andReturn().response.contentAsString
+        ).andExpect(MockMvcResultMatchers.status().isCreated).andReturn().response.contentAsString
 
         val noteDtoResponse: NoteDto = mapper.readValue(noteString, NoteDto::class.java)
         return noteDtoResponse
@@ -144,7 +144,7 @@ abstract class AbstractIntegrationTest {
                         )
                     )
                 )
-        ).andExpect(MockMvcResultMatchers.status().isOk).andReturn().response.contentAsString
+        ).andExpect(MockMvcResultMatchers.status().isCreated).andReturn().response.contentAsString
 
         val userDtoResponse: UserResponseDto = mapper.readValue(userString, UserResponseDto::class.java)
         return userDtoResponse

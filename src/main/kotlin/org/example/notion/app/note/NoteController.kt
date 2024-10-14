@@ -48,7 +48,7 @@ class NoteController(
         @RequestHeader("user-id") userId: Long
     ): ResponseEntity<NoteDto> {
         UserContext.setCurrentUser(userId)
-        return ResponseEntity.ok(noteService.create(noteCreateDto))
+        return ResponseEntity(noteService.create(noteCreateDto), HttpStatus.CREATED)
     }
 
     @PutMapping

@@ -3,6 +3,7 @@ package org.example.notion.app.user
 import jakarta.validation.Valid
 import org.example.notion.app.user.dto.UserCreateDto
 import org.example.notion.app.user.dto.UserResponseDto
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
@@ -24,7 +25,7 @@ class UserController(
 
     @PostMapping("register")
     fun registerUser(@Valid @RequestBody userCreateDto: UserCreateDto): ResponseEntity<UserResponseDto> {
-        return ResponseEntity.ok(userService.createUser(userCreateDto))
+        return ResponseEntity(userService.createUser(userCreateDto), HttpStatus.CREATED)
     }
 
     @PutMapping
