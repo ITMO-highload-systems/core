@@ -47,7 +47,9 @@ class TeamService(
 
     @Transactional
     fun update(teamDto: TeamDto): TeamDto {
+        userService.requireUserExistence(teamDto.owner)
         requireTeamExistence(teamDto.teamId)
+        requireCurrentUserIsOwner(teamDto.teamId)
         val currentTeam = (teamRepository.findTeamByTeamId(teamDto.teamId)
             ?: throw EntityNotFoundException("Team with id ${teamDto.teamId} not found"))
         if (currentTeam.name != teamDto.name && teamRepository.findTeamByName(teamDto.name) != null) {

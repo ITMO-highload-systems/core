@@ -2,8 +2,10 @@ package org.example.notion.permission
 
 import org.example.notion.app.exceptions.ForbiddenException
 import org.example.notion.app.note.NoteService
+import org.example.notion.app.team.dto.TeamDto
 import org.example.notion.app.team.service.TeamService
 import org.example.notion.app.teamUser.TeamUserService
+import org.example.notion.app.teamUser.dto.TeamUserMyResponseDto
 import org.example.notion.app.user.UserService
 import org.example.notion.app.userPermission.TeamPermissionService
 import org.example.notion.app.userPermission.UserPermissionService
@@ -46,9 +48,9 @@ class PermissionService(
         noteId: Long,
         permission: Permission
     ): Boolean {
-        val myTeams = teamService.getTeamsByUser(userId) + teamUserService.findByUserId(userId)
+        val myTeams:List<Long> = (teamService.getTeamsByUser(userId).map { it.teamId }.toList() + teamUserService.findByUserId(userId).map { it.teamId }.toList())
         return teamPermissionService.findByNoteIdUnsafe(noteId).filter { t -> t.permission == permission }
-            .any { team -> myTeams.contains(team) }
+            .any { team -> myTeams.contains(team.teamId) }
     }
 
     fun requireOwnerPermission(userId: Long, noteId: Long) {

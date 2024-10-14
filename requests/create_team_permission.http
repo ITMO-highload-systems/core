@@ -1,0 +1,14 @@
+POST http://localhost:8080/api/v1/team/permissions
+Content-Type: application/json
+user-id: 1
+
+{
+    "team_id": 1,
+    "note_id": 2,
+    "permission": "READER"
+}
+
+<> 2024-10-13T202057.200.json
+<> 2024-10-13T201034.200.json
+
+###
