@@ -47,4 +47,9 @@ interface ParagraphService {
      * Find all paragraphs.
      */
     fun findAllParagraphs(pageSize: Long, pageNumber: Long): List<ParagraphGetResponse>
+
+    /**
+     * Method to delete paragraphs by noteId.
+     */
+    fun deleteParagraphByNoteId(noteId: Long)
 }

@@ -205,7 +205,7 @@ class ParagraphServiceImpl(
             }
         }
 
-        // обновляем next_paragraph_id следующего параграфа у параграфа, который стоит перед перемещаемым
+        // обновляем next_paragraph_id у параграфа, который стоит перед перемещаемым
         val paragraphBefore = paragraphRepository.findByNextParagraphIdAndNoteId(paragraph.id!!, paragraph.noteId)
 
         if (paragraphBefore != null) { // paragraphBefore может быть null-ом если текущий параграф стоит в самом начале
@@ -229,6 +229,13 @@ class ParagraphServiceImpl(
 
     override fun findAllParagraphs(pageSize: Long, pageNumber: Long): List<ParagraphGetResponse> {
         return paragraphRepository.findAllParagraphs(pageSize,pageNumber * pageSize).asSequence().map { paragraphToResponse(it) }.toList()
+    }
+
+    @Transactional
+    override fun deleteParagraphByNoteId(noteId: Long) {
+        paragraphRepository.findByNoteId(noteId).asSequence().forEach {
+            deleteParagraph(it.id!!)
+        }
     }
 
     private fun uploadImage(image: MultipartFile, paragraphId: Long) {
