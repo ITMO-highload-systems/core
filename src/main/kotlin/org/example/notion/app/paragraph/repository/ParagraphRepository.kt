@@ -20,4 +20,7 @@ interface ParagraphRepository : CrudRepository<Paragraph, Long> {
 
     @Query("SELECT * FROM paragraph LIMIT :pageSize OFFSET :offset")
     fun findAllParagraphs(pageSize: Long, offset: Long): List<Paragraph>
+
+    @Query("SELECT * FROM paragraph where note_id = :noteId")
+    fun findByNoteId(noteId: Long): List<Paragraph>
 }
