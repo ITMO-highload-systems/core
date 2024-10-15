@@ -36,7 +36,7 @@ class TeamUserService(
         userService.requireUserExistence(teamUserDto.userId)
         teamService.requireTeamExistence(teamUserDto.teamId)
         teamService.requireCurrentUserIsOwner(teamUserDto.teamId)
-        if (teamUserRepository.findTeamUserByTeamIdAndUserId(teamUserDto.userId, teamUserDto.userId) != null) {
+        if (teamUserRepository.findTeamUserByTeamIdAndUserId(teamUserDto.teamId, teamUserDto.userId) != null) {
             throw EntityAlreadyExistException("User ${teamUserDto.userId} in team ${teamUserDto.teamId} already exists")
         }
         val saved = teamUserRepository.save(teamUserMapper.toEntity(teamUserDto))
