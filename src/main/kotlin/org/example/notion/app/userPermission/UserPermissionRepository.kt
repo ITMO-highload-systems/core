@@ -11,6 +11,10 @@ interface UserPermissionRepository : CrudRepository<NoteUserPermission, Long> {
     @Query("delete from note_user_permission where user_id = :userId and note_id = :noteId")
     fun deleteNoteUserPermissionByUserIdAndNoteId(userId: Long, noteId: Long)
 
+    @Modifying
+    @Query("delete from note_user_permission where note_id = :noteId")
+    fun deleteNoteUserPermissionByNoteId(noteId: Long)
+
     fun findNoteUserPermissionByUserIdAndNoteId(userId: Long, noteId: Long): NoteUserPermission?
 
     fun findAllByNoteId(noteId: Long) : List<NoteUserPermission>

@@ -87,6 +87,18 @@ class TeamPermissionService(
     }
 
     @Transactional
+    fun deleteByNoteId(noteId: Long) {
+        val currentUserId = userService.getCurrentUser()
+        val isNoteOwner = noteService.isOwner(noteId, currentUserId)
+        if (isNoteOwner) {
+            teamPermissionRepository.deleteNoteUserPermissionByNoteId(noteId)
+        } else {
+            throw ForbiddenException("Current user $currentUserId must be owner of note ${noteId}")
+        }
+    }
+
+
+    @Transactional
     fun findByNoteId(noteId: Long): List<NoteTeamPermissionDto> {
         permissionService.requireUserPermission(noteId, Permission.READER)
         return teamPermissionRepository.findAllByNoteId(noteId).map { teamPermissionMapper.toDto(it) }

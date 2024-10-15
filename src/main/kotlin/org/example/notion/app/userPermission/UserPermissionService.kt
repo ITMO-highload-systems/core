@@ -102,5 +102,12 @@ class UserPermissionService(
         return true
     }
 
+    fun deleteByNoteId(noteId: Long) {
+        permissionService.requireOwnerPermission(noteId)
+        userPermissionRepository.deleteNoteUserPermissionByNoteId(
+            noteId
+        )
+    }
+
 }
 
