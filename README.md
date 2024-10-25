@@ -1,4 +1,4 @@
-note-eureka-service-registry http://localhost:8084
+note-eureka-service-registry http://localhost:8761
 
 notion-code-exec http://localhost:8083
 
