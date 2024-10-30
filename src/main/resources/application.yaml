@@ -23,9 +23,9 @@ server:
 
 integrations:
     image:
-        url: "localhost:8092/api/v1/image"
+        url: "localhost:8092"
     executor:
-        url: "localhost:8091/api/v1/execution"
+        url: "localhost:8091"
 
 feign:
     hystrix:

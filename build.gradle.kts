@@ -27,7 +27,7 @@ val postgresqlVersion = "42.7.3"
 val jacksonVersion = "2.17.2"
 val kotlinJetBrainsVersion = "2.0.20"
 val cloudVersion = "4.1.3"
-val wiremockVersion = "3.9.1"
+val wiremockVersion = "3.9.2"
 val jettyServer = "11.0.24"
 val netflixVersion = "2.2.10.RELEASE"
 
@@ -60,7 +60,8 @@ dependencies {
     testImplementation("org.testcontainers:junit-jupiter:$testContainersVersion")
     testImplementation("org.testcontainers:postgresql:$testContainersVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5:$kotlinJetBrainsVersion")
-    testImplementation("com.squareup.okhttp3:mockwebserver:4.9.3")
+    testImplementation("org.wiremock:wiremock-standalone:$wiremockVersion")
+
 }
 kapt {
     arguments {

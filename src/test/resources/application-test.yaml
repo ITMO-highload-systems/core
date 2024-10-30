@@ -1,0 +1,9 @@
+integrations:
+  image:
+    url: "localhost:81"
+  executor:
+    url: "localhost:80"
+
+spring:
+  main:
+    allow-bean-definition-overriding: true

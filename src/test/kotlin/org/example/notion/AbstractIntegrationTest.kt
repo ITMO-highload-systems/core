@@ -7,8 +7,10 @@ import org.example.notion.app.teamUser.dto.TeamUserResponseDto
 import org.example.notion.app.user.dto.UserResponseDto
 import org.example.notion.app.userPermission.dto.NoteTeamPermissionDto
 import org.example.notion.app.userPermission.entity.Permission
+import org.example.notion.configuration.ClockTestConfiguration
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
@@ -24,8 +26,6 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.testcontainers.containers.PostgreSQLContainer
-import org.example.notion.configuration.ClockTestConfiguration.TestClockProxy
-import org.junit.jupiter.api.extension.ExtendWith
 import java.io.IOException
 import java.util.*
 import java.util.concurrent.Executors
@@ -58,7 +58,7 @@ abstract class AbstractIntegrationTest {
 
     @BeforeEach
     fun prepareEnv() {
-        TestClockProxy.setToFixedClock()
+        ClockTestConfiguration.TestClockProxy.setToFixedClock()
     }
 
     fun subscribe(noteId: Long): MvcResult {

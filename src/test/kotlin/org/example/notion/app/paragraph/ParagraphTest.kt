@@ -1,6 +1,8 @@
 package org.example.notion.app.paragraph
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.github.tomakehurst.wiremock.WireMockServer
+import com.github.tomakehurst.wiremock.client.WireMock
 import org.example.notion.AbstractIntegrationTest
 import org.example.notion.app.note.dto.NoteDto
 import org.example.notion.app.paragraph.dto.ChangeParagraphPositionRequest
@@ -10,18 +12,30 @@ import org.example.notion.app.paragraph.dto.ParagraphUpdateRequest
 import org.example.notion.app.paragraph.entity.ParagraphType
 import org.example.notion.app.paragraph.repository.ParagraphRepository
 import org.example.notion.app.user.dto.UserResponseDto
+import org.example.notion.configuration.WireMockConfig
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.cloud.openfeign.EnableFeignClients
+import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import org.springframework.test.context.ContextConfiguration
+import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
+@EnableFeignClients
+@EnableConfigurationProperties
+@ExtendWith(SpringExtension::class)
+@ContextConfiguration(classes = [WireMockConfig::class])
 class ParagraphTest : AbstractIntegrationTest() {
 
     lateinit var testUser: UserResponseDto
@@ -31,12 +45,38 @@ class ParagraphTest : AbstractIntegrationTest() {
     private lateinit var paragraphRepository: ParagraphRepository
 
     @Autowired
+    @Qualifier("mockImageService")
+    private val mockImageService = WireMockServer(81)
+
+    @Autowired
+    @Qualifier("mockCodeExecService")
+    private val mockCodeExecService = WireMockServer(80)
+
+    @Autowired
     lateinit var objectMapper: ObjectMapper
 
     @BeforeEach
     fun setUp() {
         testUser = createUser()
         testNote = createNote(testUser.userId)
+        mockImageService.stubFor(
+            WireMock.get(WireMock.urlPathMatching("/api/v1/image/get/\\d+"))
+                .willReturn(
+                    WireMock.aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(
+                            """
+                {
+                    "imageUrls": [
+                        "https://example.com/image1.jpg",
+                        "https://example.com/image2.jpg"
+                    ]
+                }
+            """.trimIndent()
+                        )
+                )
+        )
     }
 
     @AfterEach
@@ -44,35 +84,58 @@ class ParagraphTest : AbstractIntegrationTest() {
         paragraphRepository.deleteAll()
     }
 
-//    @Test TODO add mock feign client
+    @Test
     fun `delete paragraph - valid paragraph id - success deleted`() {
+        mockImageService.stubFor(
+            WireMock.delete(WireMock.urlPathMatching("/api/v1/image/deleteByParagraphId/\\d+"))
+                .willReturn(
+                    WireMock.aResponse()
+                        .withStatus(HttpStatus.NO_CONTENT.value())
+                )
+        )
         val paragraphGetResponseExpected = `create paragraph`()
         val paragraphGetResponseActual = `get paragraph`(paragraphGetResponseExpected.id)
         Assertions.assertEquals(paragraphGetResponseExpected, paragraphGetResponseActual)
         mockMvc.perform(
             MockMvcRequestBuilders.delete("/api/v1/paragraph/delete/${paragraphGetResponseActual.id}")
                 .header("user-id", testUser.userId)
-        )
+        ).andExpect(status().isNoContent)
         Assertions.assertThrows(Exception::class.java) { `get paragraph`(paragraphGetResponseActual.id) }
     }
 
-//    @Test TODO add mock feign client
+    @Test
     fun `execute paragraph - valid paragraph id - success executed`() {
+        mockCodeExecService.stubFor(
+            WireMock.get(WireMock.urlPathEqualTo("/api/v1/execution/execute"))
+                .withQueryParam("paragraphId", WireMock.matching("\\d+"))
+                .withQueryParam("code", WireMock.matching(".*"))
+                .willReturn(
+                    WireMock.aResponse()
+                        .withStatus(HttpStatus.OK.value())
+                        .withBody("Hello, World!\n")
+                )
+        )
         val paragraph = `create paragraph`(ParagraphType.PYTHON_PARAGRAPH, "print('Hello, World!')")
-        val mvcResult = mockMvc.perform(
+        mockMvc.perform(
             MockMvcRequestBuilders.get("/api/v1/paragraph/execute/${paragraph.id}")
                 .header("user-id", testUser.userId)
         )
-            .andExpect(MockMvcResultMatchers.request().asyncStarted())  // Убедиться, что запрос асинхронный
-            .andReturn()
-
-        mockMvc.perform(MockMvcRequestBuilders.asyncDispatch(mvcResult))
             .andExpect(status().isOk)
             .andExpect(MockMvcResultMatchers.content().string("Hello, World!\n"))
     }
 
-//    @Test TODO add mock feign client
+    @Test
     fun `execute paragraph with logarithmic logic - valid paragraph id - success executed`() {
+        mockCodeExecService.stubFor(
+            WireMock.get(WireMock.urlPathEqualTo("/api/v1/execution/execute"))
+                .withQueryParam("paragraphId", WireMock.matching("\\d+"))
+                .withQueryParam("code", WireMock.matching(".*"))
+                .willReturn(
+                    WireMock.aResponse()
+                        .withStatus(HttpStatus.OK.value())
+                        .withBody("2.0\n")
+                )
+        )
         val pythonCode = """
         import math
         number = 100
@@ -82,17 +145,12 @@ class ParagraphTest : AbstractIntegrationTest() {
 
         val paragraph = `create paragraph`(ParagraphType.PYTHON_PARAGRAPH, pythonCode)
 
-        val mvcResult = mockMvc.perform(
+        mockMvc.perform(
             MockMvcRequestBuilders.get("/api/v1/paragraph/execute/${paragraph.id}")
                 .header("user-id", testUser.userId)
         )
-            .andExpect(MockMvcResultMatchers.request().asyncStarted())  // Убедиться, что запрос асинхронный
-            .andReturn()
-
-        // Ожидание завершения асинхронного выполнения
-        mockMvc.perform(MockMvcRequestBuilders.asyncDispatch(mvcResult))
-            .andExpect(status().isOk)  // Проверяем статус
-            .andExpect(MockMvcResultMatchers.content().string("2.0\n"))  // Ожидаем результат
+            .andExpect(status().isOk)
+            .andExpect(MockMvcResultMatchers.content().string("2.0\n"))
     }
 
     @Test
@@ -120,7 +178,6 @@ class ParagraphTest : AbstractIntegrationTest() {
         Assertions.assertEquals("Updated Title", paragraphGetResponseUpdated.title)
         Assertions.assertEquals("print('Now I am updated!')", paragraphGetResponseUpdated.text)
         Assertions.assertEquals(ParagraphType.PYTHON_PARAGRAPH, paragraphGetResponseUpdated.paragraphType)
-        Assertions.assertEquals(true, paragraphGetResponseUpdated.imageUrls.isEmpty())
     }
 
     @Test
@@ -235,7 +292,11 @@ class ParagraphTest : AbstractIntegrationTest() {
         "0, 53, 50",
         "1, 27, 25",
     )
-    fun `getAllParagraphs - valid data - success get all paragraphs`(pageNumber: Long, pageSize: Long, expectedSize: Int) {
+    fun `getAllParagraphs - valid data - success get all paragraphs`(
+        pageNumber: Long,
+        pageSize: Long,
+        expectedSize: Int
+    ) {
         for (i in 1..52) `create paragraph`()
 
         val result0 = mockMvc.perform(

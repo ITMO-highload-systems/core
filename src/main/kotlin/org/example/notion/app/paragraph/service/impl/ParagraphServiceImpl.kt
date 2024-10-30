@@ -22,6 +22,7 @@ import org.example.notion.sse.Message
 import org.example.notion.sse.SseService
 import org.example.notion.sse.Type
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.codec.multipart.FilePart
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -34,7 +35,9 @@ class ParagraphServiceImpl(
     private val paragraphMapper: ParagraphMapper,
     private val permissionService: PermissionService,
     private val userService: UserService,
+    @Qualifier("executorServiceClient")
     private val executorServiceClient: ExecutorServiceClient,
+    @Qualifier("imageServiceClient")
     private val imageServiceClient: ImageServiceClient,
     private val imageCreateClient: ImageCreateClient
 ) : ParagraphService {
@@ -260,17 +263,16 @@ class ParagraphServiceImpl(
             .build()
 
     private fun paragraphToResponse(paragraph: Paragraph): ParagraphGetResponse {
-        // TODO раскомментить когда настроится интеграция
-        //val imageUrls = imageServiceClient.getImageByParagraphId(paragraph.id!!.toString()).body?.imageUrls ?: emptyList()
+        val imageUrls = imageServiceClient.getImageByParagraphId(paragraph.id!!.toString()).body?.imageUrls ?: emptyList()
 
         return ParagraphGetResponse.Builder()
-            .id(paragraph.id!!)
+            .id(paragraph.id)
             .noteId(paragraph.noteId)
             .title(paragraph.title)
             .nextParagraphId(paragraph.nextParagraphId)
             .text(paragraph.text)
             .paragraphType(paragraph.paragraphType)
-//            .imageUrls(imageUrls)
+            .imageUrls(imageUrls)
             .build()
     }
 }

@@ -49,7 +49,7 @@ class ParagraphController(
     ): ResponseEntity<Unit> {
         UserContext.setCurrentUser(userId)
         paragraphService.deleteParagraph(paragraphId)
-        return ResponseEntity.ok().build()
+        return ResponseEntity.noContent().build()
     }
 
     @GetMapping("/get/{paragraphId}")
