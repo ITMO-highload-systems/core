@@ -7,20 +7,17 @@ import org.example.notion.app.paragraph.dto.ParagraphGetResponse
 import org.example.notion.app.paragraph.dto.ParagraphUpdateRequest
 import org.example.notion.app.paragraph.service.ParagraphService
 import org.example.notion.app.user.UserContext
-import org.example.notion.sse.Message
-import org.example.notion.sse.SseService
-import org.example.notion.sse.Type
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.http.codec.multipart.FilePart
 import org.springframework.web.bind.annotation.*
-import java.util.concurrent.CompletableFuture
+import reactor.core.publisher.Mono
 
 @RestController
 @RequestMapping("api/v1/paragraph")
 class ParagraphController(
-    private val paragraphService: ParagraphService,
-    private val sseService: SseService
+    private val paragraphService: ParagraphService
 ) {
 
     companion object {
@@ -30,7 +27,7 @@ class ParagraphController(
     @PostMapping("/create")
     fun createParagraph(
         @RequestHeader("user-id") userId: Long,
-        @Valid @ModelAttribute paragraphCreateRequest: ParagraphCreateRequest
+        @Valid @RequestBody paragraphCreateRequest: ParagraphCreateRequest
     ): ResponseEntity<ParagraphGetResponse> {
         UserContext.setCurrentUser(userId)
         return ResponseEntity(paragraphService.createParagraph(paragraphCreateRequest), HttpStatus.CREATED)
@@ -40,13 +37,9 @@ class ParagraphController(
     fun executeParagraph(
         @RequestHeader("user-id") userId: Long,
         @PathVariable paragraphId: Long
-    ): CompletableFuture<ResponseEntity<String>> {
+    ): ResponseEntity<String> {
         UserContext.setCurrentUser(userId)
-        return paragraphService.executeParagraph(paragraphId)
-            .thenApply { result ->
-                sseService.sendMessage(2, Message(Type.PARAGRAPH_EXECUTED, result))
-                ResponseEntity.ok(result)
-            }
+        return ResponseEntity.ok(paragraphService.executeParagraph(paragraphId))
     }
 
     @DeleteMapping("/delete/{paragraphId}")
@@ -71,7 +64,7 @@ class ParagraphController(
     @PutMapping("/update")
     fun updateParagraph(
         @Valid @RequestHeader("user-id") userId: Long,
-        @Valid @ModelAttribute paragraphUpdateRequest: ParagraphUpdateRequest
+        @Valid @RequestBody paragraphUpdateRequest: ParagraphUpdateRequest
     ): ResponseEntity<ParagraphGetResponse> {
         UserContext.setCurrentUser(userId)
         return ResponseEntity.ok(paragraphService.updateParagraph(paragraphUpdateRequest))
@@ -97,5 +90,35 @@ class ParagraphController(
         val headers = HttpHeaders()
         headers.add("X-Total-Count", paragraphs.size.toString())
         return ResponseEntity.ok().headers(headers).body(paragraphs)
+    }
+
+    @PutMapping("/addImageToParagraph/{paragraphId}")
+    fun addImageToParagraph(
+        @RequestHeader("user-id") userId: Long,
+        @PathVariable paragraphId: Long,
+        @RequestPart("file") filePart: FilePart
+    ): ResponseEntity<Unit> {
+        UserContext.setCurrentUser(userId)
+        paragraphService.addImageToParagraph(paragraphId, filePart)
+        return ResponseEntity(HttpStatus.CREATED)
+    }
+
+    @DeleteMapping("/deleteImageFromParagraph/{paragraphId}")
+    fun deleteImageFromParagraph(
+        @RequestHeader("user-id") userId: Long,
+        @PathVariable paragraphId: Long,
+        @RequestParam imageName: String
+    ): ResponseEntity<Unit> {
+        UserContext.setCurrentUser(userId)
+        paragraphService.deleteImageFromParagraph(paragraphId, imageName)
+        return ResponseEntity.noContent().build()
+    }
+
+    @PutMapping("/create/{paragraphId}")
+    fun saveImage(
+        @PathVariable paragraphId: Long,
+        @RequestPart("file") filePart: FilePart
+    ): Mono<ResponseEntity<Unit>> {
+        return Mono.just(ResponseEntity(HttpStatus.CREATED))
     }
 }

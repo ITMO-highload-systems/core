@@ -28,6 +28,11 @@ CREATE TABLE paragraph
     paragraph_type      varchar(255)
 );
 
+CREATE TABLE execution_code_result (
+    paragraph_id INT PRIMARY KEY REFERENCES paragraph (id),
+    execution_result text
+);
+
 CREATE TABLE image_record
 (
     id           SERIAL PRIMARY KEY,

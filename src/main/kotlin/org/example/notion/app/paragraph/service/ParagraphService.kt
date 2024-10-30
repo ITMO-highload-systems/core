@@ -5,6 +5,8 @@ import org.example.notion.app.paragraph.dto.ParagraphCreateRequest
 import org.example.notion.app.paragraph.dto.ParagraphGetResponse
 import org.example.notion.app.paragraph.dto.ParagraphUpdateRequest
 import org.springframework.data.domain.Pageable
+import org.springframework.http.codec.multipart.FilePart
+import org.springframework.web.multipart.MultipartFile
 import java.util.concurrent.CompletableFuture
 
 /**
@@ -21,7 +23,7 @@ interface ParagraphService {
     /**
      * Execute a paragraph asynchronously.
      */
-    fun executeParagraph(paragraphId: Long): CompletableFuture<String>
+    fun executeParagraph(paragraphId: Long): String
 
     /**
      * Delete a paragraph by id.
@@ -52,4 +54,14 @@ interface ParagraphService {
      * Method to delete paragraphs by noteId.
      */
     fun deleteParagraphByNoteId(noteId: Long)
+
+    /**
+     * Method to add image to paragraph.
+     */
+    fun addImageToParagraph(paragraphId: Long, file: FilePart)
+
+    /**
+     * Method to delete image from paragraph.
+     */
+    fun deleteImageFromParagraph(paragraphId: Long, imageName: String)
 }

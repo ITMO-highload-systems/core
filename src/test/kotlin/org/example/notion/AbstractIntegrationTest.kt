@@ -17,20 +17,15 @@ import org.springframework.boot.testcontainers.service.connection.ServiceConnect
 import org.springframework.http.MediaType
 import org.springframework.mock.web.MockAsyncContext
 import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.DynamicPropertyRegistry
-import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.MvcResult
 import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
-import org.testcontainers.containers.GenericContainer
-import org.testcontainers.containers.MinIOContainer
 import org.testcontainers.containers.PostgreSQLContainer
-import org.testcontainers.containers.wait.strategy.Wait
-import org.testcontainers.utility.DockerImageName
-import ru.tinkoff.helicopter.core.ClockTestConfiguration.TestClockProxy
+import org.example.notion.configuration.ClockTestConfiguration.TestClockProxy
+import org.junit.jupiter.api.extension.ExtendWith
 import java.io.IOException
 import java.util.*
 import java.util.concurrent.Executors
@@ -40,6 +35,7 @@ import java.util.concurrent.TimeUnit
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
 @SpringBootTest
+@ExtendWith()
 abstract class AbstractIntegrationTest {
     @Autowired
     lateinit var mockMvc: MockMvc
@@ -51,31 +47,12 @@ abstract class AbstractIntegrationTest {
         private val logger = LoggerFactory.getLogger(this::class.java)
 
         @ServiceConnection
-        internal var minio = MinIOContainer("minio/minio:latest").apply {
-            withCommand("server /data")
-                .withExposedPorts(9000)
-                .waitingFor(Wait.forHttp("/minio/health/live").forStatusCode(200))
-        }
-
-        @ServiceConnection
         internal var postgres = PostgreSQLContainer("postgres:latest")
-
-        internal val genericContainer = GenericContainer(DockerImageName.parse("python:3.10-slim"))
-            .withCommand("tail", "-f", "/dev/null")
-
 
         @BeforeAll
         @JvmStatic
         fun setup() {
-            minio.start()
             postgres.start()
-            genericContainer.start()
-        }
-
-        @DynamicPropertySource
-        @JvmStatic
-        fun registerDockerProperties(registry: DynamicPropertyRegistry) {
-            registry.add("docker.image") { genericContainer.containerName }
         }
     }
 

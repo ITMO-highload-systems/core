@@ -1,10 +1,9 @@
 package org.example.notion.app.paragraph.dto
 
 import jakarta.validation.constraints.Min
-import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
 import org.example.notion.app.paragraph.entity.ParagraphType
-import org.springframework.web.multipart.MultipartFile
+import org.springframework.http.codec.multipart.FilePart
 
 data class ParagraphCreateRequest(
     @field:Min(1)
@@ -17,7 +16,5 @@ data class ParagraphCreateRequest(
 
     val text: String,
 
-    val paragraphType: ParagraphType,
-
-    val images: List<MultipartFile> = emptyList()
+    val paragraphType: ParagraphType
 )
