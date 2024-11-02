@@ -4,7 +4,6 @@ import org.example.notion.app.exceptions.EntityNotFoundException
 import org.example.notion.app.exceptions.IdSimilarException
 import org.example.notion.app.exceptions.ParagraphErrorTypeException
 import org.example.notion.app.paragraph.client.ExecutorServiceClient
-import org.example.notion.app.paragraph.client.ImageCreateClient
 import org.example.notion.app.paragraph.client.ImageServiceClient
 import org.example.notion.app.paragraph.dto.ChangeParagraphPositionRequest
 import org.example.notion.app.paragraph.dto.ParagraphCreateRequest
@@ -38,8 +37,7 @@ class ParagraphServiceImpl(
     @Qualifier("executorServiceClient")
     private val executorServiceClient: ExecutorServiceClient,
     @Qualifier("imageServiceClient")
-    private val imageServiceClient: ImageServiceClient,
-    private val imageCreateClient: ImageCreateClient
+    private val imageServiceClient: ImageServiceClient
 ) : ParagraphService {
 
     companion object {
@@ -214,17 +212,6 @@ class ParagraphServiceImpl(
         return paragraphRepository.findAllParagraphs(pageSize,pageNumber * pageSize).asSequence().map { paragraphToResponse(it) }.toList()
     }
 
-    override fun addImageToParagraph(paragraphId: Long, file: FilePart) {
-        val paragraph = paragraphRepository.findByParagraphId(paragraphId)
-        require(paragraph != null) {
-            logger.error(PARAGRAPH_NOT_FOUND.format(paragraphId))
-            throw EntityNotFoundException(PARAGRAPH_NOT_FOUND.format(paragraphId))
-        }
-
-        permissionService.requireUserPermission(paragraph.noteId, Permission.WRITER)
-        imageCreateClient.createImage(paragraphId, file)
-    }
-
     override fun deleteImageFromParagraph(paragraphId: Long, imageName: String) {
         val paragraph = paragraphRepository.findByParagraphId(paragraphId)
         require(paragraph != null) {
@@ -243,6 +230,21 @@ class ParagraphServiceImpl(
         paragraphRepository.findByNoteId(noteId).asSequence().forEach {
             deleteParagraph(it.id!!)
         }
+    }
+
+    override fun isPosssibleAddImageToParagraph(paragraphId: Long): Boolean {
+        val paragraph = paragraphRepository.findByParagraphId(paragraphId)
+        try {
+            require(paragraph != null) {
+                logger.error(PARAGRAPH_NOT_FOUND.format(paragraphId))
+                throw EntityNotFoundException(PARAGRAPH_NOT_FOUND.format(paragraphId))
+            }
+
+            permissionService.requireUserPermission(paragraph.noteId, Permission.WRITER)
+        } catch (e: Exception) {
+            return false
+        }
+        return true
     }
 
     private fun updateParagraphEntity(

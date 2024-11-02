@@ -24,13 +24,16 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.openfeign.EnableFeignClients
+import org.springframework.core.io.ClassPathResource
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import org.springframework.http.client.MultipartBodyBuilder
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import org.springframework.web.reactive.function.BodyInserters
 
 @EnableFeignClients
 @EnableConfigurationProperties
@@ -351,4 +354,6 @@ class ParagraphTest : AbstractIntegrationTest() {
             .andReturn().response.contentAsString
         return mapper.readValue(result, ParagraphGetResponse::class.java)
     }
+
+    // TODO пофиксить добавление картинки + добавить тесты / вынести конфигурацию / запаковать все в docker / убедится в работоспособности circuit breaker / отрефакторить все по по максимуму чтобы было меньше кода
 }

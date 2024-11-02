@@ -19,6 +19,7 @@ import org.springframework.boot.testcontainers.service.connection.ServiceConnect
 import org.springframework.http.MediaType
 import org.springframework.mock.web.MockAsyncContext
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.MvcResult
 import org.springframework.test.web.servlet.ResultActions
@@ -42,6 +43,9 @@ abstract class AbstractIntegrationTest {
 
     @Autowired
     lateinit var mapper: ObjectMapper
+
+    @Autowired
+    lateinit var webTestClient: WebTestClient
 
     companion object {
         private val logger = LoggerFactory.getLogger(this::class.java)

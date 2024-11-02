@@ -30,6 +30,7 @@ val cloudVersion = "4.1.3"
 val wiremockVersion = "3.9.2"
 val jettyServer = "11.0.24"
 val netflixVersion = "2.2.10.RELEASE"
+val reactiveFeignVersion = "4.2.1"
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")

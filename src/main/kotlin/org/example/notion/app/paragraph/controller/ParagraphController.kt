@@ -10,9 +10,7 @@ import org.example.notion.app.user.UserContext
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.http.codec.multipart.FilePart
 import org.springframework.web.bind.annotation.*
-import reactor.core.publisher.Mono
 
 @RestController
 @RequestMapping("api/v1/paragraph")
@@ -92,15 +90,13 @@ class ParagraphController(
         return ResponseEntity.ok().headers(headers).body(paragraphs)
     }
 
-    @PutMapping("/addImageToParagraph/{paragraphId}")
-    fun addImageToParagraph(
+    @GetMapping("/isPossibleAddImageToParagraph/{paragraphId}")
+    fun isPossibleAddImageToParagraph(
         @RequestHeader("user-id") userId: Long,
-        @PathVariable paragraphId: Long,
-        @RequestPart("file") filePart: FilePart
-    ): ResponseEntity<Unit> {
+        @PathVariable paragraphId: Long
+    ): ResponseEntity<Boolean> {
         UserContext.setCurrentUser(userId)
-        paragraphService.addImageToParagraph(paragraphId, filePart)
-        return ResponseEntity(HttpStatus.CREATED)
+        return ResponseEntity.ok(paragraphService.isPosssibleAddImageToParagraph(paragraphId))
     }
 
     @DeleteMapping("/deleteImageFromParagraph/{paragraphId}")
@@ -112,13 +108,5 @@ class ParagraphController(
         UserContext.setCurrentUser(userId)
         paragraphService.deleteImageFromParagraph(paragraphId, imageName)
         return ResponseEntity.noContent().build()
-    }
-
-    @PutMapping("/create/{paragraphId}")
-    fun saveImage(
-        @PathVariable paragraphId: Long,
-        @RequestPart("file") filePart: FilePart
-    ): Mono<ResponseEntity<Unit>> {
-        return Mono.just(ResponseEntity(HttpStatus.CREATED))
     }
 }
