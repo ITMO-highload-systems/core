@@ -24,16 +24,13 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.openfeign.EnableFeignClients
-import org.springframework.core.io.ClassPathResource
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
-import org.springframework.http.client.MultipartBodyBuilder
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
-import org.springframework.web.reactive.function.BodyInserters
 
 @EnableFeignClients
 @EnableConfigurationProperties
@@ -49,11 +46,11 @@ class ParagraphTest : AbstractIntegrationTest() {
 
     @Autowired
     @Qualifier("mockImageService")
-    private val mockImageService = WireMockServer(81)
+    private lateinit var mockImageService: WireMockServer
 
     @Autowired
     @Qualifier("mockCodeExecService")
-    private val mockCodeExecService = WireMockServer(80)
+    private lateinit var mockCodeExecService: WireMockServer
 
     @Autowired
     lateinit var objectMapper: ObjectMapper
