@@ -16,7 +16,7 @@ data class Paragraph(
 
     var nextParagraphId: Long?,
     var text: String,
-    var lastUpdateUserId: Long,
+    var lastUpdateUserId: String,
     var createdAt: LocalDateTime,
     var updatedAt: LocalDateTime,
     var paragraphType: ParagraphType
@@ -27,7 +27,7 @@ data class Paragraph(
         var title: String = "",
         var nextParagraphId: Long? = 0,
         var text: String = "",
-        var lastUpdateUserId: Long = 0,
+        var lastUpdateUserId: String = "",
         var createdAt: LocalDateTime = LocalDateTime.now(),
         var updatedAt: LocalDateTime = LocalDateTime.now(),
         var paragraphType: ParagraphType = ParagraphType.PLAIN_TEXT_PARAGRAPH
@@ -36,7 +36,7 @@ data class Paragraph(
         fun title(title: String) = apply { this.title = title }
         fun nextParagraphId(nextParagraphId: Long?) = apply { this.nextParagraphId = nextParagraphId }
         fun text(text: String) = apply { this.text = text }
-        fun lastUpdateUserId(lastUpdateUserId: Long) = apply { this.lastUpdateUserId = lastUpdateUserId }
+        fun lastUpdateUserId(lastUpdateUserId: String) = apply { this.lastUpdateUserId = lastUpdateUserId }
         fun createdAt(createdAt: LocalDateTime) = apply { this.createdAt = createdAt }
         fun updatedAt(updatedAt: LocalDateTime) = apply { this.updatedAt = updatedAt }
         fun paragraphType(paragraphType: ParagraphType) = apply { this.paragraphType = paragraphType }

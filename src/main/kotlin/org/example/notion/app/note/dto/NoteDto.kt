@@ -17,7 +17,7 @@ data class NoteDto(
 
     @Min(1)
     @NotNull
-    val owner: Long,
+    val owner: String,
 
     @NotBlank
     @Size(max = 255)

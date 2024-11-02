@@ -3,7 +3,6 @@ package org.example.notion.app.team
 import org.example.notion.AbstractIntegrationTest
 import org.example.notion.app.note.dto.NoteDto
 import org.example.notion.app.team.dto.TeamDto
-import org.example.notion.app.user.dto.UserResponseDto
 import org.example.notion.app.userPermission.dto.NoteTeamPermissionDto
 import org.example.notion.app.userPermission.entity.Permission
 import org.hamcrest.Matchers.hasSize
@@ -15,8 +14,8 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 
 class TeamPermissionControllerTest : AbstractIntegrationTest() {
-    lateinit var testTeamOwner: UserResponseDto
-    lateinit var testNoteOwner: UserResponseDto
+    lateinit var testTeamOwner: String
+    lateinit var testNoteOwner: String
     lateinit var testTeam: TeamDto
     lateinit var testNote: NoteDto
 
@@ -24,8 +23,8 @@ class TeamPermissionControllerTest : AbstractIntegrationTest() {
     fun setUp() {
         testTeamOwner = createUser()
         testNoteOwner = createUser()
-        testTeam = createTeam(testTeamOwner.userId)
-        testNote = createNote(testNoteOwner.userId)
+        testTeam = createTeam(testTeamOwner)
+        testNote = createNote()
     }
 
     @Test
@@ -33,7 +32,7 @@ class TeamPermissionControllerTest : AbstractIntegrationTest() {
 
         mockMvc.perform(
             MockMvcRequestBuilders.post("/api/v1/team/permissions")
-                .header("user-id", testNoteOwner.userId)
+                .header("user-id", testNoteOwner)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
@@ -56,7 +55,7 @@ class TeamPermissionControllerTest : AbstractIntegrationTest() {
 
         mockMvc.perform(
             MockMvcRequestBuilders.post("/api/v1/team/permissions")
-                .header("user-id", testTeamOwner.userId)
+                .header("user-id", testTeamOwner)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
@@ -73,12 +72,12 @@ class TeamPermissionControllerTest : AbstractIntegrationTest() {
     @Test
     fun `create team permission - permission already exist  - conflict`() {
         createTeamPermission(
-            testNoteOwner.userId,
+            testNoteOwner,
             NoteTeamPermissionDto(testTeam.teamId, testNote.noteId, Permission.READER)
         )
         mockMvc.perform(
             MockMvcRequestBuilders.post("/api/v1/team/permissions")
-                .header("user-id", testNoteOwner.userId)
+                .header("user-id", testNoteOwner)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
@@ -96,7 +95,7 @@ class TeamPermissionControllerTest : AbstractIntegrationTest() {
     fun `create team permission - note not exist  - not found`() {
         mockMvc.perform(
             MockMvcRequestBuilders.post("/api/v1/team/permissions")
-                .header("user-id", testNoteOwner.userId)
+                .header("user-id", testNoteOwner)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
@@ -114,7 +113,7 @@ class TeamPermissionControllerTest : AbstractIntegrationTest() {
     fun `create team permission - team not exist  - not found`() {
         mockMvc.perform(
             MockMvcRequestBuilders.post("/api/v1/team/permissions")
-                .header("user-id", testNoteOwner.userId)
+                .header("user-id", testNoteOwner)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
@@ -130,14 +129,14 @@ class TeamPermissionControllerTest : AbstractIntegrationTest() {
 
     @Test
     fun `update team permission - valid input update permission - success`() {
-        val team = createTeam(testTeamOwner.userId)
+        val team = createTeam(testTeamOwner)
         createTeamPermission(
-            testNoteOwner.userId,
+            testNoteOwner,
             NoteTeamPermissionDto(team.teamId, testNote.noteId, Permission.READER)
         )
         mockMvc.perform(
             MockMvcRequestBuilders.put("/api/v1/team/permissions")
-                .header("user-id", testNoteOwner.userId)
+                .header("user-id", testNoteOwner)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
@@ -157,14 +156,14 @@ class TeamPermissionControllerTest : AbstractIntegrationTest() {
 
     @Test
     fun `update team permission - not by note owner for  - success`() {
-        val team = createTeam(testTeamOwner.userId)
+        val team = createTeam(testTeamOwner)
         createTeamPermission(
-            testNoteOwner.userId,
+            testNoteOwner,
             NoteTeamPermissionDto(team.teamId, testNote.noteId, Permission.READER)
         )
         mockMvc.perform(
             MockMvcRequestBuilders.put("/api/v1/team/permissions")
-                .header("user-id", testTeamOwner.userId)
+                .header("user-id", testTeamOwner)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
@@ -180,10 +179,10 @@ class TeamPermissionControllerTest : AbstractIntegrationTest() {
 
     @Test
     fun `update team permission - permission not exist  - not found`() {
-        val team = createTeam(testTeamOwner.userId)
+        val team = createTeam(testTeamOwner)
         mockMvc.perform(
             MockMvcRequestBuilders.put("/api/v1/team/permissions")
-                .header("user-id", testNoteOwner.userId)
+                .header("user-id", testNoteOwner)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
@@ -199,10 +198,10 @@ class TeamPermissionControllerTest : AbstractIntegrationTest() {
 
     @Test
     fun `update team permission - note not exist  - not found`() {
-        val team = createTeam(testTeamOwner.userId)
+        val team = createTeam(testTeamOwner)
         mockMvc.perform(
             MockMvcRequestBuilders.put("/api/v1/team/permissions")
-                .header("user-id", testNoteOwner.userId)
+                .header("user-id", testNoteOwner)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
@@ -218,14 +217,14 @@ class TeamPermissionControllerTest : AbstractIntegrationTest() {
 
     @Test
     fun `delete team permission - delete by note owner  - success`() {
-        val team = createTeam(testTeamOwner.userId)
+        val team = createTeam(testTeamOwner)
         createTeamPermission(
-            testNoteOwner.userId,
+            testNoteOwner,
             NoteTeamPermissionDto(team.teamId, testNote.noteId, Permission.READER)
         )
         mockMvc.perform(
             MockMvcRequestBuilders.delete("/api/v1/team/permissions")
-                .header("user-id", testNoteOwner.userId)
+                .header("user-id", testNoteOwner)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
@@ -240,14 +239,14 @@ class TeamPermissionControllerTest : AbstractIntegrationTest() {
 
     @Test
     fun `delete team permission - delete by team owner  - success`() {
-        val team = createTeam(testTeamOwner.userId)
+        val team = createTeam(testTeamOwner)
         createTeamPermission(
-            testNoteOwner.userId,
+            testNoteOwner,
             NoteTeamPermissionDto(team.teamId, testNote.noteId, Permission.READER)
         )
         mockMvc.perform(
             MockMvcRequestBuilders.delete("/api/v1/team/permissions")
-                .header("user-id", testTeamOwner.userId)
+                .header("user-id", testTeamOwner)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
@@ -263,14 +262,14 @@ class TeamPermissionControllerTest : AbstractIntegrationTest() {
     @Test
     fun `delete team permission - delete by some user  - forbidden`() {
         val createUser = createUser()
-        val team = createTeam(testTeamOwner.userId)
+        val team = createTeam(testTeamOwner)
         createTeamPermission(
-            testNoteOwner.userId,
+            testNoteOwner,
             NoteTeamPermissionDto(team.teamId, testNote.noteId, Permission.READER)
         )
         mockMvc.perform(
             MockMvcRequestBuilders.delete("/api/v1/team/permissions")
-                .header("user-id", createUser.userId)
+                .header("user-id", createUser)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
@@ -287,7 +286,7 @@ class TeamPermissionControllerTest : AbstractIntegrationTest() {
     fun `delete team permission - note not exist  - not found`() {
         mockMvc.perform(
             MockMvcRequestBuilders.delete("/api/v1/team/permissions")
-                .header("user-id", testTeamOwner.userId)
+                .header("user-id", testTeamOwner)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
@@ -304,7 +303,7 @@ class TeamPermissionControllerTest : AbstractIntegrationTest() {
     fun `delete team permission - team not exist  - not found`() {
         mockMvc.perform(
             MockMvcRequestBuilders.delete("/api/v1/team/permissions")
-                .header("user-id", testTeamOwner.userId)
+                .header("user-id", testTeamOwner)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
@@ -319,10 +318,10 @@ class TeamPermissionControllerTest : AbstractIntegrationTest() {
 
     @Test
     fun `delete team permission - permission not exist  - success`() {
-        val team = createTeam(testTeamOwner.userId)
+        val team = createTeam(testTeamOwner)
         mockMvc.perform(
             MockMvcRequestBuilders.delete("/api/v1/team/permissions")
-                .header("user-id", testTeamOwner.userId)
+                .header("user-id", testTeamOwner)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
@@ -339,16 +338,16 @@ class TeamPermissionControllerTest : AbstractIntegrationTest() {
     fun `find by note id - note not exist  - not found`() {
         mockMvc.perform(
             MockMvcRequestBuilders.get("/api/v1/team/permissions/byNote/123")
-                .header("user-id", testNoteOwner.userId)
+                .header("user-id", testNoteOwner)
         ).andExpect(MockMvcResultMatchers.status().isNotFound)
     }
 
     @Test
     fun `find by note id - empty  - success`() {
-        val createNote = createNote(testNoteOwner.userId)
+        val createNote = createNote()
         mockMvc.perform(
             MockMvcRequestBuilders.get("/api/v1/team/permissions/byNote/${createNote.noteId}")
-                .header("user-id", testNoteOwner.userId)
+                .header("user-id", testNoteOwner)
         ).andExpect(MockMvcResultMatchers.status().isOk)
             .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$").isArray)
@@ -357,14 +356,14 @@ class TeamPermissionControllerTest : AbstractIntegrationTest() {
 
     @Test
     fun `find by note id - valid  - success`() {
-        val note = createNote(testNoteOwner.userId)
+        val note = createNote()
         val createTeamPermission = createTeamPermission(
-            testNoteOwner.userId,
+            testNoteOwner,
             NoteTeamPermissionDto(testTeam.teamId, note.noteId, Permission.READER)
         )
         mockMvc.perform(
             MockMvcRequestBuilders.get("/api/v1/team/permissions/byNote/${note.noteId}")
-                .header("user-id", testNoteOwner.userId)
+                .header("user-id", testNoteOwner)
         ).andExpect(MockMvcResultMatchers.status().isOk)
             .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$").isArray)
@@ -376,21 +375,21 @@ class TeamPermissionControllerTest : AbstractIntegrationTest() {
 
     @Test
     fun `find by note id - ok for note reader  - success`() {
-        val note = createNote(testNoteOwner.userId)
+        val note = createNote()
         val createTeamPermission = createTeamPermission(
-            testNoteOwner.userId,
+            testNoteOwner,
             NoteTeamPermissionDto(testTeam.teamId, note.noteId, Permission.READER)
         )
         val user = createUser()
         createPermission(
-            testNoteOwner.userId,
-            user.userId,
+            testNoteOwner,
+            user,
             note.noteId,
             Permission.READER
         )
         mockMvc.perform(
             MockMvcRequestBuilders.get("/api/v1/team/permissions/byNote/${note.noteId}")
-                .header("user-id", user.userId)
+                .header("user-id", user)
         ).andExpect(MockMvcResultMatchers.status().isOk)
             .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$").isArray)
@@ -402,10 +401,10 @@ class TeamPermissionControllerTest : AbstractIntegrationTest() {
 
     @Test
     fun `find by note id - forbidden for not note reader  - forbidden`() {
-        val note = createNote(testNoteOwner.userId)
+        val note = createNote()
         mockMvc.perform(
             MockMvcRequestBuilders.get("/api/v1/team/permissions/byNote/${note.noteId}")
-                .header("user-id", testTeamOwner.userId)
+                .header("user-id", testTeamOwner)
         ).andExpect(MockMvcResultMatchers.status().isForbidden)
     }
 
@@ -413,16 +412,16 @@ class TeamPermissionControllerTest : AbstractIntegrationTest() {
     fun `find by team id - team not exist  - not found`() {
         mockMvc.perform(
             MockMvcRequestBuilders.get("/api/v1/team/permissions/byTeam/123")
-                .header("user-id", testTeamOwner.userId)
+                .header("user-id", testTeamOwner)
         ).andExpect(MockMvcResultMatchers.status().isNotFound)
     }
 
     @Test
     fun `find by team id - empty  - success`() {
-        val team = createTeam(testTeamOwner.userId)
+        val team = createTeam(testTeamOwner)
         mockMvc.perform(
             MockMvcRequestBuilders.get("/api/v1/team/permissions/byTeam/${team.teamId}")
-                .header("user-id", testTeamOwner.userId)
+                .header("user-id", testTeamOwner)
         ).andExpect(MockMvcResultMatchers.status().isOk)
             .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$").isArray)
@@ -431,14 +430,14 @@ class TeamPermissionControllerTest : AbstractIntegrationTest() {
 
     @Test
     fun `find by team id - valid  - success`() {
-        val team = createTeam(testTeamOwner.userId)
+        val team = createTeam(testTeamOwner)
         val createTeamPermission = createTeamPermission(
-            testNoteOwner.userId,
+            testNoteOwner,
             NoteTeamPermissionDto(team.teamId, testNote.noteId, Permission.READER)
         )
         mockMvc.perform(
             MockMvcRequestBuilders.get("/api/v1/team/permissions/byTeam/${team.teamId}")
-                .header("user-id", testTeamOwner.userId)
+                .header("user-id", testTeamOwner)
         ).andExpect(MockMvcResultMatchers.status().isOk)
             .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$").isArray)
@@ -450,16 +449,16 @@ class TeamPermissionControllerTest : AbstractIntegrationTest() {
 
     @Test
     fun `find by team id - ok for team participant  - success`() {
-        val team = createTeam(testTeamOwner.userId)
+        val team = createTeam(testTeamOwner)
         val createTeamPermission = createTeamPermission(
-            testNoteOwner.userId,
+            testNoteOwner,
             NoteTeamPermissionDto(team.teamId, testNote.noteId, Permission.READER)
         )
         val user = createUser()
-        createTeamParticipant(testTeamOwner.userId, user.userId, team.teamId)
+        createTeamParticipant(testTeamOwner, user, team.teamId)
         mockMvc.perform(
             MockMvcRequestBuilders.get("/api/v1/team/permissions/byTeam/${team.teamId}")
-                .header("user-id", user.userId)
+                .header("user-id", user)
         ).andExpect(MockMvcResultMatchers.status().isOk)
             .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$").isArray)
@@ -471,10 +470,10 @@ class TeamPermissionControllerTest : AbstractIntegrationTest() {
 
     @Test
     fun `find by team id - forbidden for not team participant  - forbidden`() {
-        val team = createTeam(testTeamOwner.userId)
+        val team = createTeam(testTeamOwner)
         mockMvc.perform(
             MockMvcRequestBuilders.get("/api/v1/team/permissions/byTeam/${team.teamId}")
-                .header("user-id", testNoteOwner.userId)
+                .header("user-id", testNoteOwner)
         ).andExpect(MockMvcResultMatchers.status().isForbidden)
     }
 

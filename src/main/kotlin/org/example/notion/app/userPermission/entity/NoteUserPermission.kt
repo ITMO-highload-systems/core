@@ -8,6 +8,6 @@ data class NoteUserPermission(
     @Id
     val permissionId: Long,
     val noteId: Long,
-    val userId: Long,
+    val userId: String,
     val permission: Permission,
 )

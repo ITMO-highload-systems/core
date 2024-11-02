@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component
 @Component
 class ParagraphMapper {
 
-    fun toEntity(dto: ParagraphCreateRequest, userId: Long): Paragraph {
+    fun toEntity(dto: ParagraphCreateRequest, userId: String): Paragraph {
         return Paragraph.Builder()
             .noteId(dto.noteId)
             .title(dto.title)

@@ -12,7 +12,7 @@ interface NoteRepository : CrudRepository<Note, Long> {
     fun findByNoteId(noteId: Long): Note?
 
     @Query("SELECT * FROM note WHERE owner = :owner")
-    fun findByOwner(owner: Long): List<Note>
+    fun findByOwner(owner: String): List<Note>
 
     @Modifying
     @Query("DELETE FROM note WHERE note_id = :noteId")

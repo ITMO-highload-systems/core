@@ -8,5 +8,5 @@ data class TeamUser(
     @Id
     val id: Long,
     val teamId: Long,
-    val userId: Long
+    val userId: String
 )

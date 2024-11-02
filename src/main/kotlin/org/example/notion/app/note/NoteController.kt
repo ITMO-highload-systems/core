@@ -3,7 +3,6 @@ package org.example.notion.app.note
 import org.example.notion.app.note.dto.NoteCreateDto
 import org.example.notion.app.note.dto.NoteDto
 import org.example.notion.app.note.dto.NoteUpdateDto
-import org.example.notion.app.user.UserContext
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.validation.annotation.Validated
@@ -17,46 +16,35 @@ class NoteController(
 
     @GetMapping("{noteId}")
     fun getNoteById(
-        @PathVariable("noteId") noteId: Long,
-        @RequestHeader("user-id") userId: Long
+        @PathVariable("noteId") noteId: Long
     ): ResponseEntity<NoteDto> {
-        UserContext.setCurrentUser(userId)
         return ResponseEntity.ok(noteService.getByNoteId(noteId))
     }
 
     @GetMapping("/my")
-    fun getNoteByOwnerId(
-        @RequestHeader("user-id") userId: Long
-    ): ResponseEntity<List<NoteDto>> {
-        UserContext.setCurrentUser(userId)
-        return ResponseEntity.ok(noteService.getByOwnerId(userId))
+    fun getNoteByOwnerId(): ResponseEntity<List<NoteDto>> {
+        return ResponseEntity.ok(noteService.getByOwnerId())
     }
 
     @DeleteMapping("{noteId}")
     fun deleteByNoteId(
-        @PathVariable("noteId") noteId: Long,
-        @RequestHeader("user-id") userId: Long
+        @PathVariable("noteId") noteId: Long
     ): ResponseEntity<Void> {
-        UserContext.setCurrentUser(userId)
         noteService.deleteByNoteId(noteId)
         return ResponseEntity(HttpStatus.OK)
     }
 
     @PostMapping
     fun createNote(
-        @Validated @RequestBody noteCreateDto: NoteCreateDto,
-        @RequestHeader("user-id") userId: Long
+        @Validated @RequestBody noteCreateDto: NoteCreateDto
     ): ResponseEntity<NoteDto> {
-        UserContext.setCurrentUser(userId)
         return ResponseEntity(noteService.create(noteCreateDto), HttpStatus.CREATED)
     }
 
     @PutMapping
     fun updateNote(
-        @Validated @RequestBody noteUpdateDto: NoteUpdateDto,
-        @RequestHeader("user-id") userId: Long
+        @Validated @RequestBody noteUpdateDto: NoteUpdateDto
     ): ResponseEntity<NoteDto> {
-        UserContext.setCurrentUser(userId)
         return ResponseEntity.ok(noteService.update(noteUpdateDto))
     }
 

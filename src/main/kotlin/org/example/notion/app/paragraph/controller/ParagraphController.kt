@@ -6,7 +6,6 @@ import org.example.notion.app.paragraph.dto.ParagraphCreateRequest
 import org.example.notion.app.paragraph.dto.ParagraphGetResponse
 import org.example.notion.app.paragraph.dto.ParagraphUpdateRequest
 import org.example.notion.app.paragraph.service.ParagraphService
-import org.example.notion.app.user.UserContext
 import org.example.notion.sse.Message
 import org.example.notion.sse.SseService
 import org.example.notion.sse.Type
@@ -29,10 +28,8 @@ class ParagraphController(
 
     @PostMapping("/create")
     fun createParagraph(
-        @RequestHeader("user-id") userId: Long,
         @Valid @ModelAttribute paragraphCreateRequest: ParagraphCreateRequest
     ): ResponseEntity<ParagraphGetResponse> {
-        UserContext.setCurrentUser(userId)
         return ResponseEntity(paragraphService.createParagraph(paragraphCreateRequest), HttpStatus.CREATED)
     }
 
@@ -41,7 +38,6 @@ class ParagraphController(
         @RequestHeader("user-id") userId: Long,
         @PathVariable paragraphId: Long
     ): CompletableFuture<ResponseEntity<String>> {
-        UserContext.setCurrentUser(userId)
         return paragraphService.executeParagraph(paragraphId)
             .thenApply { result ->
                 sseService.sendMessage(2, Message(Type.PARAGRAPH_EXECUTED, result))
@@ -54,35 +50,28 @@ class ParagraphController(
         @RequestHeader("user-id") userId: Long,
         @PathVariable paragraphId: Long
     ): ResponseEntity<Unit> {
-        UserContext.setCurrentUser(userId)
         paragraphService.deleteParagraph(paragraphId)
         return ResponseEntity.ok().build()
     }
 
     @GetMapping("/get/{paragraphId}")
     fun getParagraph(
-        @RequestHeader("user-id") userId: Long,
         @PathVariable paragraphId: Long
     ): ResponseEntity<ParagraphGetResponse> {
-        UserContext.setCurrentUser(userId)
         return ResponseEntity.ok(paragraphService.getParagraph(paragraphId))
     }
 
     @PutMapping("/update")
     fun updateParagraph(
-        @Valid @RequestHeader("user-id") userId: Long,
         @Valid @ModelAttribute paragraphUpdateRequest: ParagraphUpdateRequest
     ): ResponseEntity<ParagraphGetResponse> {
-        UserContext.setCurrentUser(userId)
         return ResponseEntity.ok(paragraphService.updateParagraph(paragraphUpdateRequest))
     }
 
     @PostMapping("/position")
     fun changeParagraphPosition(
-        @Valid @RequestHeader("user-id") userId: Long,
         @Valid @RequestBody changeParagraphPositionRequest: ChangeParagraphPositionRequest
     ): ResponseEntity<Unit> {
-        UserContext.setCurrentUser(userId)
         paragraphService.changeParagraphPosition(changeParagraphPositionRequest)
         return ResponseEntity.ok().build()
     }

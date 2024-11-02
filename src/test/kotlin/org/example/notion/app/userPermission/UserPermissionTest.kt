@@ -3,7 +3,6 @@ package org.example.notion.app.userPermission
 import com.fasterxml.jackson.core.type.TypeReference
 import org.example.notion.AbstractIntegrationTest
 import org.example.notion.app.note.dto.NoteDto
-import org.example.notion.app.user.dto.UserResponseDto
 import org.example.notion.app.userPermission.dto.NoteUserPermissionDto
 import org.example.notion.app.userPermission.entity.Permission
 import org.junit.jupiter.api.Test
@@ -31,19 +30,19 @@ class UserPermissionTest : AbstractIntegrationTest() {
 
     @Test
     fun `forbidden change owner permission`() {
-        val userDtoResponse: UserResponseDto = createUser()
+        val userDtoResponse: String = createUser()
 
-        val noteDtoResponse: NoteDto = createNote(userDtoResponse.userId)
+        val noteDtoResponse: NoteDto = createNote()
 
         mockMvc.perform(
             MockMvcRequestBuilders
                 .post("/api/v1/user/permissions")
-                .header("user-id", userDtoResponse.userId)
+                .header("user-id", userDtoResponse)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
                         mapOf(
-                            "user_id" to userDtoResponse.userId,
+                            "user_id" to userDtoResponse,
                             "note_id" to noteDtoResponse.noteId,
                             "permission" to "READER"
                         )
@@ -54,37 +53,37 @@ class UserPermissionTest : AbstractIntegrationTest() {
 
     @Test
     fun `owner allowed create permission`() {
-        val ownerDtoResponse: UserResponseDto = createUser()
-        val someUserDtoResponse: UserResponseDto = createUser()
+        val ownerDtoResponse: String = createUser()
+        val someUserDtoResponse: String = createUser()
 
-        val noteDtoResponse: NoteDto = createNote(ownerDtoResponse.userId)
+        val noteDtoResponse: NoteDto = createNote()
 
-        createPermission(ownerDtoResponse.userId, someUserDtoResponse.userId, noteDtoResponse.noteId, Permission.READER)
+        createPermission(ownerDtoResponse, someUserDtoResponse, noteDtoResponse.noteId, Permission.READER)
 
         assertContains(
-            getNotePermission(noteDtoResponse.noteId, ownerDtoResponse.userId),
-            NoteUserPermissionDto(someUserDtoResponse.userId, noteDtoResponse.noteId, Permission.READER)
+            getNotePermission(noteDtoResponse.noteId, ownerDtoResponse),
+            NoteUserPermissionDto(someUserDtoResponse, noteDtoResponse.noteId, Permission.READER)
         )
     }
 
 
     @Test
     fun `forbidden create permission for not owner`() {
-        val ownerDtoResponse: UserResponseDto = createUser()
-        val someUserDtoResponse: UserResponseDto = createUser()
-        val someUserDtoResponse2: UserResponseDto = createUser()
+        val ownerDtoResponse: String = createUser()
+        val someUserDtoResponse: String = createUser()
+        val someUserDtoResponse2: String = createUser()
 
-        val noteDtoResponse: NoteDto = createNote(ownerDtoResponse.userId)
+        val noteDtoResponse: NoteDto = createNote()
 
         mockMvc.perform(
             MockMvcRequestBuilders
                 .post("/api/v1/user/permissions")
-                .header("user-id", someUserDtoResponse2.userId)
+                .header("user-id", someUserDtoResponse2)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
                         mapOf(
-                            "user_id" to someUserDtoResponse.userId,
+                            "user_id" to someUserDtoResponse,
                             "note_id" to noteDtoResponse.noteId,
                             "permission" to "READER"
                         )
@@ -97,52 +96,52 @@ class UserPermissionTest : AbstractIntegrationTest() {
 
     @Test
     fun `owner allowed delete existing permission`() {
-        val ownerDtoResponse: UserResponseDto = createUser()
-        val someUserDtoResponse: UserResponseDto = createUser()
+        val ownerDtoResponse: String = createUser()
+        val someUserDtoResponse: String = createUser()
 
-        val noteDtoResponse: NoteDto = createNote(ownerDtoResponse.userId)
+        val noteDtoResponse: NoteDto = createNote()
 
-        createPermission(ownerDtoResponse.userId, someUserDtoResponse.userId, noteDtoResponse.noteId, Permission.READER)
+        createPermission(ownerDtoResponse, someUserDtoResponse, noteDtoResponse.noteId, Permission.READER)
 
-        assertFalse { getNotePermission(noteDtoResponse.noteId, ownerDtoResponse.userId).isEmpty() }
+        assertFalse { getNotePermission(noteDtoResponse.noteId, ownerDtoResponse).isEmpty() }
 
         mockMvc.perform(
             MockMvcRequestBuilders
                 .delete("/api/v1/user/permissions")
-                .header("user-id", ownerDtoResponse.userId)
+                .header("user-id", ownerDtoResponse)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
                         mapOf(
-                            "user_id" to someUserDtoResponse.userId,
+                            "user_id" to someUserDtoResponse,
                             "note_id" to noteDtoResponse.noteId
                         )
                     )
                 )
         ).andExpect(MockMvcResultMatchers.status().isOk)
 
-        assertTrue { getNotePermission(noteDtoResponse.noteId, ownerDtoResponse.userId).isEmpty() }
+        assertTrue { getNotePermission(noteDtoResponse.noteId, ownerDtoResponse).isEmpty() }
     }
 
     @Test
     fun `owner allowed delete existing permission twice`() {
-        val ownerDtoResponse: UserResponseDto = createUser()
-        val someUserDtoResponse: UserResponseDto = createUser()
+        val ownerDtoResponse: String = createUser()
+        val someUserDtoResponse: String = createUser()
 
-        val noteDtoResponse: NoteDto = createNote(ownerDtoResponse.userId)
+        val noteDtoResponse: NoteDto = createNote()
 
-        createPermission(ownerDtoResponse.userId, someUserDtoResponse.userId, noteDtoResponse.noteId, Permission.READER)
-        assertFalse { getNotePermission(noteDtoResponse.noteId, ownerDtoResponse.userId).isEmpty() }
+        createPermission(ownerDtoResponse, someUserDtoResponse, noteDtoResponse.noteId, Permission.READER)
+        assertFalse { getNotePermission(noteDtoResponse.noteId, ownerDtoResponse).isEmpty() }
 
         mockMvc.perform(
             MockMvcRequestBuilders
                 .delete("/api/v1/user/permissions")
-                .header("user-id", ownerDtoResponse.userId)
+                .header("user-id", ownerDtoResponse)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
                         mapOf(
-                            "user_id" to someUserDtoResponse.userId,
+                            "user_id" to someUserDtoResponse,
                             "note_id" to noteDtoResponse.noteId
                         )
                     )
@@ -152,31 +151,31 @@ class UserPermissionTest : AbstractIntegrationTest() {
         mockMvc.perform(
             MockMvcRequestBuilders
                 .delete("/api/v1/user/permissions")
-                .header("user-id", ownerDtoResponse.userId)
+                .header("user-id", ownerDtoResponse)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
                         mapOf(
-                            "user_id" to someUserDtoResponse.userId,
+                            "user_id" to someUserDtoResponse,
                             "note_id" to noteDtoResponse.noteId
                         )
                     )
                 )
         ).andExpect(MockMvcResultMatchers.status().isOk)
-        assertTrue { getNotePermission(noteDtoResponse.noteId, ownerDtoResponse.userId).isEmpty() }
+        assertTrue { getNotePermission(noteDtoResponse.noteId, ownerDtoResponse).isEmpty() }
 
     }
 
     @Test
     fun `owner allowed delete not existing permission`() {
-        val ownerDtoResponse: UserResponseDto = createUser()
+        val ownerDtoResponse: String = createUser()
 
-        val noteDtoResponse: NoteDto = createNote(ownerDtoResponse.userId)
+        val noteDtoResponse: NoteDto = createNote()
 
         mockMvc.perform(
             MockMvcRequestBuilders
                 .delete("/api/v1/user/permissions")
-                .header("user-id", ownerDtoResponse.userId)
+                .header("user-id", ownerDtoResponse)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
@@ -191,24 +190,24 @@ class UserPermissionTest : AbstractIntegrationTest() {
 
     @Test
     fun `forbidden delete permission for not owner`() {
-        val ownerDtoResponse: UserResponseDto = createUser()
-        val someUserDtoResponse: UserResponseDto = createUser()
-        val someUserDtoResponse2: UserResponseDto = createUser()
+        val ownerDtoResponse: String = createUser()
+        val someUserDtoResponse: String = createUser()
+        val someUserDtoResponse2: String = createUser()
 
-        val noteDtoResponse: NoteDto = createNote(ownerDtoResponse.userId)
+        val noteDtoResponse: NoteDto = createNote()
 
-        createPermission(ownerDtoResponse.userId, someUserDtoResponse.userId, noteDtoResponse.noteId, Permission.READER)
+        createPermission(ownerDtoResponse, someUserDtoResponse, noteDtoResponse.noteId, Permission.READER)
 
 
         mockMvc.perform(
             MockMvcRequestBuilders
                 .delete("/api/v1/user/permissions")
-                .header("user-id", someUserDtoResponse2.userId)
+                .header("user-id", someUserDtoResponse2)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
                         mapOf(
-                            "user_id" to someUserDtoResponse.userId,
+                            "user_id" to someUserDtoResponse,
                             "note_id" to noteDtoResponse.noteId
                         )
                     )
@@ -218,27 +217,27 @@ class UserPermissionTest : AbstractIntegrationTest() {
 
     @Test
     fun `owner allowed update existing permission`() {
-        val ownerDtoResponse: UserResponseDto = createUser()
-        val someUserDtoResponse: UserResponseDto = createUser()
+        val ownerDtoResponse: String = createUser()
+        val someUserDtoResponse: String = createUser()
 
-        val noteDtoResponse: NoteDto = createNote(ownerDtoResponse.userId)
+        val noteDtoResponse: NoteDto = createNote()
 
-        createPermission(ownerDtoResponse.userId, someUserDtoResponse.userId, noteDtoResponse.noteId, Permission.READER)
+        createPermission(ownerDtoResponse, someUserDtoResponse, noteDtoResponse.noteId, Permission.READER)
 
         assertContains(
-            getNotePermission(noteDtoResponse.noteId, ownerDtoResponse.userId),
-            NoteUserPermissionDto(someUserDtoResponse.userId, noteDtoResponse.noteId, Permission.READER)
+            getNotePermission(noteDtoResponse.noteId, ownerDtoResponse),
+            NoteUserPermissionDto(someUserDtoResponse, noteDtoResponse.noteId, Permission.READER)
         )
 
         mockMvc.perform(
             MockMvcRequestBuilders
                 .put("/api/v1/user/permissions")
-                .header("user-id", ownerDtoResponse.userId)
+                .header("user-id", ownerDtoResponse)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
                         mapOf(
-                            "user_id" to someUserDtoResponse.userId,
+                            "user_id" to someUserDtoResponse,
                             "note_id" to noteDtoResponse.noteId,
                             "permission" to Permission.WRITER
                         )
@@ -246,34 +245,34 @@ class UserPermissionTest : AbstractIntegrationTest() {
                 )
         ).andExpect(MockMvcResultMatchers.status().isOk)
 
-        val notePermission = getNotePermission(noteDtoResponse.noteId, ownerDtoResponse.userId)
+        val notePermission = getNotePermission(noteDtoResponse.noteId, ownerDtoResponse)
         assertContains(
             notePermission,
-            NoteUserPermissionDto(someUserDtoResponse.userId, noteDtoResponse.noteId, Permission.WRITER)
+            NoteUserPermissionDto(someUserDtoResponse, noteDtoResponse.noteId, Permission.WRITER)
         )
         assertEquals(1, notePermission.size)
     }
 
     @Test
     fun `forbidden update existing permission for not owner`() {
-        val ownerDtoResponse: UserResponseDto = createUser()
-        val someUserDtoResponse: UserResponseDto = createUser()
-        val someUserDtoResponse2: UserResponseDto = createUser()
+        val ownerDtoResponse: String = createUser()
+        val someUserDtoResponse: String = createUser()
+        val someUserDtoResponse2: String = createUser()
 
-        val noteDtoResponse: NoteDto = createNote(ownerDtoResponse.userId)
+        val noteDtoResponse: NoteDto = createNote()
 
-        createPermission(ownerDtoResponse.userId, someUserDtoResponse.userId, noteDtoResponse.noteId, Permission.READER)
+        createPermission(ownerDtoResponse, someUserDtoResponse, noteDtoResponse.noteId, Permission.READER)
 
 
         mockMvc.perform(
             MockMvcRequestBuilders
                 .put("/api/v1/user/permissions")
-                .header("user-id", someUserDtoResponse2.userId)
+                .header("user-id", someUserDtoResponse2)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
                         mapOf(
-                            "user_id" to someUserDtoResponse.userId,
+                            "user_id" to someUserDtoResponse,
                             "note_id" to noteDtoResponse.noteId,
                             "permission" to Permission.WRITER
                         )
@@ -284,19 +283,19 @@ class UserPermissionTest : AbstractIntegrationTest() {
 
     @Test
     fun `forbidden get permission if no permission`() {
-        val ownerDtoResponse: UserResponseDto = createUser()
-        val someUserDtoResponse: UserResponseDto = createUser()
-        val someUserDtoResponse2: UserResponseDto = createUser()
+        val ownerDtoResponse: String = createUser()
+        val someUserDtoResponse: String = createUser()
+        val someUserDtoResponse2: String = createUser()
 
-        val noteDtoResponse: NoteDto = createNote(ownerDtoResponse.userId)
+        val noteDtoResponse: NoteDto = createNote()
 
-        createPermission(ownerDtoResponse.userId, someUserDtoResponse.userId, noteDtoResponse.noteId, Permission.READER)
+        createPermission(ownerDtoResponse, someUserDtoResponse, noteDtoResponse.noteId, Permission.READER)
 
 
         mockMvc.perform(
             MockMvcRequestBuilders
                 .get("/api/v1/user/permissions/{noteId}", noteDtoResponse.noteId)
-                .header("user-id", someUserDtoResponse2.userId) // Ensure userId is in string format
+                .header("user-id", someUserDtoResponse2) // Ensure userId is in string format
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(MockMvcResultMatchers.status().isForbidden)
@@ -304,23 +303,23 @@ class UserPermissionTest : AbstractIntegrationTest() {
 
     @Test
     fun `allowed get permission if reader`() {
-        val ownerDtoResponse: UserResponseDto = createUser()
-        val someUserDtoResponse: UserResponseDto = createUser()
+        val ownerDtoResponse: String = createUser()
+        val someUserDtoResponse: String = createUser()
 
-        val noteDtoResponse: NoteDto = createNote(ownerDtoResponse.userId)
+        val noteDtoResponse: NoteDto = createNote()
 
-        createPermission(ownerDtoResponse.userId, someUserDtoResponse.userId, noteDtoResponse.noteId, Permission.READER)
+        createPermission(ownerDtoResponse, someUserDtoResponse, noteDtoResponse.noteId, Permission.READER)
 
         mockMvc.perform(
             MockMvcRequestBuilders
                 .get("/api/v1/user/permissions/{noteId}", noteDtoResponse.noteId)
-                .header("user-id", someUserDtoResponse.userId) // Ensure userId is in string format
+                .header("user-id", someUserDtoResponse) // Ensure userId is in string format
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(MockMvcResultMatchers.status().isOk)
     }
 
-    private fun getNotePermission(noteId: Long, userId: Long): List<NoteUserPermissionDto> {
+    private fun getNotePermission(noteId: Long, userId: String): List<NoteUserPermissionDto> {
         val contentAsString = mockMvc.perform(
             MockMvcRequestBuilders
                 .get("/api/v1/user/permissions/{noteId}", noteId)

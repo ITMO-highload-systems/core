@@ -6,5 +6,5 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 data class TeamUserCreateDto(
     val teamId: Long,
-    val userId: Long
+    val userId: String
 )

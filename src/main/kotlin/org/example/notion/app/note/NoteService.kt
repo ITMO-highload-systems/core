@@ -6,7 +6,6 @@ import org.example.notion.app.note.dto.NoteDto
 import org.example.notion.app.note.dto.NoteUpdateDto
 import org.example.notion.app.note.mapper.NoteMapper
 import org.example.notion.app.paragraph.service.ParagraphService
-import org.example.notion.app.user.UserRepository
 import org.example.notion.app.user.UserService
 import org.example.notion.app.userPermission.TeamPermissionService
 import org.example.notion.app.userPermission.UserPermissionService
@@ -20,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional
 class NoteService(
     private val noteRepository: NoteRepository,
     private val noteMapper: NoteMapper,
-    private val userRepository: UserRepository,
     private val userService: UserService,
     private val permissionService: PermissionService,
     private val paragraphService: ParagraphService,
@@ -32,11 +30,6 @@ class NoteService(
 
     @Transactional
     fun create(noteDto: NoteCreateDto): NoteDto {
-        val currentUserId = userService.getCurrentUser()
-
-        if (userRepository.findById(currentUserId).isEmpty) {
-            throw EntityNotFoundException("User with id $currentUserId does not exist")
-        }
         val entity = noteMapper.toEntity(noteDto)
 
         val save = noteRepository.save(entity)
@@ -53,10 +46,8 @@ class NoteService(
     }
 
 
-    fun getByOwnerId(ownerId: Long): List<NoteDto> {
-        if (userRepository.findById(ownerId).isEmpty) {
-            throw EntityNotFoundException("User with id ${ownerId} does not exist")
-        }
+    fun getByOwnerId(): List<NoteDto> {
+        val ownerId = userService.getCurrentUser()
         return noteRepository.findByOwner(ownerId).let {
             it.map { el -> noteMapper.toDto(el) }
         }
@@ -79,9 +70,7 @@ class NoteService(
 
         if (noteDto.owner != note.owner) {
             permissionService.requireOwnerPermission(noteDto.noteId)
-            if (userRepository.findById(noteDto.owner).isEmpty) {
-                throw EntityNotFoundException("User with id ${noteDto.owner} does not exist")
-            }
+            userService.requireUserExistence(noteDto.owner)
         }
 
         val newEntity = noteMapper.toEntity(noteDto, note.createdAt)
@@ -91,7 +80,7 @@ class NoteService(
         return noteMapper.toDto(saved)
     }
 
-    fun isOwner(noteId: Long, userId: Long): Boolean {
+    fun isOwner(noteId: Long, userId: String): Boolean {
         val result = noteRepository.findByNoteId(noteId) ?:
             throw EntityNotFoundException("Note with id $noteId does not exist")
 
