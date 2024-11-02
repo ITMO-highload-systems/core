@@ -39,7 +39,7 @@ abstract class NoteMapper {
         return LocalDateTime.now(clock)
     }
 
-    fun currentUser(): Long {
+    fun currentUser(): String {
         return userService.getCurrentUser()
     }
 }

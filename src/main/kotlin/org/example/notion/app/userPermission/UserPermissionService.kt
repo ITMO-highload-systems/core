@@ -69,9 +69,9 @@ class UserPermissionService(
     }
 
     @Transactional
-    fun findByUserIdAndNoteId(noteId: Long, userId: Long): Permission {
+    fun findByUserIdAndNoteId(noteId: Long, userId: String): Permission {
         permissionService.requireUserPermission(noteId, Permission.READER)
-        val noteUserPermission = userPermissionRepository.findNoteUserPermissionByUserIdAndNoteId(noteId, userId)
+        val noteUserPermission = userPermissionRepository.findNoteUserPermissionByUserIdAndNoteId(userId, noteId)
             ?: throw EntityNotFoundException("Permission for user $userId and note $noteId not found")
         return noteUserPermission.permission
 
@@ -84,7 +84,7 @@ class UserPermissionService(
     }
 
     @Transactional
-    fun isHasUserPermission(userId: Long, noteId: Long, permission: Permission): Boolean {
+    fun isHasUserPermission(userId: String, noteId: Long, permission: Permission): Boolean {
         if (noteService.isOwner(noteId, userId)) {
             return true
         }

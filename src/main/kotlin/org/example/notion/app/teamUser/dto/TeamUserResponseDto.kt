@@ -7,5 +7,5 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming
 data class TeamUserResponseDto(
     val id: Long,
     val teamId: Long,
-    val userId: Long
+    val userId: String
 )

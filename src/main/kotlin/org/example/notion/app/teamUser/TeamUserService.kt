@@ -63,7 +63,7 @@ class TeamUserService(
     }
 
     @Transactional(readOnly = true)
-    fun findByUserId(userId: Long): List<TeamUserMyResponseDto> {
+    fun findByUserId(userId: String): List<TeamUserMyResponseDto> {
         return teamUserRepository.findAllByUserId(userId)
             .map { teamUser -> teamUserMapper.toMyResponseDto(teamUser) }
 

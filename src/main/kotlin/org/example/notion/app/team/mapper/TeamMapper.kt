@@ -11,6 +11,6 @@ interface TeamMapper {
 
     @Mapping(target = "name", source = "name")
     @Mapping(target = "owner", source = "owner")
-    fun toEntity(name: String, owner: Long): Team
+    fun toEntity(name: String, owner: String): Team
     fun toDto(team: Team): TeamDto
 }

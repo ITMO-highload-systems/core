@@ -250,7 +250,7 @@ class ParagraphServiceImpl(
     private fun updateParagraphEntity(
         paragraphOrigin: Paragraph,
         paragraphUpdateRequest: ParagraphUpdateRequest,
-        userId: Long
+        userId: String
     ): Paragraph =
         Paragraph.Builder()
             .id(paragraphOrigin.id)

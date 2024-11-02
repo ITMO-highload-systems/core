@@ -1,6 +1,5 @@
 package org.example.notion.app.userPermission
 
-import org.example.notion.app.user.UserContext
 import org.example.notion.app.userPermission.dto.NoteTeamPermissionDeleteDto
 import org.example.notion.app.userPermission.dto.NoteTeamPermissionDto
 import org.springframework.http.HttpStatus
@@ -16,49 +15,39 @@ class TeamPermissionController(
 
     @PostMapping(consumes = [MediaType.APPLICATION_JSON_VALUE])
     fun create(
-        @RequestBody teamPermissionDto: NoteTeamPermissionDto,
-        @RequestHeader("user-id") userId: Long
+        @RequestBody teamPermissionDto: NoteTeamPermissionDto
     ): ResponseEntity<NoteTeamPermissionDto> {
-        UserContext.setCurrentUser(userId)
         val created = teamPermissionService.create(teamPermissionDto)
         return ResponseEntity(created, HttpStatus.CREATED)
     }
 
     @DeleteMapping
     fun delete(
-        @RequestBody noteTeamPermissionDeleteDto: NoteTeamPermissionDeleteDto,
-        @RequestHeader("user-id") userId: Long
+        @RequestBody noteTeamPermissionDeleteDto: NoteTeamPermissionDeleteDto
     ): ResponseEntity<Void> {
-        UserContext.setCurrentUser(userId)
         teamPermissionService.delete(noteTeamPermissionDeleteDto)
         return ResponseEntity(HttpStatus.OK)
     }
 
     @PutMapping
     fun update(
-        @RequestBody noteTeamPermissionDto: NoteTeamPermissionDto,
-        @RequestHeader("user-id") userId: Long
+        @RequestBody noteTeamPermissionDto: NoteTeamPermissionDto
     ): ResponseEntity<NoteTeamPermissionDto> {
-        UserContext.setCurrentUser(userId)
         val response = teamPermissionService.update(noteTeamPermissionDto)
         return ResponseEntity(response, HttpStatus.OK)
     }
 
     @GetMapping("/byTeam/{teamId}")
     fun get(
-        @PathVariable teamId: Long,
-        @RequestHeader("user-id") userId: Long
+        @PathVariable teamId: Long
     ): ResponseEntity<List<NoteTeamPermissionDto>> {
-        UserContext.setCurrentUser(userId)
         return ResponseEntity.ok(teamPermissionService.findByTeamId(teamId))
     }
 
     @GetMapping("byNote/{noteId}")
     fun getByNote(
-        @PathVariable noteId: Long,
-        @RequestHeader("user-id") userId: Long
+        @PathVariable noteId: Long
     ): ResponseEntity<List<NoteTeamPermissionDto>> {
-        UserContext.setCurrentUser(userId)
         return ResponseEntity.ok(teamPermissionService.findByNoteId(noteId))
     }
 

@@ -24,19 +24,15 @@ class ParagraphController(
 
     @PostMapping("/create")
     fun createParagraph(
-        @RequestHeader("user-id") userId: Long,
         @Valid @RequestBody paragraphCreateRequest: ParagraphCreateRequest
     ): ResponseEntity<ParagraphGetResponse> {
-        UserContext.setCurrentUser(userId)
         return ResponseEntity(paragraphService.createParagraph(paragraphCreateRequest), HttpStatus.CREATED)
     }
 
     @GetMapping("/execute/{paragraphId}")
     fun executeParagraph(
-        @RequestHeader("user-id") userId: Long,
         @PathVariable paragraphId: Long
     ): ResponseEntity<String> {
-        UserContext.setCurrentUser(userId)
         return ResponseEntity.ok(paragraphService.executeParagraph(paragraphId))
     }
 
@@ -45,35 +41,28 @@ class ParagraphController(
         @RequestHeader("user-id") userId: Long,
         @PathVariable paragraphId: Long
     ): ResponseEntity<Unit> {
-        UserContext.setCurrentUser(userId)
         paragraphService.deleteParagraph(paragraphId)
         return ResponseEntity.noContent().build()
     }
 
     @GetMapping("/get/{paragraphId}")
     fun getParagraph(
-        @RequestHeader("user-id") userId: Long,
         @PathVariable paragraphId: Long
     ): ResponseEntity<ParagraphGetResponse> {
-        UserContext.setCurrentUser(userId)
         return ResponseEntity.ok(paragraphService.getParagraph(paragraphId))
     }
 
     @PutMapping("/update")
     fun updateParagraph(
-        @Valid @RequestHeader("user-id") userId: Long,
         @Valid @RequestBody paragraphUpdateRequest: ParagraphUpdateRequest
     ): ResponseEntity<ParagraphGetResponse> {
-        UserContext.setCurrentUser(userId)
         return ResponseEntity.ok(paragraphService.updateParagraph(paragraphUpdateRequest))
     }
 
     @PostMapping("/position")
     fun changeParagraphPosition(
-        @Valid @RequestHeader("user-id") userId: Long,
         @Valid @RequestBody changeParagraphPositionRequest: ChangeParagraphPositionRequest
     ): ResponseEntity<Unit> {
-        UserContext.setCurrentUser(userId)
         paragraphService.changeParagraphPosition(changeParagraphPositionRequest)
         return ResponseEntity.ok().build()
     }

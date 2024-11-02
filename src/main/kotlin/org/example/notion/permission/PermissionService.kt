@@ -2,10 +2,8 @@ package org.example.notion.permission
 
 import org.example.notion.app.exceptions.ForbiddenException
 import org.example.notion.app.note.NoteService
-import org.example.notion.app.team.dto.TeamDto
 import org.example.notion.app.team.service.TeamService
 import org.example.notion.app.teamUser.TeamUserService
-import org.example.notion.app.teamUser.dto.TeamUserMyResponseDto
 import org.example.notion.app.user.UserService
 import org.example.notion.app.userPermission.TeamPermissionService
 import org.example.notion.app.userPermission.UserPermissionService
@@ -29,11 +27,14 @@ class PermissionService(
     private val teamPermissionService: TeamPermissionService
 ) {
     fun requireUserPermission(noteId: Long, permission: Permission) {
+        if (userService.isAdmin()) {
+            return
+        }
         requireUserPermission(userService.getCurrentUser(), noteId, permission)
     }
 
     @Transactional
-    fun requireUserPermission(userId: Long, noteId: Long, permission: Permission) {
+    protected fun requireUserPermission(userId: String, noteId: Long, permission: Permission) {
         if (userPermissionService.isHasUserPermission(userId, noteId, permission) ||
             isHasRoleInTeam(userId, noteId, permission)
         ) {
@@ -43,8 +44,8 @@ class PermissionService(
     }
 
     @Transactional
-    fun isHasRoleInTeam(
-        userId: Long,
+    protected fun isHasRoleInTeam(
+        userId: String,
         noteId: Long,
         permission: Permission
     ): Boolean {
@@ -53,7 +54,10 @@ class PermissionService(
             .any { team -> myTeams.contains(team.teamId) }
     }
 
-    fun requireOwnerPermission(userId: Long, noteId: Long) {
+    protected fun requireOwnerPermission(userId: String, noteId: Long) {
+        if (userService.isAdmin()) {
+            return
+        }
         if (!noteService.isOwner(noteId, userId))
             throw ForbiddenException("Forbidden permission for user $userId must be owner of $noteId")
     }

@@ -20,5 +20,5 @@ data class TeamDto(
 
     @field:Min(1)
     @field:NotNull
-    val owner: Long
+    val owner: String
 ) : Serializable

@@ -11,7 +11,6 @@ import org.example.notion.app.paragraph.dto.ParagraphGetResponse
 import org.example.notion.app.paragraph.dto.ParagraphUpdateRequest
 import org.example.notion.app.paragraph.entity.ParagraphType
 import org.example.notion.app.paragraph.repository.ParagraphRepository
-import org.example.notion.app.user.dto.UserResponseDto
 import org.example.notion.configuration.WireMockConfig
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions
@@ -38,7 +37,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 @ContextConfiguration(classes = [WireMockConfig::class])
 class ParagraphTest : AbstractIntegrationTest() {
 
-    lateinit var testUser: UserResponseDto
+    lateinit var testUser: String
     lateinit var testNote: NoteDto
 
     @Autowired
@@ -58,7 +57,6 @@ class ParagraphTest : AbstractIntegrationTest() {
     @BeforeEach
     fun setUp() {
         testUser = createUser()
-        testNote = createNote(testUser.userId)
         mockImageService.stubFor(
             WireMock.get(WireMock.urlPathMatching("/api/v1/image/get/\\d+"))
                 .willReturn(
@@ -77,6 +75,7 @@ class ParagraphTest : AbstractIntegrationTest() {
                         )
                 )
         )
+        testNote = createNote()
     }
 
     @AfterEach
@@ -98,7 +97,6 @@ class ParagraphTest : AbstractIntegrationTest() {
         Assertions.assertEquals(paragraphGetResponseExpected, paragraphGetResponseActual)
         mockMvc.perform(
             MockMvcRequestBuilders.delete("/api/v1/paragraph/delete/${paragraphGetResponseActual.id}")
-                .header("user-id", testUser.userId)
         ).andExpect(status().isNoContent)
         Assertions.assertThrows(Exception::class.java) { `get paragraph`(paragraphGetResponseActual.id) }
     }
@@ -118,7 +116,6 @@ class ParagraphTest : AbstractIntegrationTest() {
         val paragraph = `create paragraph`(ParagraphType.PYTHON_PARAGRAPH, "print('Hello, World!')")
         mockMvc.perform(
             MockMvcRequestBuilders.get("/api/v1/paragraph/execute/${paragraph.id}")
-                .header("user-id", testUser.userId)
         )
             .andExpect(status().isOk)
             .andExpect(MockMvcResultMatchers.content().string("Hello, World!\n"))
@@ -147,7 +144,6 @@ class ParagraphTest : AbstractIntegrationTest() {
 
         mockMvc.perform(
             MockMvcRequestBuilders.get("/api/v1/paragraph/execute/${paragraph.id}")
-                .header("user-id", testUser.userId)
         )
             .andExpect(status().isOk)
             .andExpect(MockMvcResultMatchers.content().string("2.0\n"))
@@ -169,7 +165,6 @@ class ParagraphTest : AbstractIntegrationTest() {
         mockMvc.perform(
             MockMvcRequestBuilders.put("/api/v1/paragraph/update")
                 .content(objectMapper.writeValueAsString(paragraphUpdateRequest))
-                .header("user-id", testUser.userId)
                 .contentType(MediaType.APPLICATION_JSON)
         )
 
@@ -203,7 +198,6 @@ class ParagraphTest : AbstractIntegrationTest() {
 
         mockMvc.perform(
             MockMvcRequestBuilders.post("/api/v1/paragraph/position")
-                .header("user-id", testUser.userId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(changeParagraphPositionRequest))
         ).andExpect(status().isOk)
@@ -249,7 +243,6 @@ class ParagraphTest : AbstractIntegrationTest() {
 
         mockMvc.perform(
             MockMvcRequestBuilders.post("/api/v1/paragraph/position")
-                .header("user-id", testUser.userId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(changeParagraphPositionRequest))
         ).andExpect(status().isOk)
@@ -279,7 +272,6 @@ class ParagraphTest : AbstractIntegrationTest() {
             ChangeParagraphPositionRequest(1L, 1L)
         mockMvc.perform(
             MockMvcRequestBuilders.post("/api/v1/paragraph/position")
-                .header("user-id", testUser.userId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(changeParagraphPositionRequest))
         ).andExpect(status().isBadRequest)
@@ -314,7 +306,6 @@ class ParagraphTest : AbstractIntegrationTest() {
     private fun `get paragraph`(paragraphId: Long): ParagraphGetResponse {
         mockMvc.perform(
             MockMvcRequestBuilders.get("/api/v1/paragraph/get/$paragraphId")
-                .header("user-id", testUser.userId)
         ).andReturn().response.contentAsString
             .let { return mapper.readValue(it, ParagraphGetResponse::class.java) }
     }
@@ -335,7 +326,6 @@ class ParagraphTest : AbstractIntegrationTest() {
         val result = mockMvc.perform(
             MockMvcRequestBuilders.post("/api/v1/paragraph/create")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("user-id", testUser.userId)
                 .content(objectMapper.writeValueAsString(paragraphCreateRequest))
         )
             .andExpect(status().isCreated)

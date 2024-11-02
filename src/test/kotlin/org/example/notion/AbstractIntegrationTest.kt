@@ -4,9 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.example.notion.app.note.dto.NoteDto
 import org.example.notion.app.team.dto.TeamDto
 import org.example.notion.app.teamUser.dto.TeamUserResponseDto
-import org.example.notion.app.user.dto.UserResponseDto
 import org.example.notion.app.userPermission.dto.NoteTeamPermissionDto
 import org.example.notion.app.userPermission.entity.Permission
+import org.example.notion.configuration.JwtUtil
 import org.example.notion.configuration.ClockTestConfiguration
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
@@ -18,6 +18,9 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
 import org.springframework.http.MediaType
 import org.springframework.mock.web.MockAsyncContext
+import org.springframework.security.core.GrantedAuthority
+import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.MvcResult
@@ -42,6 +45,9 @@ abstract class AbstractIntegrationTest {
 
     @Autowired
     lateinit var mapper: ObjectMapper
+
+    @Autowired
+    lateinit var jwtUtil: JwtUtil
 
     companion object {
         private val logger = LoggerFactory.getLogger(this::class.java)
@@ -95,11 +101,10 @@ abstract class AbstractIntegrationTest {
     }
 
 
-    protected fun createNote(userId: Long): NoteDto {
+    protected fun createNote(): NoteDto {
         val noteString = mockMvc.perform(
             MockMvcRequestBuilders
                 .post("/api/v1/note")
-                .header("user-id", userId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(mapOf("title" to "title", "description" to "description")))
         ).andExpect(MockMvcResultMatchers.status().isCreated).andReturn().response.contentAsString
@@ -108,27 +113,13 @@ abstract class AbstractIntegrationTest {
         return noteDtoResponse
     }
 
-    protected fun createUser(): UserResponseDto {
-        val userString = mockMvc.perform(
-            MockMvcRequestBuilders
-                .post("/api/v1/user/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(
-                    mapper.writeValueAsString(
-                        mapOf(
-                            "email" to UUID.randomUUID().toString() + "email.com",
-                            "password" to UUID.randomUUID().toString()
-                        )
-                    )
-                )
-        ).andExpect(MockMvcResultMatchers.status().isCreated).andReturn().response.contentAsString
-
-        val userDtoResponse: UserResponseDto = mapper.readValue(userString, UserResponseDto::class.java)
-        return userDtoResponse
+    protected fun createUser(): String {
+        //todo
+        return UUID.randomUUID().toString()
     }
     protected fun createPermission(
-        ownerId: Long,
-        userId: Long,
+        ownerId: String,
+        userId: String,
         noteId: Long,
         permission: Permission
     ) {
@@ -148,7 +139,8 @@ abstract class AbstractIntegrationTest {
                 )
         ).andExpect(MockMvcResultMatchers.status().isCreated)
     }
-    protected fun createTeam(userId: Long): TeamDto {
+
+    protected fun createTeam(userId: String): TeamDto {
         val teamName = UUID.randomUUID().toString()
         val contentAsString = mockMvc.perform(
             MockMvcRequestBuilders.post("/api/v1/team")
@@ -163,7 +155,7 @@ abstract class AbstractIntegrationTest {
         return mapper.readValue(contentAsString, TeamDto::class.java)
     }
 
-    protected fun createTeamParticipant(userId: Long, participantUserId: Long, teamId: Long): TeamUserResponseDto {
+    protected fun createTeamParticipant(userId: String, participantUserId: String, teamId: Long): TeamUserResponseDto {
         val contentAsString = mockMvc.perform(
             MockMvcRequestBuilders.post("/api/v1/team/user")
                 .header("user-id", userId)
@@ -180,7 +172,10 @@ abstract class AbstractIntegrationTest {
         return mapper.readValue(contentAsString, TeamUserResponseDto::class.java)
     }
 
-    protected fun createTeamPermission(userId: Long, teamPermissionDto: NoteTeamPermissionDto): NoteTeamPermissionDto {
+    protected fun createTeamPermission(
+        userId: String,
+        teamPermissionDto: NoteTeamPermissionDto
+    ): NoteTeamPermissionDto {
         val contentAsString = mockMvc.perform(
             MockMvcRequestBuilders.post("/api/v1/team/permissions")
                 .header("user-id", userId)
@@ -198,11 +193,33 @@ abstract class AbstractIntegrationTest {
         return mapper.readValue(contentAsString, NoteTeamPermissionDto::class.java)
     }
 
-    protected fun getNoteById(userId: Long, noteId: Long): NoteDto {
+    protected fun getNoteById(userId: String, noteId: Long): NoteDto {
         val contentAsString = mockMvc.perform(
             MockMvcRequestBuilders.get("/api/v1/note/$noteId").header("user-id", userId)
                 .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(MockMvcResultMatchers.status().isOk).andReturn().response.contentAsString
         return mapper.readValue(contentAsString, NoteDto::class.java)
+    }
+
+    protected fun signInAs(username: String, role: String): String {
+        return jwtUtil.generateToken(mapOf("role" to role), object : UserDetails {
+            override fun getAuthorities(): MutableCollection<out GrantedAuthority> {
+                return mutableListOf(SimpleGrantedAuthority(role))
+            }
+
+            override fun getPassword(): String {
+                return "password"
+            }
+
+            override fun getUsername(): String {
+                return username
+            }
+
+        })
+
+    }
+
+    protected fun signInAs(username: String): String {
+        return signInAs(username, "ROLE_USER")
     }
 }

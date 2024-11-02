@@ -33,7 +33,7 @@ val netflixVersion = "2.2.10.RELEASE"
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
-    implementation("org.springframework.boot:spring-boot-starter-webflux")
+    implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
     implementation("org.springframework.cloud:spring-cloud-starter-netflix-hystrix:$netflixVersion")
@@ -42,8 +42,15 @@ dependencies {
     implementation("org.springframework.data:spring-data-jdbc")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
     implementation("org.flywaydb:flyway-core:$flyWayVersion")
+    implementation("org.springframework.cloud:spring-cloud-starter-netflix-eureka-client")
+    implementation("org.springframework.cloud:spring-cloud-loadbalancer")
     implementation("org.mapstruct:mapstruct:$mapstructVersion")
+    implementation("io.jsonwebtoken:jjwt-api:0.11.2")
+    implementation("org.springframework.cloud:spring-cloud-starter-feign:1.4.7.RELEASE")
 
+
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.2")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.2")
 
     kapt("org.mapstruct:mapstruct-processor:$mapstructVersion")
     // Optional configuration processor
@@ -54,6 +61,8 @@ dependencies {
     runtimeOnly("org.flywaydb:flyway-database-postgresql:$flyWayVersion")
 
     // Test dependencies
+    // https://mvnrepository.com/artifact/org.springframework.security/spring-security-test
+    testImplementation("org.springframework.security:spring-security-test:6.3.4")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("org.testcontainers:testcontainers:$testContainersVersion")
@@ -68,6 +77,12 @@ kapt {
         arg("mapstruct.defaultComponentModel", "spring")
     }
 }
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:2023.0.3")
+    }
+}
+
 // Compiler options for Kotlin
 kotlin {
     compilerOptions {
