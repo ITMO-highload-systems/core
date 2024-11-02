@@ -1,3 +1,14 @@
 spring:
   application:
     name: notion
+eureka:
+  client:
+    enabled: false
+    service-url:
+      registerWithEureka: false
+
+application:
+  security:
+    jwt:
+      secret-key: megaSecretKeymamamammamammammamammamammammamammakfjhfhf
+      expiration: 1234

@@ -8,7 +8,7 @@ import java.time.LocalDateTime
 data class Note(
     @Id
     val noteId: Long,
-    val owner: Long,
+    val owner: String,
     val title: String,
     val description: String?,
     val createdAt: LocalDateTime,

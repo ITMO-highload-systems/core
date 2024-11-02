@@ -8,7 +8,6 @@ import org.example.notion.app.team.dto.TeamDto
 import org.example.notion.app.team.mapper.TeamMapper
 import org.example.notion.app.team.repository.TeamRepository
 import org.example.notion.app.teamUser.TeamUserService
-import org.example.notion.app.user.UserContext
 import org.example.notion.app.user.UserService
 import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
@@ -40,7 +39,7 @@ class TeamService(
         return getTeamsByUser(userService.getCurrentUser())
     }
 
-    fun getTeamsByUser(userId: Long): List<TeamDto> {
+    fun getTeamsByUser(userId: String): List<TeamDto> {
         val teamList = teamRepository.findByOwner(userId)
         return teamList.map { teamMapper.toDto(it) }
     }
@@ -71,7 +70,7 @@ class TeamService(
         return teamMapper.toDto(teamRepository.save(toEntity))
     }
 
-    fun isOwner(teamId: Long, userId: Long): Boolean {
+    fun isOwner(teamId: Long, userId: String): Boolean {
         val result = teamRepository.findTeamByTeamId(teamId)
             ?: throw EntityNotFoundException("Team with id $teamId does not exist")
         return result.owner == userId

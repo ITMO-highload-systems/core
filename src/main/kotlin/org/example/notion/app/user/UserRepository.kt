@@ -1,10 +1,13 @@
 package org.example.notion.app.user
 
-import org.example.notion.app.user.entity.User
-import org.springframework.data.repository.CrudRepository
+import org.springframework.cloud.openfeign.FeignClient
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 
-interface UserRepository : CrudRepository<User, Long> {
 
-    fun findByEmail(email: String): User?
+@FeignClient("NOTION-SECURITY")
+interface UserRepository {
 
+    @GetMapping(path = ["/auth/is-user-exist/{email}"])
+    fun isUserExist(@PathVariable email: String): Boolean
 }

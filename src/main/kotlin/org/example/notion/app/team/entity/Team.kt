@@ -10,5 +10,5 @@ data class Team(
     val teamId: Long,
     @field:NotBlank
     val name: String,
-    val owner: Long
+    val owner: String
 )

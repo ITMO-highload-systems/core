@@ -6,7 +6,7 @@ import org.example.notion.app.userPermission.entity.Permission
 
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 data class NoteUserPermissionDto (
-    val userId:Long,
+    val userId: String,
     val noteId:Long,
     val permission: Permission
 )

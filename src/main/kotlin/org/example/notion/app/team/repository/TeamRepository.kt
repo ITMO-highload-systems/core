@@ -7,5 +7,5 @@ import org.springframework.data.repository.CrudRepository
 interface TeamRepository : CrudRepository<Team, Long> {
     fun findTeamByTeamId(id: Long): Team?
     fun findTeamByName(name: String): Team?
-    fun findByOwner(id: Long): List<Team>
+    fun findByOwner(id: String): List<Team>
 }
