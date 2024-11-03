@@ -20,23 +20,28 @@ repositories {
 }
 
 // Dependencies
-val minioVersion = "8.5.11"
 val testContainersVersion = "1.20.1"
 val mapstructVersion = "1.6.0"
 val flyWayVersion = "10.10.0"
 val postgresqlVersion = "42.7.3"
 val jacksonVersion = "2.17.2"
 val kotlinJetBrainsVersion = "2.0.20"
+val cloudVersion = "4.1.3"
+val wiremockVersion = "3.9.2"
+val jettyServer = "11.0.24"
+val netflixVersion = "2.2.10.RELEASE"
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
+    implementation("org.springframework.cloud:spring-cloud-starter-netflix-hystrix:$netflixVersion")
+    implementation("org.springframework.cloud:spring-cloud-starter-netflix-hystrix-dashboard:$netflixVersion")
+    implementation("org.springframework.cloud:spring-cloud-starter-openfeign:$cloudVersion")
     implementation("org.springframework.data:spring-data-jdbc")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
     implementation("org.flywaydb:flyway-core:$flyWayVersion")
-    implementation("io.minio:minio:$minioVersion")
     implementation("org.springframework.cloud:spring-cloud-starter-netflix-eureka-client")
     implementation("org.springframework.cloud:spring-cloud-loadbalancer")
     implementation("org.mapstruct:mapstruct:$mapstructVersion")
@@ -62,9 +67,10 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("org.testcontainers:testcontainers:$testContainersVersion")
     testImplementation("org.testcontainers:junit-jupiter:$testContainersVersion")
-    testImplementation("org.testcontainers:minio:$testContainersVersion")
     testImplementation("org.testcontainers:postgresql:$testContainersVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5:$kotlinJetBrainsVersion")
+    testImplementation("org.wiremock:wiremock-standalone:$wiremockVersion")
+
 }
 kapt {
     arguments {

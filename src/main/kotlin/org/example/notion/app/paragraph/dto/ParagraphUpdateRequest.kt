@@ -18,7 +18,5 @@ data class ParagraphUpdateRequest(
 
     val text: String,
 
-    val paragraphType: ParagraphType,
-
-    val images: List<MultipartFile> = emptyList()
+    val paragraphType: ParagraphType
 )

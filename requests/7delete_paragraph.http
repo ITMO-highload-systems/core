@@ -1,4 +1,4 @@
-DELETE http://localhost:8080/api/v1/paragraph/delete/4
+DELETE http://localhost:8080/api/v1/paragraph/delete/2
 user-id: 1
 
 <> 2024-10-13T204500.404.json

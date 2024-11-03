@@ -4,8 +4,6 @@ import org.example.notion.app.paragraph.dto.ChangeParagraphPositionRequest
 import org.example.notion.app.paragraph.dto.ParagraphCreateRequest
 import org.example.notion.app.paragraph.dto.ParagraphGetResponse
 import org.example.notion.app.paragraph.dto.ParagraphUpdateRequest
-import org.springframework.data.domain.Pageable
-import java.util.concurrent.CompletableFuture
 
 /**
  * Service for paragraph operations.
@@ -21,7 +19,7 @@ interface ParagraphService {
     /**
      * Execute a paragraph asynchronously.
      */
-    fun executeParagraph(paragraphId: Long): CompletableFuture<String>
+    fun executeParagraph(paragraphId: Long): String
 
     /**
      * Delete a paragraph by id.
@@ -52,4 +50,14 @@ interface ParagraphService {
      * Method to delete paragraphs by noteId.
      */
     fun deleteParagraphByNoteId(noteId: Long)
+
+    /**
+     * Method to add image to paragraph.
+     */
+    fun isPosssibleAddImageToParagraph(paragraphId: Long): Boolean
+
+    /**
+     * Method to delete image from paragraph.
+     */
+    fun deleteImageFromParagraph(paragraphId: Long, imageName: String)
 }

@@ -3,7 +3,7 @@
 CREATE TABLE note
 (
     note_id     SERIAL PRIMARY KEY,
-    owner TEXT UNIQUE,
+    owner       TEXT,
     title       VARCHAR(255) NOT NULL,
     description TEXT,
     created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -17,10 +17,15 @@ CREATE TABLE paragraph
     title               VARCHAR(255),
     next_paragraph_id     INT REFERENCES paragraph(id),
     text                TEXT NOT NULL,
-    last_update_user_id TEXT UNIQUE,
+    last_update_user_id TEXT,
     created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     paragraph_type      varchar(255)
+);
+
+CREATE TABLE execution_code_result (
+    paragraph_id INT PRIMARY KEY REFERENCES paragraph (id),
+    execution_result text
 );
 
 CREATE TABLE image_record
@@ -34,14 +39,14 @@ CREATE TABLE team
 (
     team_id SERIAL PRIMARY KEY,
     name    VARCHAR(255) NOT NULL UNIQUE,
-    owner TEXT UNIQUE
+    owner TEXT
 );
 
 CREATE TABLE note_user_permission
 (
     permission_id SERIAL PRIMARY KEY,
     note_id INT REFERENCES note (note_id) on delete cascade,
-    user_id TEXT UNIQUE,
+    user_id TEXT,
     permission    VARCHAR(50) NOT NULL,
     UNIQUE (user_id, note_id)
 );
@@ -58,7 +63,7 @@ CREATE TABLE note_team_permission
 CREATE TABLE team_user
 (
     id SERIAL PRIMARY KEY,
-    user_id TEXT UNIQUE,
+    user_id TEXT,
     team_id INT REFERENCES team (team_id) ON DELETE CASCADE,
     UNIQUE (user_id, team_id)
 )

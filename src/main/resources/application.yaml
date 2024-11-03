@@ -21,23 +21,41 @@ spring:
     enabled: true
     baseline-on-migrate: true
 
-# MinIO (S3) configuration
-minio:
-    endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
-    accessKey: ${MINIO_ACCESS_KEY:minioadmin}
-    secretKey: ${MINIO_SECRET_KEY:minioadmin}
-    bucket: ${MINIO_BUCKET:my-bucket}
-
 sse:
   timeout: 3000
 
-docker:
-  image: "python-container"
-
 server:
-  port: 8091
+    port: ${SERVER_PORT:8090}
+
+integrations:
+    image:
+        url: "localhost:8092"
+    executor:
+        url: "localhost:8091"
+
+feign:
+    hystrix:
+        enabled: true
+    client:
+        config:
+            executorServiceClient:
+                connectTimeout: 60000
+                readTimeout: 60000
+                loggerLevel: basic
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: hystrix.stream
+
+#eureka:
+#  client:
+#    service-url:
+#      defaultZone: http://localhost:8761/eureka
 
 eureka:
   client:
+    enabled: false
     service-url:
-      defaultZone: http://localhost:8761/eureka
+      registerWithEureka: false

@@ -1,14 +1,17 @@
 package org.example.notion
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.HttpHeaders.AUTHORIZATION
 import org.example.notion.app.note.dto.NoteDto
 import org.example.notion.app.team.dto.TeamDto
 import org.example.notion.app.teamUser.dto.TeamUserResponseDto
 import org.example.notion.app.userPermission.dto.NoteTeamPermissionDto
 import org.example.notion.app.userPermission.entity.Permission
 import org.example.notion.configuration.JwtUtil
+import org.example.notion.configuration.ClockTestConfiguration
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
@@ -20,20 +23,13 @@ import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.DynamicPropertyRegistry
-import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.MvcResult
 import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
-import org.testcontainers.containers.GenericContainer
-import org.testcontainers.containers.MinIOContainer
 import org.testcontainers.containers.PostgreSQLContainer
-import org.testcontainers.containers.wait.strategy.Wait
-import org.testcontainers.utility.DockerImageName
-import ru.tinkoff.helicopter.core.ClockTestConfiguration.TestClockProxy
 import java.io.IOException
 import java.util.*
 import java.util.concurrent.Executors
@@ -43,6 +39,7 @@ import java.util.concurrent.TimeUnit
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
 @SpringBootTest
+@ExtendWith()
 abstract class AbstractIntegrationTest {
     @Autowired
     lateinit var mockMvc: MockMvc
@@ -57,37 +54,18 @@ abstract class AbstractIntegrationTest {
         private val logger = LoggerFactory.getLogger(this::class.java)
 
         @ServiceConnection
-        internal var minio = MinIOContainer("minio/minio:latest").apply {
-            withCommand("server /data")
-                .withExposedPorts(9000)
-                .waitingFor(Wait.forHttp("/minio/health/live").forStatusCode(200))
-        }
-
-        @ServiceConnection
         internal var postgres = PostgreSQLContainer("postgres:latest")
-
-        internal val genericContainer = GenericContainer(DockerImageName.parse("python:3.10-slim"))
-            .withCommand("tail", "-f", "/dev/null")
-
 
         @BeforeAll
         @JvmStatic
         fun setup() {
-            minio.start()
             postgres.start()
-            genericContainer.start()
-        }
-
-        @DynamicPropertySource
-        @JvmStatic
-        fun registerDockerProperties(registry: DynamicPropertyRegistry) {
-            registry.add("docker.image") { genericContainer.containerName }
         }
     }
 
     @BeforeEach
     fun prepareEnv() {
-        TestClockProxy.setToFixedClock()
+        ClockTestConfiguration.TestClockProxy.setToFixedClock()
     }
 
     fun subscribe(noteId: Long): MvcResult {
@@ -128,6 +106,19 @@ abstract class AbstractIntegrationTest {
         val noteString = mockMvc.perform(
             MockMvcRequestBuilders
                 .post("/api/v1/note")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(mapOf("title" to "title", "description" to "description")))
+        ).andExpect(MockMvcResultMatchers.status().isCreated).andReturn().response.contentAsString
+
+        val noteDtoResponse: NoteDto = mapper.readValue(noteString, NoteDto::class.java)
+        return noteDtoResponse
+    }
+
+    protected fun createNote(token: String): NoteDto {
+        val noteString = mockMvc.perform(
+            MockMvcRequestBuilders
+                .post("/api/v1/note")
+                .header(AUTHORIZATION, "Bearer $token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(mapOf("title" to "title", "description" to "description")))
         ).andExpect(MockMvcResultMatchers.status().isCreated).andReturn().response.contentAsString
@@ -244,5 +235,8 @@ abstract class AbstractIntegrationTest {
 
     protected fun signInAs(username: String): String {
         return signInAs(username, "ROLE_USER")
+    }
+    protected fun signInAsAdmin(username: String): String {
+        return signInAs(username, "ROLE_ADMIN")
     }
 }

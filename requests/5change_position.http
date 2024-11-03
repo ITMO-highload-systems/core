@@ -3,8 +3,7 @@ Content-Type: application/json
 user-id: 1
 
 {
-  "paragraph_id": 4,
-  "next_paragraph_id": 4
+  "paragraph_id": 1
 }
 
 <> 2024-10-13T203604.500.json

@@ -1,4 +1,12 @@
+integrations:
+  image:
+    url: "localhost:81"
+  executor:
+    url: "localhost:80"
+
 spring:
+  main:
+    allow-bean-definition-overriding: true
   application:
     name: notion
 eureka:
@@ -11,4 +19,4 @@ application:
   security:
     jwt:
       secret-key: megaSecretKeymamamammamammammamammamammammamammakfjhfhf
-      expiration: 1234
+      expiration: 123456789
