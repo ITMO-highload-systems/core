@@ -27,19 +27,20 @@ class NoteControllerTest : AbstractIntegrationTest() {
     }
 
     lateinit var testUser: String
+    lateinit var testUserToken: String
 
     @BeforeEach
     fun setUp() {
-        testUser = UUID.randomUUID().toString()
+        testUser = createUser()
+        testUserToken = signInAs(testUser)
     }
 
     @Test
     fun `create note - valid params - success create`() {
-        val token = signInAs(testUser)
         val response = mockMvc.perform(
             MockMvcRequestBuilders.post("/api/v1/note")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header(AUTHORIZATION, "Bearer $token")
+                .header(AUTHORIZATION, "Bearer $testUserToken")
                 .content(mapper.writeValueAsString(mapOf("title" to "title", "description" to "description")))
         ).andExpect(MockMvcResultMatchers.status().isCreated)
             .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
@@ -63,31 +64,9 @@ class NoteControllerTest : AbstractIntegrationTest() {
         mockMvc.perform(
             MockMvcRequestBuilders.post("/api/v1/note")
                 .contentType(MediaType.APPLICATION_JSON)
+                .header(AUTHORIZATION, "Bearer $testUserToken")
                 .content(mapper.writeValueAsString(mapOf("title" to null, "description" to "description")))
         ).andExpect(MockMvcResultMatchers.status().isBadRequest)
-    }
-
-    @Test
-    fun `create note - user not exist - failed create`() {
-        mockMvc.perform(
-            MockMvcRequestBuilders.post("/api/v1/note").contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(mapOf("title" to "title", "description" to "description")))
-        ).andExpect(MockMvcResultMatchers.status().isNotFound)
-    }
-
-    @Test
-    fun `update note - user not exist - not found update`() {
-        val createNote = createNote()
-        mockMvc.perform(
-            MockMvcRequestBuilders.put("/api/v1/note").contentType(MediaType.APPLICATION_JSON)
-                .content(
-                    mapper.writeValueAsString(
-                        mapOf(
-                            "note_id" to createNote.noteId, "owner" to "123", "title" to "title", "description" to "description"
-                        )
-                    )
-                )
-        ).andExpect(MockMvcResultMatchers.status().isNotFound)
     }
 
     @Test
@@ -101,12 +80,13 @@ class NoteControllerTest : AbstractIntegrationTest() {
                         )
                     )
                 )
+                .header(AUTHORIZATION, "Bearer $testUserToken")
         ).andExpect(MockMvcResultMatchers.status().isNotFound)
     }
 
     @Test
     fun `update note - valid params - success update`() {
-        val note = createNote()
+        val note = createNote(testUserToken)
         val newTitle = note.title + "1"
         val newDescription = note.description + "1"
         mockMvc.perform(
@@ -121,6 +101,7 @@ class NoteControllerTest : AbstractIntegrationTest() {
                         )
                     )
                 )
+                .header(AUTHORIZATION, "Bearer $testUserToken")
         ).andExpect(MockMvcResultMatchers.status().isOk)
             .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.title").value(newTitle)).andExpect(jsonPath("$.description").value(newDescription))
@@ -131,10 +112,11 @@ class NoteControllerTest : AbstractIntegrationTest() {
 
     @Test
     fun `update note - owner change not existing owner - failed update`() {
-        val note = createNote()
+        val note = createNote(testUserToken)
         val newTitle = note.title + "1"
         val newDescription = note.description + "1"
         val notExistingNewOwner = "12345"
+        mockIsUserExist(notExistingNewOwner, false)
         mockMvc.perform(
             MockMvcRequestBuilders.put("/api/v1/note")
                 .contentType(MediaType.APPLICATION_JSON).content(
@@ -147,15 +129,18 @@ class NoteControllerTest : AbstractIntegrationTest() {
                         )
                     )
                 )
+                .header(AUTHORIZATION, "Bearer $testUserToken")
         ).andExpect(MockMvcResultMatchers.status().isNotFound)
     }
 
     @Test
     fun `update note - owner change existing owner - success update`() {
-        val note = createNote()
+        val note = createNote(testUserToken)
         val newTitle = note.title + "1"
         val newDescription = note.description + "1"
-        val existingNewOwner = UUID.randomUUID().toString()
+        val existingNewOwner = createUser()
+        val existingToken = signInAs(existingNewOwner)
+        mockIsUserExist(existingNewOwner, true)
         mockMvc.perform(
             MockMvcRequestBuilders.put("/api/v1/note")
                 .contentType(MediaType.APPLICATION_JSON).content(
@@ -168,6 +153,7 @@ class NoteControllerTest : AbstractIntegrationTest() {
                         )
                     )
                 )
+                .header(AUTHORIZATION, "Bearer $testUserToken")
         ).andExpect(MockMvcResultMatchers.status().isOk)
             .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.note_id").value(note.noteId)).andExpect(jsonPath("$.title").value(newTitle))
@@ -176,7 +162,7 @@ class NoteControllerTest : AbstractIntegrationTest() {
             .andExpect(jsonPath("$.created_at", `is`(note.createdAt.format(FORMATTER))))
             .andExpect(jsonPath("$.updated_at", not(`is`(note.updatedAt.format(FORMATTER)))))
 
-        val notes = getNoteById(existingNewOwner, note.noteId)
+        val notes = getNoteById(signInAs(existingNewOwner), note.noteId)
 
         assertEquals(note.noteId, notes.noteId)
         assertEquals(newTitle, notes.title)
@@ -188,6 +174,7 @@ class NoteControllerTest : AbstractIntegrationTest() {
         mockMvc.perform(
             MockMvcRequestBuilders.get("/api/v1/note/my")
                 .contentType(MediaType.APPLICATION_JSON)
+                .header(AUTHORIZATION, "Bearer $testUserToken")
         ).andExpect(MockMvcResultMatchers.status().isOk)
             .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$").isEmpty)
@@ -195,6 +182,7 @@ class NoteControllerTest : AbstractIntegrationTest() {
         mockMvc.perform(
             MockMvcRequestBuilders.get("/api/v1/note/my")
                 .contentType(MediaType.APPLICATION_JSON)
+                .header(AUTHORIZATION, "Bearer $existingToken")
         ).andExpect(MockMvcResultMatchers.status().isOk)
             .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$").isNotEmpty)
@@ -202,12 +190,14 @@ class NoteControllerTest : AbstractIntegrationTest() {
 
     @Test
     fun `update note - executor change existing owner - forbidden update`() {
-        val note = createNote()
+        val note = createNote(testUserToken)
         val newTitle = note.title + "1"
         val newDescription = note.description + "1"
         val executor = UUID.randomUUID().toString()
-        createPermission(testUser, executor, note.noteId, Permission.EXECUTOR)
+        createPermission(testUserToken, executor, note.noteId, Permission.EXECUTOR)
+        val executorToken = signInAs(executor)
         val newOwner = UUID.randomUUID().toString()
+        mockIsUserExist(newOwner, true)
         mockMvc.perform(
             MockMvcRequestBuilders.put("/api/v1/note")
                 .contentType(MediaType.APPLICATION_JSON).content(
@@ -220,16 +210,17 @@ class NoteControllerTest : AbstractIntegrationTest() {
                         )
                     )
                 )
+                .header(AUTHORIZATION, "Bearer $executorToken")
         ).andExpect(MockMvcResultMatchers.status().isForbidden)
     }
 
     @Test
     fun `update note - executor valid update - success update`() {
-        val note = createNote()
+        val note = createNote(testUserToken)
         val newTitle = note.title + "1"
         val newDescription = note.description + "1"
         val executor = UUID.randomUUID().toString()
-        createPermission(testUser, executor, note.noteId, Permission.EXECUTOR)
+        createPermission(testUserToken, executor, note.noteId, Permission.EXECUTOR)
         mockMvc.perform(
             MockMvcRequestBuilders.put("/api/v1/note")
                 .contentType(MediaType.APPLICATION_JSON).content(
@@ -242,6 +233,7 @@ class NoteControllerTest : AbstractIntegrationTest() {
                         )
                     )
                 )
+                .header(AUTHORIZATION, "Bearer $testUserToken")
         ).andExpect(MockMvcResultMatchers.status().isOk)
             .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.title").value(newTitle)).andExpect(jsonPath("$.description").value(newDescription))
@@ -252,11 +244,12 @@ class NoteControllerTest : AbstractIntegrationTest() {
 
     @Test
     fun `update note - less than executor valid update - forbidden update`() {
-        val note = createNote()
+        val note = createNote(testUserToken)
         val newTitle = note.title + "1"
         val newDescription = note.description + "1"
         val executor = UUID.randomUUID().toString()
-        createPermission(testUser, executor, note.noteId, Permission.WRITER)
+        createPermission(testUserToken, executor, note.noteId, Permission.WRITER)
+        val executorToken = signInAs(executor)
         mockMvc.perform(
             MockMvcRequestBuilders.put("/api/v1/note")
                 .contentType(MediaType.APPLICATION_JSON).content(
@@ -269,6 +262,7 @@ class NoteControllerTest : AbstractIntegrationTest() {
                         )
                     )
                 )
+                .header(AUTHORIZATION, "Bearer $executorToken")
         ).andExpect(MockMvcResultMatchers.status().isForbidden)
     }
 
@@ -277,50 +271,46 @@ class NoteControllerTest : AbstractIntegrationTest() {
         mockMvc.perform(
             MockMvcRequestBuilders.delete("/api/v1/note/1234")
                 .contentType(MediaType.APPLICATION_JSON)
+                .header(AUTHORIZATION, "Bearer $testUserToken")
         ).andExpect(MockMvcResultMatchers.status().isNotFound)
     }
 
     @Test
     fun `delete by note id - owner delete existing note - success delete`() {
-        val note = createNote()
+        val note = createNote(testUserToken)
         mockMvc.perform(
             MockMvcRequestBuilders.delete("/api/v1/note/${note.noteId}")
                 .contentType(MediaType.APPLICATION_JSON)
+                .header(AUTHORIZATION, "Bearer $testUserToken")
         ).andExpect(MockMvcResultMatchers.status().isOk)
     }
 
     @Test
     fun `delete by note id - owner delete twice existing note - not found delete`() {
-        val note = createNote()
+        val note = createNote(testUserToken)
         mockMvc.perform(
             MockMvcRequestBuilders.delete("/api/v1/note/${note.noteId}")
                 .contentType(MediaType.APPLICATION_JSON)
+                .header(AUTHORIZATION, "Bearer $testUserToken")
         ).andExpect(MockMvcResultMatchers.status().isOk)
 
         mockMvc.perform(
             MockMvcRequestBuilders.delete("/api/v1/note/${note.noteId}")
                 .contentType(MediaType.APPLICATION_JSON)
+                .header(AUTHORIZATION, "Bearer $testUserToken")
         ).andExpect(MockMvcResultMatchers.status().isNotFound)
     }
 
     @Test
     fun `delete by note id - not owner delete existing note -forbidden delete`() {
-        val note = createNote()
+        val note = createNote(testUserToken)
         val newUser = UUID.randomUUID().toString()
-        createPermission(testUser, newUser, note.noteId, Permission.WRITER)
+        createPermission(testUserToken, newUser, note.noteId, Permission.WRITER)
         mockMvc.perform(
             MockMvcRequestBuilders.delete("/api/v1/note/${note.noteId}")
                 .contentType(MediaType.APPLICATION_JSON)
+                .header(AUTHORIZATION, "Bearer ${signInAs(newUser)}")
         ).andExpect(MockMvcResultMatchers.status().isForbidden)
-    }
-
-    @Test
-    fun `delete by note id - not existing owner delete existing note -not found delete`() {
-        val note = createNote()
-        mockMvc.perform(
-            MockMvcRequestBuilders.delete("/api/v1/note/${note.noteId}")
-                .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(MockMvcResultMatchers.status().isNotFound)
     }
 
     @Test
@@ -329,6 +319,7 @@ class NoteControllerTest : AbstractIntegrationTest() {
         mockMvc.perform(
             MockMvcRequestBuilders.get("/api/v1/note/123")
                 .contentType(MediaType.APPLICATION_JSON)
+                .header(AUTHORIZATION, "Bearer $testUserToken")
         ).andExpect(MockMvcResultMatchers.status().isNotFound)
 
     }
@@ -336,12 +327,12 @@ class NoteControllerTest : AbstractIntegrationTest() {
 
     @Test
     fun `get note by id - valid input - success get`() {
-        signInAs(testUser)
-        val note = createNote()
+        val note = createNote(testUserToken)
 
         mockMvc.perform(
             MockMvcRequestBuilders.get("/api/v1/note/${note.noteId}")
                 .contentType(MediaType.APPLICATION_JSON)
+                .header(AUTHORIZATION, "Bearer $testUserToken")
         ).andExpect(MockMvcResultMatchers.status().isOk)
             .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.owner").value(note.owner))
@@ -354,13 +345,13 @@ class NoteControllerTest : AbstractIntegrationTest() {
 
     @Test
     fun `get note by id - admin - success get`() {
-        signInAs(testUser)
-        val note = createNote()
-        signInAs("admin", "ROLE_ADMIN")
+        val token = signInAs(testUser, "ROLE_ADMIN")
+        val note = createNote(token)
 
         mockMvc.perform(
             MockMvcRequestBuilders.get("/api/v1/note/${note.noteId}")
                 .contentType(MediaType.APPLICATION_JSON)
+                .header(AUTHORIZATION, "Bearer $token")
         ).andExpect(MockMvcResultMatchers.status().isOk)
             .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.owner").value(note.owner))
@@ -377,6 +368,7 @@ class NoteControllerTest : AbstractIntegrationTest() {
         mockMvc.perform(
             MockMvcRequestBuilders.get("/api/v1/note/my")
                 .contentType(MediaType.APPLICATION_JSON)
+                .header(AUTHORIZATION, "Bearer $testUserToken")
         ).andExpect(MockMvcResultMatchers.status().isOk)
             .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$").isEmpty)
@@ -384,11 +376,11 @@ class NoteControllerTest : AbstractIntegrationTest() {
 
     @Test
     fun `get notes by owner - 1 note - success get`() {
-        signInAs(testUser)
-        val note = createNote()
+        val note = createNote(testUserToken)
         mockMvc.perform(
             MockMvcRequestBuilders.get("/api/v1/note/my")
                 .contentType(MediaType.APPLICATION_JSON)
+                .header(AUTHORIZATION, "Bearer $testUserToken")
         ).andExpect(MockMvcResultMatchers.status().isOk)
             .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$").isNotEmpty).andExpect(jsonPath("$").isArray)
@@ -398,14 +390,6 @@ class NoteControllerTest : AbstractIntegrationTest() {
             .andExpect(jsonPath("[0].description").value(note.description))
             .andExpect(jsonPath("[0].created_at", `is`(note.createdAt.format(FORMATTER))))
             .andExpect(jsonPath("[0].updated_at", `is`(note.updatedAt.format(FORMATTER))))
-    }
-
-    @Test
-    @WithMockUser
-    fun `get notes by owner - not exist owner - not found get`() {
-        mockMvc.perform(
-            MockMvcRequestBuilders.get("/api/v1/note/my").contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(MockMvcResultMatchers.status().isOk)
     }
 
 }

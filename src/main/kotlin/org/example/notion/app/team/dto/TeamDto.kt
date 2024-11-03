@@ -18,7 +18,6 @@ data class TeamDto(
     @field:Size(max = 255)
     val name: String,
 
-    @field:Min(1)
     @field:NotNull
     val owner: String
 ) : Serializable

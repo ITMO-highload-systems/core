@@ -1,8 +1,6 @@
 package org.example.notion.app.paragraph
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.HttpHeaders.AUTHORIZATION
-import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import org.example.notion.AbstractIntegrationTest
 import org.example.notion.app.note.dto.NoteDto
@@ -12,48 +10,28 @@ import org.example.notion.app.paragraph.dto.ParagraphGetResponse
 import org.example.notion.app.paragraph.dto.ParagraphUpdateRequest
 import org.example.notion.app.paragraph.entity.ParagraphType
 import org.example.notion.app.paragraph.repository.ParagraphRepository
-import org.example.notion.configuration.WireMockConfig
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.boot.context.properties.EnableConfigurationProperties
-import org.springframework.cloud.openfeign.EnableFeignClients
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
-import org.springframework.test.context.ContextConfiguration
-import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
-@EnableFeignClients
-@EnableConfigurationProperties
-@ExtendWith(SpringExtension::class)
-@ContextConfiguration(classes = [WireMockConfig::class])
 class ParagraphTest : AbstractIntegrationTest() {
 
+    lateinit var testUser: String
     lateinit var testNote: NoteDto
     lateinit var adminToken: String
 
     @Autowired
     private lateinit var paragraphRepository: ParagraphRepository
 
-    @Autowired
-    @Qualifier("mockImageService")
-    private lateinit var mockImageService: WireMockServer
-
-    @Autowired
-    @Qualifier("mockCodeExecService")
-    private lateinit var mockCodeExecService: WireMockServer
-
-    @Autowired
-    lateinit var objectMapper: ObjectMapper
 
     @BeforeEach
     fun setUp() {
@@ -77,6 +55,7 @@ class ParagraphTest : AbstractIntegrationTest() {
                 )
         )
         testNote = createNote(adminToken)
+        testUser = createUser()
     }
 
     @AfterEach
@@ -169,7 +148,7 @@ class ParagraphTest : AbstractIntegrationTest() {
         mockMvc.perform(
             MockMvcRequestBuilders.put("/api/v1/paragraph/update")
                 .header(AUTHORIZATION, "Bearer $adminToken")
-                .content(objectMapper.writeValueAsString(paragraphUpdateRequest))
+                .content(mapper.writeValueAsString(paragraphUpdateRequest))
                 .contentType(MediaType.APPLICATION_JSON)
         )
 
@@ -205,7 +184,7 @@ class ParagraphTest : AbstractIntegrationTest() {
             MockMvcRequestBuilders.post("/api/v1/paragraph/position")
                 .header(AUTHORIZATION, "Bearer $adminToken")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(changeParagraphPositionRequest))
+                .content(mapper.writeValueAsString(changeParagraphPositionRequest))
         ).andExpect(status().isOk)
 
         val paragraph2after = paragraphRepository.findByParagraphId(paragraphGetResponse2.id)
@@ -251,7 +230,7 @@ class ParagraphTest : AbstractIntegrationTest() {
             MockMvcRequestBuilders.post("/api/v1/paragraph/position")
                 .header(AUTHORIZATION, "Bearer $adminToken")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(changeParagraphPositionRequest))
+                .content(mapper.writeValueAsString(changeParagraphPositionRequest))
         ).andExpect(status().isOk)
 
         val paragraph3after = paragraphRepository.findByParagraphId(paragraphGetResponse3.id)
@@ -281,7 +260,7 @@ class ParagraphTest : AbstractIntegrationTest() {
             MockMvcRequestBuilders.post("/api/v1/paragraph/position")
                 .header(AUTHORIZATION, "Bearer $adminToken")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(changeParagraphPositionRequest))
+                .content(mapper.writeValueAsString(changeParagraphPositionRequest))
         ).andExpect(status().isBadRequest)
     }
 
@@ -337,7 +316,7 @@ class ParagraphTest : AbstractIntegrationTest() {
             MockMvcRequestBuilders.post("/api/v1/paragraph/create")
                 .header(AUTHORIZATION, "Bearer $adminToken")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(paragraphCreateRequest))
+                .content(mapper.writeValueAsString(paragraphCreateRequest))
         )
             .andExpect(status().isCreated)
             .andExpect(MockMvcResultMatchers.jsonPath("$.note_id").value(paragraphCreateRequest.noteId))

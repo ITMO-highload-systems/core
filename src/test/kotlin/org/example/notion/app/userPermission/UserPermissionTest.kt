@@ -1,6 +1,7 @@
 package org.example.notion.app.userPermission
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.HttpHeaders.AUTHORIZATION
 import org.example.notion.AbstractIntegrationTest
 import org.example.notion.app.note.dto.NoteDto
 import org.example.notion.app.userPermission.dto.NoteUserPermissionDto
@@ -19,25 +20,36 @@ class UserPermissionTest : AbstractIntegrationTest() {
     //create
     @Test
     fun `not found create permission if no user and note`() {
+        mockIsUserExist("1", false)
         mockMvc.perform(
             MockMvcRequestBuilders
                 .post("/api/user/permissions")
                 .header("user-id", 1)
+                .header(AUTHORIZATION, "Bearer ${signInAs(createUser())}")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(mapOf("userId" to 1, "noteId" to 1L, "permission" to "READER")))
+                .content(
+                    mapper.writeValueAsString(
+                        mapOf(
+                            "userId" to "1",
+                            "noteId" to 1L,
+                            "permission" to "READER"
+                        )
+                    )
+                )
         ).andExpect(MockMvcResultMatchers.status().isNotFound)
     }
 
     @Test
     fun `forbidden change owner permission`() {
         val userDtoResponse: String = createUser()
-
-        val noteDtoResponse: NoteDto = createNote()
+        mockIsUserExist(userDtoResponse, true)
+        val token = signInAs(userDtoResponse)
+        val noteDtoResponse: NoteDto = createNote(token)
 
         mockMvc.perform(
             MockMvcRequestBuilders
                 .post("/api/v1/user/permissions")
-                .header("user-id", userDtoResponse)
+                .header(AUTHORIZATION, "Bearer $token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
@@ -54,14 +66,15 @@ class UserPermissionTest : AbstractIntegrationTest() {
     @Test
     fun `owner allowed create permission`() {
         val ownerDtoResponse: String = createUser()
+        val ownerToken = signInAs(ownerDtoResponse)
         val someUserDtoResponse: String = createUser()
 
-        val noteDtoResponse: NoteDto = createNote()
+        val noteDtoResponse: NoteDto = createNote(ownerToken)
 
-        createPermission(ownerDtoResponse, someUserDtoResponse, noteDtoResponse.noteId, Permission.READER)
+        createPermission(ownerToken, someUserDtoResponse, noteDtoResponse.noteId, Permission.READER)
 
         assertContains(
-            getNotePermission(noteDtoResponse.noteId, ownerDtoResponse),
+            getNotePermission(noteDtoResponse.noteId, ownerToken),
             NoteUserPermissionDto(someUserDtoResponse, noteDtoResponse.noteId, Permission.READER)
         )
     }
@@ -70,15 +83,16 @@ class UserPermissionTest : AbstractIntegrationTest() {
     @Test
     fun `forbidden create permission for not owner`() {
         val ownerDtoResponse: String = createUser()
+        val ownerToken = signInAs(ownerDtoResponse)
         val someUserDtoResponse: String = createUser()
         val someUserDtoResponse2: String = createUser()
 
-        val noteDtoResponse: NoteDto = createNote()
+        val noteDtoResponse: NoteDto = createNote(ownerToken)
 
         mockMvc.perform(
             MockMvcRequestBuilders
                 .post("/api/v1/user/permissions")
-                .header("user-id", someUserDtoResponse2)
+                .header(AUTHORIZATION, "Bearer ${signInAs(someUserDtoResponse2)}")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
@@ -97,18 +111,19 @@ class UserPermissionTest : AbstractIntegrationTest() {
     @Test
     fun `owner allowed delete existing permission`() {
         val ownerDtoResponse: String = createUser()
+        val ownerToken = signInAs(ownerDtoResponse)
         val someUserDtoResponse: String = createUser()
 
-        val noteDtoResponse: NoteDto = createNote()
+        val noteDtoResponse: NoteDto = createNote(ownerToken)
 
-        createPermission(ownerDtoResponse, someUserDtoResponse, noteDtoResponse.noteId, Permission.READER)
+        createPermission(ownerToken, someUserDtoResponse, noteDtoResponse.noteId, Permission.READER)
 
-        assertFalse { getNotePermission(noteDtoResponse.noteId, ownerDtoResponse).isEmpty() }
+        assertFalse { getNotePermission(noteDtoResponse.noteId, ownerToken).isEmpty() }
 
         mockMvc.perform(
             MockMvcRequestBuilders
                 .delete("/api/v1/user/permissions")
-                .header("user-id", ownerDtoResponse)
+                .header(AUTHORIZATION, "Bearer $ownerToken")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
@@ -120,23 +135,24 @@ class UserPermissionTest : AbstractIntegrationTest() {
                 )
         ).andExpect(MockMvcResultMatchers.status().isOk)
 
-        assertTrue { getNotePermission(noteDtoResponse.noteId, ownerDtoResponse).isEmpty() }
+        assertTrue { getNotePermission(noteDtoResponse.noteId, ownerToken).isEmpty() }
     }
 
     @Test
     fun `owner allowed delete existing permission twice`() {
         val ownerDtoResponse: String = createUser()
+        val token = signInAs(ownerDtoResponse)
         val someUserDtoResponse: String = createUser()
 
-        val noteDtoResponse: NoteDto = createNote()
+        val noteDtoResponse: NoteDto = createNote(token)
 
-        createPermission(ownerDtoResponse, someUserDtoResponse, noteDtoResponse.noteId, Permission.READER)
-        assertFalse { getNotePermission(noteDtoResponse.noteId, ownerDtoResponse).isEmpty() }
+        createPermission(token, someUserDtoResponse, noteDtoResponse.noteId, Permission.READER)
+        assertFalse { getNotePermission(noteDtoResponse.noteId, token).isEmpty() }
 
         mockMvc.perform(
             MockMvcRequestBuilders
                 .delete("/api/v1/user/permissions")
-                .header("user-id", ownerDtoResponse)
+                .header(AUTHORIZATION, "Bearer $token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
@@ -151,7 +167,7 @@ class UserPermissionTest : AbstractIntegrationTest() {
         mockMvc.perform(
             MockMvcRequestBuilders
                 .delete("/api/v1/user/permissions")
-                .header("user-id", ownerDtoResponse)
+                .header(AUTHORIZATION, "Bearer $token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
@@ -162,20 +178,21 @@ class UserPermissionTest : AbstractIntegrationTest() {
                     )
                 )
         ).andExpect(MockMvcResultMatchers.status().isOk)
-        assertTrue { getNotePermission(noteDtoResponse.noteId, ownerDtoResponse).isEmpty() }
+        assertTrue { getNotePermission(noteDtoResponse.noteId, token).isEmpty() }
 
     }
 
     @Test
     fun `owner allowed delete not existing permission`() {
         val ownerDtoResponse: String = createUser()
+        val token = signInAs(ownerDtoResponse)
 
-        val noteDtoResponse: NoteDto = createNote()
+        val noteDtoResponse: NoteDto = createNote(token)
 
         mockMvc.perform(
             MockMvcRequestBuilders
                 .delete("/api/v1/user/permissions")
-                .header("user-id", ownerDtoResponse)
+                .header(AUTHORIZATION, "Bearer $token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
@@ -191,18 +208,19 @@ class UserPermissionTest : AbstractIntegrationTest() {
     @Test
     fun `forbidden delete permission for not owner`() {
         val ownerDtoResponse: String = createUser()
+        val token = signInAs(ownerDtoResponse)
         val someUserDtoResponse: String = createUser()
         val someUserDtoResponse2: String = createUser()
 
-        val noteDtoResponse: NoteDto = createNote()
+        val noteDtoResponse: NoteDto = createNote(token)
 
-        createPermission(ownerDtoResponse, someUserDtoResponse, noteDtoResponse.noteId, Permission.READER)
+        createPermission(token, someUserDtoResponse, noteDtoResponse.noteId, Permission.READER)
 
 
         mockMvc.perform(
             MockMvcRequestBuilders
                 .delete("/api/v1/user/permissions")
-                .header("user-id", someUserDtoResponse2)
+                .header(AUTHORIZATION, "Bearer ${signInAs(someUserDtoResponse2)}")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
@@ -218,21 +236,22 @@ class UserPermissionTest : AbstractIntegrationTest() {
     @Test
     fun `owner allowed update existing permission`() {
         val ownerDtoResponse: String = createUser()
+        val token = signInAs(ownerDtoResponse)
         val someUserDtoResponse: String = createUser()
 
-        val noteDtoResponse: NoteDto = createNote()
+        val noteDtoResponse: NoteDto = createNote(token)
 
-        createPermission(ownerDtoResponse, someUserDtoResponse, noteDtoResponse.noteId, Permission.READER)
+        createPermission(token, someUserDtoResponse, noteDtoResponse.noteId, Permission.READER)
 
         assertContains(
-            getNotePermission(noteDtoResponse.noteId, ownerDtoResponse),
+            getNotePermission(noteDtoResponse.noteId, token),
             NoteUserPermissionDto(someUserDtoResponse, noteDtoResponse.noteId, Permission.READER)
         )
 
         mockMvc.perform(
             MockMvcRequestBuilders
                 .put("/api/v1/user/permissions")
-                .header("user-id", ownerDtoResponse)
+                .header(AUTHORIZATION, "Bearer $token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
@@ -245,7 +264,7 @@ class UserPermissionTest : AbstractIntegrationTest() {
                 )
         ).andExpect(MockMvcResultMatchers.status().isOk)
 
-        val notePermission = getNotePermission(noteDtoResponse.noteId, ownerDtoResponse)
+        val notePermission = getNotePermission(noteDtoResponse.noteId, token)
         assertContains(
             notePermission,
             NoteUserPermissionDto(someUserDtoResponse, noteDtoResponse.noteId, Permission.WRITER)
@@ -256,18 +275,20 @@ class UserPermissionTest : AbstractIntegrationTest() {
     @Test
     fun `forbidden update existing permission for not owner`() {
         val ownerDtoResponse: String = createUser()
+        val token = signInAs(ownerDtoResponse)
         val someUserDtoResponse: String = createUser()
         val someUserDtoResponse2: String = createUser()
 
-        val noteDtoResponse: NoteDto = createNote()
+        val noteDtoResponse: NoteDto = createNote(token)
 
-        createPermission(ownerDtoResponse, someUserDtoResponse, noteDtoResponse.noteId, Permission.READER)
+        createPermission(token, someUserDtoResponse, noteDtoResponse.noteId, Permission.READER)
 
 
         mockMvc.perform(
             MockMvcRequestBuilders
                 .put("/api/v1/user/permissions")
                 .header("user-id", someUserDtoResponse2)
+                .header(AUTHORIZATION, "Bearer ${signInAs(someUserDtoResponse2)}")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
@@ -284,18 +305,19 @@ class UserPermissionTest : AbstractIntegrationTest() {
     @Test
     fun `forbidden get permission if no permission`() {
         val ownerDtoResponse: String = createUser()
+        val token = signInAs(ownerDtoResponse)
         val someUserDtoResponse: String = createUser()
         val someUserDtoResponse2: String = createUser()
 
-        val noteDtoResponse: NoteDto = createNote()
+        val noteDtoResponse: NoteDto = createNote(token)
 
-        createPermission(ownerDtoResponse, someUserDtoResponse, noteDtoResponse.noteId, Permission.READER)
+        createPermission(token, someUserDtoResponse, noteDtoResponse.noteId, Permission.READER)
 
 
         mockMvc.perform(
             MockMvcRequestBuilders
                 .get("/api/v1/user/permissions/{noteId}", noteDtoResponse.noteId)
-                .header("user-id", someUserDtoResponse2) // Ensure userId is in string format
+                .header(AUTHORIZATION, "Bearer ${signInAs(someUserDtoResponse2)}")
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(MockMvcResultMatchers.status().isForbidden)
@@ -304,26 +326,27 @@ class UserPermissionTest : AbstractIntegrationTest() {
     @Test
     fun `allowed get permission if reader`() {
         val ownerDtoResponse: String = createUser()
+        val token = signInAs(ownerDtoResponse)
         val someUserDtoResponse: String = createUser()
 
-        val noteDtoResponse: NoteDto = createNote()
+        val noteDtoResponse: NoteDto = createNote(token)
 
-        createPermission(ownerDtoResponse, someUserDtoResponse, noteDtoResponse.noteId, Permission.READER)
+        createPermission(token, someUserDtoResponse, noteDtoResponse.noteId, Permission.READER)
 
         mockMvc.perform(
             MockMvcRequestBuilders
                 .get("/api/v1/user/permissions/{noteId}", noteDtoResponse.noteId)
-                .header("user-id", someUserDtoResponse) // Ensure userId is in string format
+                .header(AUTHORIZATION, "Bearer ${signInAs(someUserDtoResponse)}")
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(MockMvcResultMatchers.status().isOk)
     }
 
-    private fun getNotePermission(noteId: Long, userId: String): List<NoteUserPermissionDto> {
+    private fun getNotePermission(noteId: Long, token: String): List<NoteUserPermissionDto> {
         val contentAsString = mockMvc.perform(
             MockMvcRequestBuilders
                 .get("/api/v1/user/permissions/{noteId}", noteId)
-                .header("user-id", userId.toString()) // Ensure userId is in string format
+                .header(AUTHORIZATION, "Bearer $token")
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(MockMvcResultMatchers.status().isOk)

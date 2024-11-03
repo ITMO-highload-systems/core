@@ -25,13 +25,7 @@ sse:
   timeout: 3000
 
 server:
-    port: ${SERVER_PORT:8090}
-
-integrations:
-    image:
-        url: "localhost:8092"
-    executor:
-        url: "localhost:8091"
+  port: 8090
 
 feign:
     hystrix:

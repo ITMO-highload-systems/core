@@ -21,8 +21,6 @@ import org.example.notion.sse.Message
 import org.example.notion.sse.SseService
 import org.example.notion.sse.Type
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.http.codec.multipart.FilePart
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
@@ -34,9 +32,7 @@ class ParagraphServiceImpl(
     private val paragraphMapper: ParagraphMapper,
     private val permissionService: PermissionService,
     private val userService: UserService,
-    @Qualifier("executorServiceClient")
     private val executorServiceClient: ExecutorServiceClient,
-    @Qualifier("imageServiceClient")
     private val imageServiceClient: ImageServiceClient
 ) : ParagraphService {
 

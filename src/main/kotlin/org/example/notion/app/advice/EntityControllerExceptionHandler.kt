@@ -1,5 +1,6 @@
 package org.example.notion.app.advice
 
+import feign.FeignException
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.core.annotation.AnnotationUtils
 import org.springframework.http.HttpStatus
@@ -12,6 +13,19 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 @ControllerAdvice
 class EntityControllerExceptionHandler : ResponseEntityExceptionHandler() {
+
+    @ExceptionHandler(FeignException::class)
+    protected fun handleFeignException(
+        request: HttpServletRequest?,
+        ex: FeignException
+    ): ResponseEntity<ApiException> {
+        val status = ex.status()
+        val message = ex.message
+
+        return ResponseEntity.status(status)
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(ApiException(status, message))
+    }
 
     @ExceptionHandler(Exception::class)
     protected fun handleException(

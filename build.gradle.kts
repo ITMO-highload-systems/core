@@ -47,6 +47,8 @@ dependencies {
     implementation("org.mapstruct:mapstruct:$mapstructVersion")
     implementation("io.jsonwebtoken:jjwt-api:0.11.2")
     implementation("org.springframework.cloud:spring-cloud-starter-feign:1.4.7.RELEASE")
+// https://mvnrepository.com/artifact/com.netflix.ribbon/ribbon-loadbalancer
+    implementation("com.netflix.ribbon:ribbon-loadbalancer:2.7.18")
 
 
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.2")

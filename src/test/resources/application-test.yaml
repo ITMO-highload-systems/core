@@ -1,14 +1,19 @@
-integrations:
-  image:
-    url: "localhost:81"
-  executor:
-    url: "localhost:80"
-
 spring:
   main:
     allow-bean-definition-overriding: true
   application:
     name: notion
+  cloud:
+    discovery:
+      client:
+        simple:
+          instances:
+            NOTION-SECURITY[0]:
+              uri: http://localhost:82
+            IMAGE-SERVICE[0]:
+              uri: http://localhost:81
+            EXECUTOR-SERVICE[0]:
+              uri: http://localhost:83
 eureka:
   client:
     enabled: false
