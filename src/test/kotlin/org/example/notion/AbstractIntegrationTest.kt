@@ -1,6 +1,7 @@
 package org.example.notion
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.HttpHeaders.AUTHORIZATION
 import org.example.notion.app.note.dto.NoteDto
 import org.example.notion.app.team.dto.TeamDto
 import org.example.notion.app.teamUser.dto.TeamUserResponseDto
@@ -105,6 +106,19 @@ abstract class AbstractIntegrationTest {
         val noteString = mockMvc.perform(
             MockMvcRequestBuilders
                 .post("/api/v1/note")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(mapOf("title" to "title", "description" to "description")))
+        ).andExpect(MockMvcResultMatchers.status().isCreated).andReturn().response.contentAsString
+
+        val noteDtoResponse: NoteDto = mapper.readValue(noteString, NoteDto::class.java)
+        return noteDtoResponse
+    }
+
+    protected fun createNote(token: String): NoteDto {
+        val noteString = mockMvc.perform(
+            MockMvcRequestBuilders
+                .post("/api/v1/note")
+                .header(AUTHORIZATION, "Bearer $token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(mapOf("title" to "title", "description" to "description")))
         ).andExpect(MockMvcResultMatchers.status().isCreated).andReturn().response.contentAsString
@@ -221,5 +235,8 @@ abstract class AbstractIntegrationTest {
 
     protected fun signInAs(username: String): String {
         return signInAs(username, "ROLE_USER")
+    }
+    protected fun signInAsAdmin(username: String): String {
+        return signInAs(username, "ROLE_ADMIN")
     }
 }

@@ -19,4 +19,4 @@ application:
   security:
     jwt:
       secret-key: megaSecretKeymamamammamammammamammamammammamammakfjhfhf
-      expiration: 1234
+      expiration: 123456789

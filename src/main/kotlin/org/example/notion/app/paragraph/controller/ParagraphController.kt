@@ -6,7 +6,6 @@ import org.example.notion.app.paragraph.dto.ParagraphCreateRequest
 import org.example.notion.app.paragraph.dto.ParagraphGetResponse
 import org.example.notion.app.paragraph.dto.ParagraphUpdateRequest
 import org.example.notion.app.paragraph.service.ParagraphService
-import org.example.notion.app.user.UserContext
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -38,7 +37,6 @@ class ParagraphController(
 
     @DeleteMapping("/delete/{paragraphId}")
     fun deleteParagraph(
-        @RequestHeader("user-id") userId: Long,
         @PathVariable paragraphId: Long
     ): ResponseEntity<Unit> {
         paragraphService.deleteParagraph(paragraphId)
@@ -81,20 +79,16 @@ class ParagraphController(
 
     @GetMapping("/isPossibleAddImageToParagraph/{paragraphId}")
     fun isPossibleAddImageToParagraph(
-        @RequestHeader("user-id") userId: Long,
         @PathVariable paragraphId: Long
     ): ResponseEntity<Boolean> {
-        UserContext.setCurrentUser(userId)
         return ResponseEntity.ok(paragraphService.isPosssibleAddImageToParagraph(paragraphId))
     }
 
     @DeleteMapping("/deleteImageFromParagraph/{paragraphId}")
     fun deleteImageFromParagraph(
-        @RequestHeader("user-id") userId: Long,
         @PathVariable paragraphId: Long,
         @RequestParam imageName: String
     ): ResponseEntity<Unit> {
-        UserContext.setCurrentUser(userId)
         paragraphService.deleteImageFromParagraph(paragraphId, imageName)
         return ResponseEntity.noContent().build()
     }
