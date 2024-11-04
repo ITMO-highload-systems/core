@@ -8,15 +8,15 @@ import org.springframework.stereotype.Component
 @Component
 class ImageServiceFallback: ImageServiceClient {
 
-    override fun deleteByParagraphId(paragraphId: Long): ResponseEntity<Unit> {
+    override fun deleteByParagraphId(paragraphId: Long, token: String): ResponseEntity<Unit> {
         return ResponseEntity.ok().build()
     }
 
-    override fun deleteImageByName(imageName: String): ResponseEntity<Unit> {
+    override fun deleteImageByName(imageName: String, token: String): ResponseEntity<Unit> {
         return ResponseEntity.ok().build()
     }
 
-    override fun getImageByParagraphId(paragraphId: String): ResponseEntity<GetImageResponse> {
+    override fun getImageByParagraphId(paragraphId: String, token: String): ResponseEntity<GetImageResponse> {
         return ResponseEntity.ok(GetImageResponse(listOf("fallback")))
     }
 }

@@ -21,5 +21,8 @@ class UserService(private val repository: UserRepository) {
         }
     }
 
-
+    fun getAuthToken(): String {
+        val token: String = "" // TODO("Необходимо реализовать функцию возвращающую токен пользователя для дальнейшей авторизации в других сервисах")
+        return "Bearer $token"
+    }
 }

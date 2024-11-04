@@ -1,5 +1,6 @@
 package org.example.notion.app.paragraph.service.impl
 
+import io.jsonwebtoken.Jwt
 import org.example.notion.app.exceptions.EntityNotFoundException
 import org.example.notion.app.exceptions.IdSimilarException
 import org.example.notion.app.exceptions.ParagraphErrorTypeException
@@ -22,7 +23,6 @@ import org.example.notion.sse.SseService
 import org.example.notion.sse.Type
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.http.codec.multipart.FilePart
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
@@ -96,7 +96,7 @@ class ParagraphServiceImpl(
             it.nextParagraphId = paragraph.nextParagraphId
             paragraphRepository.save(it)
         }
-        imageServiceClient.deleteByParagraphId(paragraphId)
+        imageServiceClient.deleteByParagraphId(paragraphId, userService.getAuthToken())
         paragraphRepository.deleteById(paragraphId)
 
         sseService.sendMessage(
@@ -130,7 +130,7 @@ class ParagraphServiceImpl(
             throw ParagraphErrorTypeException(PARAGRAPH_TYPE_NOT_PYTHON.format(paragraphId))
         }
 
-        val executionResult = executorServiceClient.getExecute(paragraph.id!!, paragraph.text).body.toString()
+        val executionResult = executorServiceClient.getExecute(paragraph.id!!, paragraph.text, userService.getAuthToken()).body.toString()
 
         sseService.sendMessage(
             paragraph.noteId,
@@ -221,7 +221,7 @@ class ParagraphServiceImpl(
 
         permissionService.requireUserPermission(paragraph.noteId, Permission.WRITER)
 
-        imageServiceClient.deleteImageByName(imageName)
+        imageServiceClient.deleteImageByName(imageName, userService.getAuthToken())
     }
 
 
@@ -265,7 +265,7 @@ class ParagraphServiceImpl(
             .build()
 
     private fun paragraphToResponse(paragraph: Paragraph): ParagraphGetResponse {
-        val imageUrls = imageServiceClient.getImageByParagraphId(paragraph.id!!.toString()).body?.imageUrls ?: emptyList()
+        val imageUrls = imageServiceClient.getImageByParagraphId(paragraph.id!!.toString(), userService.getAuthToken()).body?.imageUrls ?: emptyList()
 
         return ParagraphGetResponse.Builder()
             .id(paragraph.id)

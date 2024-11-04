@@ -30,14 +30,18 @@ val cloudVersion = "4.1.3"
 val wiremockVersion = "3.9.2"
 val jettyServer = "11.0.24"
 val netflixVersion = "2.2.10.RELEASE"
+val jsonWebTokenVersion = "0.11.2"
+val starterFeignVersion = "1.4.7.RELEASE"
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
+    @Suppress
     implementation("org.springframework.cloud:spring-cloud-starter-netflix-hystrix:$netflixVersion")
     implementation("org.springframework.cloud:spring-cloud-starter-netflix-hystrix-dashboard:$netflixVersion")
+    @Suppress
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign:$cloudVersion")
     implementation("org.springframework.data:spring-data-jdbc")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
@@ -45,12 +49,12 @@ dependencies {
     implementation("org.springframework.cloud:spring-cloud-starter-netflix-eureka-client")
     implementation("org.springframework.cloud:spring-cloud-loadbalancer")
     implementation("org.mapstruct:mapstruct:$mapstructVersion")
-    implementation("io.jsonwebtoken:jjwt-api:0.11.2")
-    implementation("org.springframework.cloud:spring-cloud-starter-feign:1.4.7.RELEASE")
+    implementation("io.jsonwebtoken:jjwt-api:$jsonWebTokenVersion")
+    implementation("org.springframework.cloud:spring-cloud-starter-feign:$starterFeignVersion")
 
 
-    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.2")
-    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.2")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:$jsonWebTokenVersion")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:$jsonWebTokenVersion")
 
     kapt("org.mapstruct:mapstruct-processor:$mapstructVersion")
     // Optional configuration processor

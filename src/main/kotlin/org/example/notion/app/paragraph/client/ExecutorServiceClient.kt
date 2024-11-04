@@ -1,10 +1,12 @@
 package org.example.notion.app.paragraph.client
 
+import com.google.common.net.HttpHeaders.AUTHORIZATION
 import org.example.notion.app.paragraph.client.fallbacks.factories.ExecutorServiceFallbackFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.cloud.openfeign.FeignClient
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestParam
 
 @FeignClient(
@@ -18,6 +20,7 @@ interface ExecutorServiceClient {
     @GetMapping("/api/v1/execution/execute")
     fun getExecute(
         @RequestParam paragraphId: Long,
-        @RequestParam code: String
+        @RequestParam code: String,
+        @RequestHeader(AUTHORIZATION) token: String
     ): ResponseEntity<String>
 }

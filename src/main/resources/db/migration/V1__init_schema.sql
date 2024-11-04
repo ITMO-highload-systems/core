@@ -1,5 +1,3 @@
-
-
 CREATE TABLE note
 (
     note_id     SERIAL PRIMARY KEY,
@@ -21,18 +19,6 @@ CREATE TABLE paragraph
     created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     paragraph_type      varchar(255)
-);
-
-CREATE TABLE execution_code_result (
-    paragraph_id INT PRIMARY KEY REFERENCES paragraph (id),
-    execution_result text
-);
-
-CREATE TABLE image_record
-(
-    id           SERIAL PRIMARY KEY,
-    image_hash   VARCHAR(255) NOT NULL,
-    paragraph_id INT REFERENCES paragraph (id) ON DELETE CASCADE
 );
 
 CREATE TABLE team
