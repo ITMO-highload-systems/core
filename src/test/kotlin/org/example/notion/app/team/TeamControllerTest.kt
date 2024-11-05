@@ -1,5 +1,6 @@
 package org.example.notion.app.team
 
+import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.HttpHeaders.AUTHORIZATION
 import org.example.notion.AbstractIntegrationTest
 import org.hamcrest.Matchers.hasSize
 import org.junit.jupiter.api.BeforeEach
@@ -13,10 +14,12 @@ import kotlin.test.Test
 class TeamControllerTest : AbstractIntegrationTest() {
 
     lateinit var testUser: String
+    lateinit var testUserToken: String
 
     @BeforeEach
     fun setUp() {
         testUser = createUser()
+        testUserToken = signInAs(testUser)
     }
 
     @Test
@@ -24,7 +27,7 @@ class TeamControllerTest : AbstractIntegrationTest() {
         val teamName = UUID.randomUUID().toString()
         mockMvc.perform(
             MockMvcRequestBuilders.post("/api/v1/team")
-                .header("user-id", testUser)
+                .header(AUTHORIZATION, "Bearer $testUserToken")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(mapOf("name" to teamName)))
         ).andExpect(MockMvcResultMatchers.status().isCreated)
@@ -38,14 +41,14 @@ class TeamControllerTest : AbstractIntegrationTest() {
         val teamName = UUID.randomUUID().toString()
         mockMvc.perform(
             MockMvcRequestBuilders.post("/api/v1/team")
-                .header("user-id", testUser)
+                .header(AUTHORIZATION, "Bearer $testUserToken")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(mapOf("name" to teamName)))
         ).andExpect(MockMvcResultMatchers.status().isCreated)
 
         mockMvc.perform(
             MockMvcRequestBuilders.post("/api/v1/team")
-                .header("user-id", testUser)
+                .header(AUTHORIZATION, "Bearer $testUserToken")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(mapOf("name" to teamName)))
         ).andExpect(MockMvcResultMatchers.status().isConflict)
@@ -55,7 +58,7 @@ class TeamControllerTest : AbstractIntegrationTest() {
     fun `create team - invalid input - bad request`() {
         mockMvc.perform(
             MockMvcRequestBuilders.post("/api/v1/team")
-                .header("user-id", testUser)
+                .header(AUTHORIZATION, "Bearer $testUserToken")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(mapOf("name" to "")))
         ).andExpect(MockMvcResultMatchers.status().isBadRequest)
@@ -65,9 +68,10 @@ class TeamControllerTest : AbstractIntegrationTest() {
     fun `update team - update name - success`() {
         val createdTeam = createTeam(testUser)
         val newName = UUID.randomUUID().toString()
+        mockIsUserExist(testUser, true)
         mockMvc.perform(
             MockMvcRequestBuilders.put("/api/v1/team")
-                .header("user-id", testUser)
+                .header(AUTHORIZATION, "Bearer $testUserToken")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
@@ -91,7 +95,7 @@ class TeamControllerTest : AbstractIntegrationTest() {
         val newName = ""
         mockMvc.perform(
             MockMvcRequestBuilders.put("/api/v1/team")
-                .header("user-id", testUser)
+                .header(AUTHORIZATION, "Bearer $testUserToken")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
@@ -109,9 +113,10 @@ class TeamControllerTest : AbstractIntegrationTest() {
     fun `update team - update owner - success`() {
         val createdUser = createUser()
         val createdTeam = createTeam(testUser)
+        mockIsUserExist(createdUser, true)
         mockMvc.perform(
             MockMvcRequestBuilders.put("/api/v1/team")
-                .header("user-id", testUser)
+                .header(AUTHORIZATION, "Bearer $testUserToken")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
@@ -133,7 +138,7 @@ class TeamControllerTest : AbstractIntegrationTest() {
     fun `update team - team not exist - not found`() {
         mockMvc.perform(
             MockMvcRequestBuilders.put("/api/v1/team")
-                .header("user-id", testUser)
+                .header(AUTHORIZATION, "Bearer $testUserToken")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
@@ -151,7 +156,7 @@ class TeamControllerTest : AbstractIntegrationTest() {
     fun `update team - owner not exist - not found`() {
         mockMvc.perform(
             MockMvcRequestBuilders.put("/api/v1/team")
-                .header("user-id", testUser)
+                .header(AUTHORIZATION, "Bearer $testUserToken")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
@@ -169,9 +174,10 @@ class TeamControllerTest : AbstractIntegrationTest() {
     fun `update team - name dublicated - conflict`() {
         val createTeam1 = createTeam(testUser)
         val createTeam2 = createTeam(testUser)
+        mockIsUserExist(testUser, true)
         mockMvc.perform(
             MockMvcRequestBuilders.put("/api/v1/team")
-                .header("user-id", testUser)
+                .header(AUTHORIZATION, "Bearer $testUserToken")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
@@ -190,7 +196,7 @@ class TeamControllerTest : AbstractIntegrationTest() {
         val team = createTeam(testUser)
         mockMvc.perform(
             MockMvcRequestBuilders.delete("/api/v1/team/" + team.teamId)
-                .header("user-id", testUser)
+                .header(AUTHORIZATION, "Bearer $testUserToken")
                 .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(MockMvcResultMatchers.status().isOk)
     }
@@ -199,7 +205,7 @@ class TeamControllerTest : AbstractIntegrationTest() {
     fun `delete team - team not exist - not found`() {
         mockMvc.perform(
             MockMvcRequestBuilders.delete("/api/v1/team/123")
-                .header("user-id", testUser)
+                .header(AUTHORIZATION, "Bearer $testUserToken")
                 .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(MockMvcResultMatchers.status().isNotFound)
     }
@@ -208,7 +214,7 @@ class TeamControllerTest : AbstractIntegrationTest() {
     fun `delete team - invalid input - bad request`() {
         mockMvc.perform(
             MockMvcRequestBuilders.delete("/api/v1/team/12h3")
-                .header("user-id", testUser)
+                .header(AUTHORIZATION, "Bearer $testUserToken")
                 .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(MockMvcResultMatchers.status().isBadRequest)
     }
@@ -219,7 +225,7 @@ class TeamControllerTest : AbstractIntegrationTest() {
 
         mockMvc.perform(
             MockMvcRequestBuilders.get("/api/v1/team/${team.teamId}")
-                .header("user-id", testUser)
+                .header(AUTHORIZATION, "Bearer $testUserToken")
                 .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(MockMvcResultMatchers.status().isOk)
             .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
@@ -232,10 +238,10 @@ class TeamControllerTest : AbstractIntegrationTest() {
     fun `get team by ID - participant get valid input - success`() {
         val team = createTeam(testUser)
         val createUser = createUser()
-        createTeamParticipant(testUser, createUser, team.teamId)
+        createTeamParticipant(testUserToken, createUser, team.teamId)
         mockMvc.perform(
             MockMvcRequestBuilders.get("/api/v1/team/${team.teamId}")
-                .header("user-id", createUser)
+                .header(AUTHORIZATION, "Bearer $testUserToken")
                 .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(MockMvcResultMatchers.status().isOk)
             .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
@@ -248,7 +254,7 @@ class TeamControllerTest : AbstractIntegrationTest() {
     fun `get team by ID - team not exist - not found`() {
         mockMvc.perform(
             MockMvcRequestBuilders.get("/api/v1/team/123")
-                .header("user-id", testUser)
+                .header(AUTHORIZATION, "Bearer $testUserToken")
                 .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(MockMvcResultMatchers.status().isNotFound)
     }
@@ -259,7 +265,7 @@ class TeamControllerTest : AbstractIntegrationTest() {
         val newUser = createUser()
         mockMvc.perform(
             MockMvcRequestBuilders.get("/api/v1/team/${team.teamId}")
-                .header("user-id", newUser)
+                .header(AUTHORIZATION, "Bearer ${signInAs(newUser)}")
                 .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(MockMvcResultMatchers.status().isForbidden)
     }
@@ -268,7 +274,7 @@ class TeamControllerTest : AbstractIntegrationTest() {
     fun `get team my teams - no teams - success`() {
         mockMvc.perform(
             MockMvcRequestBuilders.get("/api/v1/team/my")
-                .header("user-id", testUser)
+                .header(AUTHORIZATION, "Bearer $testUserToken")
                 .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(MockMvcResultMatchers.status().isOk)
             .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
@@ -281,7 +287,7 @@ class TeamControllerTest : AbstractIntegrationTest() {
         val createTeam = createTeam(testUser)
         mockMvc.perform(
             MockMvcRequestBuilders.get("/api/v1/team/my")
-                .header("user-id", testUser)
+                .header(AUTHORIZATION, "Bearer $testUserToken")
                 .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(MockMvcResultMatchers.status().isOk)
             .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
@@ -298,7 +304,7 @@ class TeamControllerTest : AbstractIntegrationTest() {
         val createTeam2 = createTeam(testUser)
         mockMvc.perform(
             MockMvcRequestBuilders.get("/api/v1/team/my")
-                .header("user-id", testUser)
+                .header(AUTHORIZATION, "Bearer $testUserToken")
                 .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(MockMvcResultMatchers.status().isOk)
             .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))

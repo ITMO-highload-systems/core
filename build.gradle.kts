@@ -30,41 +30,46 @@ val cloudVersion = "4.1.3"
 val wiremockVersion = "3.9.2"
 val jettyServer = "11.0.24"
 val netflixVersion = "2.2.10.RELEASE"
+val springDataJdbc = "3.3.5"
+val jjwtApiVersion = "0.11.2"
+val jjwtImplVersion = "0.11.5"
+val jjwtJacksonVersion = "0.11.1"
+val springSecurityTestVersion = "6.3.4"
+val cloudFeignVersion = "1.4.7.RELEASE"
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
+    implementation("org.springframework.cloud:spring-cloud-starter-netflix-eureka-client")
+    implementation("org.springframework.cloud:spring-cloud-starter-loadbalancer")
     implementation("org.springframework.cloud:spring-cloud-starter-netflix-hystrix:$netflixVersion")
     implementation("org.springframework.cloud:spring-cloud-starter-netflix-hystrix-dashboard:$netflixVersion")
-    implementation("org.springframework.cloud:spring-cloud-starter-openfeign:$cloudVersion")
-    implementation("org.springframework.data:spring-data-jdbc")
+    implementation("org.springframework.cloud:spring-cloud-starter-feign:$cloudFeignVersion")
+    implementation("org.springframework.data:spring-data-jdbc:$springDataJdbc")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
     implementation("org.flywaydb:flyway-core:$flyWayVersion")
-    implementation("org.springframework.cloud:spring-cloud-starter-netflix-eureka-client")
-    implementation("org.springframework.cloud:spring-cloud-loadbalancer")
     implementation("org.mapstruct:mapstruct:$mapstructVersion")
-    implementation("io.jsonwebtoken:jjwt-api:0.11.2")
-    implementation("org.springframework.cloud:spring-cloud-starter-feign:1.4.7.RELEASE")
+    implementation("io.jsonwebtoken:jjwt-api:$jjwtApiVersion")
 
 
-    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.2")
-    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.2")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:$jjwtImplVersion")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:$jjwtJacksonVersion")
 
     kapt("org.mapstruct:mapstruct-processor:$mapstructVersion")
-    // Optional configuration processor
-    annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 
-    // Runtime dependencies
+
+
     runtimeOnly("org.postgresql:postgresql:$postgresqlVersion")
     runtimeOnly("org.flywaydb:flyway-database-postgresql:$flyWayVersion")
 
-    // Test dependencies
-    // https://mvnrepository.com/artifact/org.springframework.security/spring-security-test
-    testImplementation("org.springframework.security:spring-security-test:6.3.4")
+
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
+    testImplementation("org.springframework.security:spring-security-test:$springSecurityTestVersion")
     testImplementation("org.testcontainers:testcontainers:$testContainersVersion")
     testImplementation("org.testcontainers:junit-jupiter:$testContainersVersion")
     testImplementation("org.testcontainers:postgresql:$testContainersVersion")

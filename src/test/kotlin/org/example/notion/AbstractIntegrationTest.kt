@@ -2,18 +2,22 @@ package org.example.notion
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.HttpHeaders.AUTHORIZATION
+import com.github.tomakehurst.wiremock.WireMockServer
+import com.github.tomakehurst.wiremock.client.WireMock
 import org.example.notion.app.note.dto.NoteDto
 import org.example.notion.app.team.dto.TeamDto
 import org.example.notion.app.teamUser.dto.TeamUserResponseDto
 import org.example.notion.app.userPermission.dto.NoteTeamPermissionDto
 import org.example.notion.app.userPermission.entity.Permission
-import org.example.notion.configuration.JwtUtil
+import org.example.notion.config.JwtUtil
 import org.example.notion.configuration.ClockTestConfiguration
+import org.example.notion.configuration.WireMockConfig
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
@@ -23,6 +27,7 @@ import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.MvcResult
 import org.springframework.test.web.servlet.ResultActions
@@ -38,8 +43,9 @@ import java.util.concurrent.TimeUnit
 
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
-@SpringBootTest
+@SpringBootTest()
 @ExtendWith()
+@ContextConfiguration(classes = [WireMockConfig::class])
 abstract class AbstractIntegrationTest {
     @Autowired
     lateinit var mockMvc: MockMvc
@@ -49,6 +55,18 @@ abstract class AbstractIntegrationTest {
 
     @Autowired
     lateinit var jwtUtil: JwtUtil
+
+    @Autowired
+    @Qualifier("mockSecurityService")
+    protected lateinit var mockSecurityService: WireMockServer
+
+    @Autowired
+    @Qualifier("mockImageService")
+    protected lateinit var mockImageService: WireMockServer
+
+    @Autowired
+    @Qualifier("mockCodeExecService")
+    protected lateinit var mockCodeExecService: WireMockServer
 
     companion object {
         private val logger = LoggerFactory.getLogger(this::class.java)
@@ -69,7 +87,10 @@ abstract class AbstractIntegrationTest {
     }
 
     fun subscribe(noteId: Long): MvcResult {
-        return mockMvc.perform(MockMvcRequestBuilders.get("/sse/bind/$noteId/user"))
+        return mockMvc.perform(
+            MockMvcRequestBuilders.get("/sse/bind/$noteId/user")
+                .header(AUTHORIZATION, "Bearer ${signInAs(createUser())}")
+        )
             .andExpect(MockMvcResultMatchers.request().asyncStarted()).andReturn()
     }
 
@@ -78,6 +99,7 @@ abstract class AbstractIntegrationTest {
         logger.debug("Sending JSON: ${String(valueAsBytes)}")
         mockMvc.perform(
             MockMvcRequestBuilders.post("/sse/send/$noteId").content(valueAsBytes)
+                .header(AUTHORIZATION, "Bearer ${signInAs(createUser())}")
                 .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(MockMvcResultMatchers.status().isOk)
     }
@@ -101,19 +123,6 @@ abstract class AbstractIntegrationTest {
 
     }
 
-
-    protected fun createNote(): NoteDto {
-        val noteString = mockMvc.perform(
-            MockMvcRequestBuilders
-                .post("/api/v1/note")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(mapOf("title" to "title", "description" to "description")))
-        ).andExpect(MockMvcResultMatchers.status().isCreated).andReturn().response.contentAsString
-
-        val noteDtoResponse: NoteDto = mapper.readValue(noteString, NoteDto::class.java)
-        return noteDtoResponse
-    }
-
     protected fun createNote(token: String): NoteDto {
         val noteString = mockMvc.perform(
             MockMvcRequestBuilders
@@ -128,19 +137,19 @@ abstract class AbstractIntegrationTest {
     }
 
     protected fun createUser(): String {
-        //todo
         return UUID.randomUUID().toString()
     }
     protected fun createPermission(
-        ownerId: String,
+        authToken: String,
         userId: String,
         noteId: Long,
         permission: Permission
     ) {
+        mockIsUserExist(userId, true)
         mockMvc.perform(
             MockMvcRequestBuilders
                 .post("/api/v1/user/permissions")
-                .header("user-id", ownerId)
+                .header(AUTHORIZATION, "Bearer $authToken")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
@@ -154,25 +163,39 @@ abstract class AbstractIntegrationTest {
         ).andExpect(MockMvcResultMatchers.status().isCreated)
     }
 
-    protected fun createTeam(userId: String): TeamDto {
+    protected fun mockIsUserExist(userId: String, isExist: Boolean) {
+        mockSecurityService.stubFor(
+            WireMock.get("/auth/is-user-exist/$userId")
+                //                .withHeader("Authorization", equalTo("Bearer $authToken"))
+                .willReturn(
+                    WireMock.aResponse()
+                        .withStatus(200)
+                        .withBody(isExist.toString())
+                        .withHeader("Content-Type", "application/json")
+                )
+        )
+    }
+
+    protected fun createTeam(username: String): TeamDto {
         val teamName = UUID.randomUUID().toString()
         val contentAsString = mockMvc.perform(
             MockMvcRequestBuilders.post("/api/v1/team")
-                .header("user-id", userId)
+                .header(AUTHORIZATION, "Bearer ${signInAs(username)}")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(mapOf("name" to teamName)))
         ).andExpect(MockMvcResultMatchers.status().isCreated)
             .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.name").value(teamName))
-            .andExpect(jsonPath("$.owner").value(userId))
+            .andExpect(jsonPath("$.owner").value(username))
             .andReturn().response.contentAsString
         return mapper.readValue(contentAsString, TeamDto::class.java)
     }
 
-    protected fun createTeamParticipant(userId: String, participantUserId: String, teamId: Long): TeamUserResponseDto {
+    protected fun createTeamParticipant(token: String, participantUserId: String, teamId: Long): TeamUserResponseDto {
+        mockIsUserExist(participantUserId, true)
         val contentAsString = mockMvc.perform(
             MockMvcRequestBuilders.post("/api/v1/team/user")
-                .header("user-id", userId)
+                .header(AUTHORIZATION, "Bearer $token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
@@ -187,12 +210,12 @@ abstract class AbstractIntegrationTest {
     }
 
     protected fun createTeamPermission(
-        userId: String,
+        token: String,
         teamPermissionDto: NoteTeamPermissionDto
     ): NoteTeamPermissionDto {
         val contentAsString = mockMvc.perform(
             MockMvcRequestBuilders.post("/api/v1/team/permissions")
-                .header("user-id", userId)
+                .header(AUTHORIZATION, "Bearer $token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     mapper.writeValueAsString(
@@ -207,9 +230,10 @@ abstract class AbstractIntegrationTest {
         return mapper.readValue(contentAsString, NoteTeamPermissionDto::class.java)
     }
 
-    protected fun getNoteById(userId: String, noteId: Long): NoteDto {
+    protected fun getNoteById(token: String, noteId: Long): NoteDto {
         val contentAsString = mockMvc.perform(
-            MockMvcRequestBuilders.get("/api/v1/note/$noteId").header("user-id", userId)
+            MockMvcRequestBuilders.get("/api/v1/note/$noteId")
+                .header(AUTHORIZATION, "Bearer $token")
                 .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(MockMvcResultMatchers.status().isOk).andReturn().response.contentAsString
         return mapper.readValue(contentAsString, NoteDto::class.java)

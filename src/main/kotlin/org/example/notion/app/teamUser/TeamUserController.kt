@@ -32,15 +32,13 @@ class TeamUserController(
 
     @GetMapping("/{teamId}")
     fun get(
-        @PathVariable teamId: Long,
-        @RequestHeader("user-id") userId: Long
+        @PathVariable teamId: Long
     ): ResponseEntity<List<TeamUserResponseDto>> {
         return ResponseEntity.ok(teamUserService.findByTeamId(teamId))
     }
 
     @GetMapping("/my")
     fun get(
-        @RequestHeader("user-id") userId: Long
     ): ResponseEntity<List<TeamUserMyResponseDto>> {
         return ResponseEntity.ok(teamUserService.findByUserId())
     }

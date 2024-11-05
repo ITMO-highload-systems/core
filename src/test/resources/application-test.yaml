@@ -1,14 +1,24 @@
-integrations:
-  image:
-    url: "localhost:81"
-  executor:
-    url: "localhost:80"
-
 spring:
   main:
     allow-bean-definition-overriding: true
   application:
     name: notion
+  cloud:
+    discovery:
+      client:
+        simple:
+          instances:
+            notion-security[0]:
+              uri: http://localhost:${mock-port.security}
+            notion-s3[0]:
+              uri: http://localhost:${mock-port.s3}
+            notion-code-exec[0]:
+              uri: http://localhost:${mock-port.code-exec}
+mock-port:
+  security: 82
+  s3: 81
+  code-exec: 83
+
 eureka:
   client:
     enabled: false
@@ -20,3 +30,4 @@ application:
     jwt:
       secret-key: megaSecretKeymamamammamammammamammamammammamammakfjhfhf
       expiration: 123456789
+      server-expiration: 123456789009876
