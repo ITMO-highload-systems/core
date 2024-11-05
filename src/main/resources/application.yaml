@@ -1,6 +1,8 @@
 application:
   security:
     jwt:
+      expiration: 123456789
+      server-expiration: 123456789009876
       secret-key: MegaLargeSigningSecretKeyForDemoApplicationMegaLargeSigningSecretKeyForDemoApplication
 
 spring:
@@ -25,7 +27,7 @@ sse:
   timeout: 3000
 
 server:
-  port: 8090
+  port: 0
 
 feign:
     hystrix:
@@ -41,15 +43,13 @@ management:
   endpoints:
     web:
       exposure:
-        include: hystrix.stream
-
-#eureka:
-#  client:
-#    service-url:
-#      defaultZone: http://localhost:8761/eureka
+        include: "*"
+        exclude: shutdown
 
 eureka:
   client:
-    enabled: false
     service-url:
-      registerWithEureka: false
+      defaultZone: http://localhost:8761/eureka
+logging:
+  level:
+    root: debug

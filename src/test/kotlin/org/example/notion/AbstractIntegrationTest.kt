@@ -9,8 +9,8 @@ import org.example.notion.app.team.dto.TeamDto
 import org.example.notion.app.teamUser.dto.TeamUserResponseDto
 import org.example.notion.app.userPermission.dto.NoteTeamPermissionDto
 import org.example.notion.app.userPermission.entity.Permission
+import org.example.notion.config.JwtUtil
 import org.example.notion.configuration.ClockTestConfiguration
-import org.example.notion.configuration.JwtUtil
 import org.example.notion.configuration.WireMockConfig
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach

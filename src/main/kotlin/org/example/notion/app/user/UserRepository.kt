@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 
 
-@FeignClient("NOTION-SECURITY")
+@FeignClient("notion-security")
 interface UserRepository {
 
     @GetMapping(path = ["/auth/is-user-exist/{email}"])

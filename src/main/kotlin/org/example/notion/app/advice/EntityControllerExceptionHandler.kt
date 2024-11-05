@@ -19,6 +19,7 @@ class EntityControllerExceptionHandler : ResponseEntityExceptionHandler() {
         request: HttpServletRequest?,
         ex: FeignException
     ): ResponseEntity<ApiException> {
+        logger.debug(ex.message, ex)
         val status = ex.status()
         val message = ex.message
 
@@ -32,6 +33,7 @@ class EntityControllerExceptionHandler : ResponseEntityExceptionHandler() {
         request: HttpServletRequest?,
         ex: Exception
     ): ResponseEntity<ApiException> {
+        logger.debug(ex.message, ex)
         var status = HttpStatus.INTERNAL_SERVER_ERROR.value()
         val message = ex.message
 

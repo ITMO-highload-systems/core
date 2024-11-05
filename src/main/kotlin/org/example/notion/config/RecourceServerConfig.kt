@@ -16,6 +16,7 @@ class ResourceServerConfig(private val jwtAuthFilter: JwtAuthFilter) {
         http {
             csrf { disable() }
             authorizeHttpRequests {
+                authorize("/actuator/**", permitAll)
                 authorize(anyRequest, authenticated)
             }
             addFilterBefore<UsernamePasswordAuthenticationFilter>(jwtAuthFilter)

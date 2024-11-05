@@ -45,7 +45,7 @@ class ParagraphTest : AbstractIntegrationTest() {
                         .withBody(
                             """
                 {
-                    "imageUrls": [
+                    "image_urls": [
                         "https://example.com/image1.jpg",
                         "https://example.com/image2.jpg"
                     ]
