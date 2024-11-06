@@ -20,6 +20,4 @@ class UserService(private val repository: UserRepository) {
             throw EntityNotFoundException("User Not Found")
         }
     }
-
-
 }
