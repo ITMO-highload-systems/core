@@ -32,6 +32,7 @@ val jettyServer = "11.0.24"
 val netflixVersion = "2.2.10.RELEASE"
 val jsonWebTokenVersion = "0.11.2"
 val starterFeignVersion = "1.4.7.RELEASE"
+val cloudConfigVersion = "4.1.3"
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
@@ -51,6 +52,7 @@ dependencies {
     implementation("org.mapstruct:mapstruct:$mapstructVersion")
     implementation("io.jsonwebtoken:jjwt-api:$jsonWebTokenVersion")
     implementation("org.springframework.cloud:spring-cloud-starter-feign:$starterFeignVersion")
+    implementation("org.springframework.cloud:spring-cloud-starter-config:$cloudConfigVersion")
 
 
     runtimeOnly("io.jsonwebtoken:jjwt-impl:$jsonWebTokenVersion")

@@ -3,12 +3,6 @@ integrations:
     url: "localhost:81"
   executor:
     url: "localhost:80"
-
-spring:
-  main:
-    allow-bean-definition-overriding: true
-  application:
-    name: notion
 eureka:
   client:
     enabled: false
@@ -20,3 +14,45 @@ application:
     jwt:
       secret-key: megaSecretKeymamamammamammammamammamammammamammakfjhfhf
       expiration: 123456789
+
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  application:
+    name: ${SPRING_APPLICATION_NAME:notion}
+  servlet:
+    multipart:
+      max-file-size: ${SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE:200MB}
+      max-request-size: ${SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE:200MB}
+      enabled: true
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/postgres}
+    username: ${DATABASE_USERNAME:postgres}
+    password: ${DATABASE_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+sse:
+  timeout: 3000
+
+server:
+  port: ${SERVER_PORT:8090}
+
+feign:
+  hystrix:
+    enabled: true
+  client:
+    config:
+      executorServiceClient:
+        connectTimeout: 60000
+        readTimeout: 60000
+        loggerLevel: basic
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: hystrix.stream
