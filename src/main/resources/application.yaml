@@ -1,6 +1,6 @@
 spring:
   application:
-    name: notion-core
+    name: notion
   config:
     import: optional:configserver:http://localhost:8888
   cloud:
