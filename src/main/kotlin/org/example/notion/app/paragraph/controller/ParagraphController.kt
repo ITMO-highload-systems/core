@@ -77,14 +77,14 @@ class ParagraphController(
         return ResponseEntity.ok().headers(headers).body(paragraphs)
     }
 
-    @GetMapping("/isPossibleAddImageToParagraph/{paragraphId}")
+    @GetMapping("/paragraphs/{paragraphId}/images/availability")
     fun isPossibleAddImageToParagraph(
         @PathVariable paragraphId: Long
     ): ResponseEntity<Boolean> {
         return ResponseEntity.ok(paragraphService.isPosssibleAddImageToParagraph(paragraphId))
     }
 
-    @DeleteMapping("/deleteImageFromParagraph/{paragraphId}")
+    @DeleteMapping("/{paragraphId}/images")
     fun deleteImageFromParagraph(
         @PathVariable paragraphId: Long,
         @RequestParam imageName: String
