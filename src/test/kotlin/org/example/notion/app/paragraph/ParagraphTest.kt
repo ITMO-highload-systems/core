@@ -37,7 +37,7 @@ class ParagraphTest : AbstractIntegrationTest() {
     fun setUp() {
         adminToken = signInAsAdmin(createUser())
         mockImageService.stubFor(
-            WireMock.get(WireMock.urlPathMatching("/api/v1/image/get/\\d+"))
+            WireMock.get(WireMock.urlPathMatching("/api/v1/image/\\d+"))
                 .willReturn(
                     WireMock.aResponse()
                         .withStatus(200)
@@ -66,7 +66,7 @@ class ParagraphTest : AbstractIntegrationTest() {
     @Test
     fun `delete paragraph - valid paragraph id - success deleted`() {
         mockImageService.stubFor(
-            WireMock.delete(WireMock.urlPathMatching("/api/v1/image/deleteByParagraphId/\\d+"))
+            WireMock.delete(WireMock.urlPathMatching("/api/v1/image/by-paragraph/\\d+"))
                 .willReturn(
                     WireMock.aResponse()
                         .withStatus(HttpStatus.NO_CONTENT.value())
@@ -76,7 +76,7 @@ class ParagraphTest : AbstractIntegrationTest() {
         val paragraphGetResponseActual = `get paragraph`(paragraphGetResponseExpected.id)
         Assertions.assertEquals(paragraphGetResponseExpected, paragraphGetResponseActual)
         mockMvc.perform(
-            MockMvcRequestBuilders.delete("/api/v1/paragraph/delete/${paragraphGetResponseActual.id}")
+            MockMvcRequestBuilders.delete("/api/v1/paragraph/${paragraphGetResponseActual.id}")
                 .header(AUTHORIZATION, "Bearer $adminToken")
         ).andExpect(status().isNoContent)
         Assertions.assertThrows(Exception::class.java) { `get paragraph`(paragraphGetResponseActual.id) }
@@ -146,7 +146,7 @@ class ParagraphTest : AbstractIntegrationTest() {
         )
 
         mockMvc.perform(
-            MockMvcRequestBuilders.put("/api/v1/paragraph/update")
+            MockMvcRequestBuilders.put("/api/v1/paragraph")
                 .header(AUTHORIZATION, "Bearer $adminToken")
                 .content(mapper.writeValueAsString(paragraphUpdateRequest))
                 .contentType(MediaType.APPLICATION_JSON)
@@ -181,7 +181,7 @@ class ParagraphTest : AbstractIntegrationTest() {
         ) // paragraph1 должен стоять перед paragraph2
 
         mockMvc.perform(
-            MockMvcRequestBuilders.post("/api/v1/paragraph/position")
+            MockMvcRequestBuilders.put("/api/v1/paragraph/position")
                 .header(AUTHORIZATION, "Bearer $adminToken")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(changeParagraphPositionRequest))
@@ -227,7 +227,7 @@ class ParagraphTest : AbstractIntegrationTest() {
         ) // paragraph1 должен стоять перед paragraph2
 
         mockMvc.perform(
-            MockMvcRequestBuilders.post("/api/v1/paragraph/position")
+            MockMvcRequestBuilders.put("/api/v1/paragraph/position")
                 .header(AUTHORIZATION, "Bearer $adminToken")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(changeParagraphPositionRequest))
@@ -257,7 +257,7 @@ class ParagraphTest : AbstractIntegrationTest() {
         val changeParagraphPositionRequest =
             ChangeParagraphPositionRequest(1L, 1L)
         mockMvc.perform(
-            MockMvcRequestBuilders.post("/api/v1/paragraph/position")
+            MockMvcRequestBuilders.put("/api/v1/paragraph/position")
                 .header(AUTHORIZATION, "Bearer $adminToken")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(changeParagraphPositionRequest))
@@ -293,7 +293,7 @@ class ParagraphTest : AbstractIntegrationTest() {
 
     private fun `get paragraph`(paragraphId: Long): ParagraphGetResponse {
         mockMvc.perform(
-            MockMvcRequestBuilders.get("/api/v1/paragraph/get/$paragraphId")
+            MockMvcRequestBuilders.get("/api/v1/paragraph/$paragraphId")
                 .header(AUTHORIZATION, "Bearer $adminToken")
         ).andReturn().response.contentAsString
             .let { return mapper.readValue(it, ParagraphGetResponse::class.java) }
@@ -313,7 +313,7 @@ class ParagraphTest : AbstractIntegrationTest() {
         )
 
         val result = mockMvc.perform(
-            MockMvcRequestBuilders.post("/api/v1/paragraph/create")
+            MockMvcRequestBuilders.post("/api/v1/paragraph")
                 .header(AUTHORIZATION, "Bearer $adminToken")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(paragraphCreateRequest))
@@ -332,5 +332,5 @@ class ParagraphTest : AbstractIntegrationTest() {
         return mapper.readValue(result, ParagraphGetResponse::class.java)
     }
 
-    // TODO пофиксить добавление картинки + добавить тесты / вынести конфигурацию / запаковать все в docker / убедится в работоспособности circuit breaker / отрефакторить все по по максимуму чтобы было меньше кода
+    // TODO пофиксить добавление картинки / запаковать все в docker / убедится в работоспособности circuit breaker / отрефакторить все по по максимуму чтобы было меньше кода
 }
