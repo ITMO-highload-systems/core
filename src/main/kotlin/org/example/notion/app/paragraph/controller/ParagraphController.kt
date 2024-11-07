@@ -21,7 +21,7 @@ class ParagraphController(
         private const val MAX_PAGE_SIZE = 50L
     }
 
-    @PostMapping("/create")
+    @PostMapping
     fun createParagraph(
         @Valid @RequestBody paragraphCreateRequest: ParagraphCreateRequest
     ): ResponseEntity<ParagraphGetResponse> {
@@ -35,7 +35,7 @@ class ParagraphController(
         return ResponseEntity.ok(paragraphService.executeParagraph(paragraphId))
     }
 
-    @DeleteMapping("/delete/{paragraphId}")
+    @DeleteMapping("/{paragraphId}")
     fun deleteParagraph(
         @PathVariable paragraphId: Long
     ): ResponseEntity<Unit> {
@@ -43,21 +43,21 @@ class ParagraphController(
         return ResponseEntity.noContent().build()
     }
 
-    @GetMapping("/get/{paragraphId}")
+    @GetMapping("/{paragraphId}")
     fun getParagraph(
         @PathVariable paragraphId: Long
     ): ResponseEntity<ParagraphGetResponse> {
         return ResponseEntity.ok(paragraphService.getParagraph(paragraphId))
     }
 
-    @PutMapping("/update")
+    @PutMapping
     fun updateParagraph(
         @Valid @RequestBody paragraphUpdateRequest: ParagraphUpdateRequest
     ): ResponseEntity<ParagraphGetResponse> {
         return ResponseEntity.ok(paragraphService.updateParagraph(paragraphUpdateRequest))
     }
 
-    @PostMapping("/position")
+    @PutMapping("/position")
     fun changeParagraphPosition(
         @Valid @RequestBody changeParagraphPositionRequest: ChangeParagraphPositionRequest
     ): ResponseEntity<Unit> {

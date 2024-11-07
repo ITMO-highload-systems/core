@@ -14,17 +14,17 @@ import org.springframework.web.bind.annotation.PathVariable
 )
 interface ImageServiceClient {
 
-    @DeleteMapping("/api/v1/image/deleteByParagraphId/{paragraphId}")
+    @DeleteMapping("/api/v1/image/by-paragraph/{paragraphId}")
     fun deleteByParagraphId(
         @PathVariable paragraphId: Long
     ): ResponseEntity<Unit>
 
-    @DeleteMapping("/api/v1/image/deleteByName/{imageName}")
+    @DeleteMapping("/api/v1/image/by-name/{imageName}")
     fun deleteImageByName(
         @PathVariable imageName: String
     ): ResponseEntity<Unit>
 
-    @GetMapping("/api/v1/image/get/{paragraphId}")
+    @GetMapping("/api/v1/image/{paragraphId}")
     fun getImageByParagraphId(
         @PathVariable paragraphId: String
     ): ResponseEntity<GetImageResponse>
