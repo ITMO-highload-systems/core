@@ -116,7 +116,7 @@ class ParagraphServiceImpl(
         val paragraph = paragraphRepository.findByParagraphId(paragraphId)
             ?: run {
                 logger.error(PARAGRAPH_NOT_FOUND.format(paragraphId))
-                throw IllegalArgumentException(PARAGRAPH_NOT_FOUND.format(paragraphId))
+                throw EntityNotFoundException(PARAGRAPH_NOT_FOUND.format(paragraphId))
             }
 
         permissionService.requireUserPermission(paragraph.noteId, Permission.EXECUTOR)

@@ -17,6 +17,99 @@ x-minio-common: &minio-common
     retries: 3
 
 services:
+  notion-config:
+    hostname: notion-config
+    image: notion-config:latest
+    environment:
+      - GITHUB_USERNAME=<here past your github email>
+      - GITHUB_TOKEN=<here past your token>
+    ports:
+      - "8888:8888"
+    networks:
+      - backend
+  notion-eureka:
+    hostname: notion-eureka
+    image: notion-eureka:latest
+    environment:
+      - CONFIG_SERVER_URL=http://notion-config:8888
+    ports:
+      - "8761:8761"
+    networks:
+      - backend
+    depends_on:
+      - notion-config
+  notion-gateway:
+    hostname: notion-gateway
+    image: notion-gateway:latest
+    environment:
+      - EUREKA_CLIENT_URL=http://notion-eureka:8761/eureka
+      - CONFIG_SERVER_URL=http://notion-config:8888
+      - GATEWAY_LOG_LEVEL=debug
+    ports:
+      - "8765:8765"
+    networks:
+      - backend
+    depends_on:
+      - notion-config
+      - notion-eureka
+  notion-security:
+    hostname: notion-security
+    image: notion-security:latest
+    environment:
+        - EUREKA_CLIENT_URL=http://notion-eureka:8761/eureka
+        - CONFIG_SERVER_URL=http://notion-config:8888
+        - NOTION_SECURITY_DATABASE_URL=jdbc:postgresql://postgres:5432/notion_security
+    networks:
+      - backend
+    depends_on:
+      - notion-config
+      - notion-eureka
+      - postgres
+  notion-core:
+    hostname: notion-core
+    image: notion-core:latest
+    environment:
+      - NOTION_CORE_DATABASE_URL=jdbc:postgresql://postgres:5432/notion-core
+      - EUREKA_CLIENT_URL=http://notion-eureka:8761/eureka
+      - CONFIG_SERVER_URL=http://notion-config:8888
+    networks:
+      - backend
+    depends_on:
+      - notion-config
+      - notion-eureka
+      - postgres
+
+  notion-code-exec:
+    hostname: notion-code-exec
+    image: notion-code-exec:latest
+    environment:
+      - NOTION_CODE_DATABASE_URL=jdbc:postgresql://postgres:5432/notion-code-exec
+      - EUREKA_CLIENT_URL=http://notion-eureka:8761/eureka
+      - CONFIG_SERVER_URL=http://notion-config:8888
+    networks:
+      - backend
+    depends_on:
+      - postgres
+      - python-exec
+      - notion-config
+      - notion-eureka
+
+  notion-s3:
+    hostname: notion-s3
+    image: notion-s3:latest
+    environment:
+      - NOTION_S3_DATABASE_URL=r2dbc:postgresql://postgres:5432/notion-s3
+      - EUREKA_CLIENT_URL=http://notion-eureka:8761/eureka
+      - CONFIG_SERVER_URL=http://notion-config:8888
+      - MINIO_ENDPOINT=http://minio1:9000
+    networks:
+      - backend
+    depends_on:
+      - postgres
+      - minio1
+      - notion-eureka
+      - notion-config
+
   minio1:
     <<: *minio-common
     hostname: minio1
@@ -29,8 +122,11 @@ services:
       - type: bind
         source: ./minio_storage/mnt/data/compose
         target: /mnt/data
+    networks:
+      - backend
 
   postgres:
+    hostname: postgres
     image: postgres:16-alpine
     container_name: "postgres"
     environment:
@@ -41,26 +137,22 @@ services:
       - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
+    networks:
+      - backend
 
   python-exec:
+    hostname: python-exec
     image: python:3.10-slim
     container_name: python-container
     command: tail -f /dev/null
-
-#  app:
-#    build:
-#      context: .
-#      dockerfile: Dockerfile
-#    container_name: spring-app
-#    ports:
-#      - '8080:8080'
-#    depends_on:
-#      - postgres
-#      - minio1
-#      - python-exec
-#    volumes:
-#      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - backend
 
 
 volumes:
   postgres_data:
+
+networks:
+  backend:
+    name: notion_backend
