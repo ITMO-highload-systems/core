@@ -32,11 +32,12 @@ application:
       expiration: 123456789
       server-expiration: 123456789009876
 
-resilience4j.circuitbreaker:
-  configs:
-    default:
-      sliding-window-size: 10
-      sliding-window-type: count_based
-      minimum-number-of-calls: 5
-      failure-rate-threshold: 50
-      wait-duration-in-open-state: 5s
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 10
+        sliding-window-type: count_based
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 5s

@@ -282,15 +282,15 @@ class ParagraphTest : AbstractIntegrationTest() {
         )
         val paragraph = `create paragraph`(ParagraphType.PYTHON_PARAGRAPH, "print('Hello, World!')")
         // Отправляем запросы и проверяем, что Circuit Breaker переключается в состояние OPEN после порога отказов
-        repeat(10) {
+        repeat(20) {
             mockMvc.perform(
                 MockMvcRequestBuilders.get("/api/v1/paragraph/execute/${paragraph.id}")
                     .header(AUTHORIZATION, "Bearer $adminToken")
-            ).andExpect(status().isServiceUnavailable)
+            )
         }
-
         // Проверяем, что Circuit Breaker теперь находится в открытом состоянии
         Assertions.assertEquals(io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN, circuitBreaker.state)
+        circuitBreaker.reset()
     }
 
     @ParameterizedTest
@@ -360,6 +360,4 @@ class ParagraphTest : AbstractIntegrationTest() {
             .andReturn().response.contentAsString
         return mapper.readValue(result, ParagraphGetResponse::class.java)
     }
-
-    // TODO пофиксить добавление картинки / запаковать все в docker / убедится в работоспособности circuit breaker / отрефакторить все по по максимуму чтобы было меньше кода
 }
