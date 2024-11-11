@@ -2,6 +2,7 @@ package org.example.notion.app.paragraph
 
 import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.HttpHeaders.AUTHORIZATION
 import com.github.tomakehurst.wiremock.client.WireMock
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import org.example.notion.AbstractIntegrationTest
 import org.example.notion.app.note.dto.NoteDto
 import org.example.notion.app.paragraph.dto.ChangeParagraphPositionRequest
@@ -32,6 +33,8 @@ class ParagraphTest : AbstractIntegrationTest() {
     @Autowired
     private lateinit var paragraphRepository: ParagraphRepository
 
+    @Autowired
+    lateinit var circuitBreakerRegistry: CircuitBreakerRegistry
 
     @BeforeEach
     fun setUp() {
@@ -262,6 +265,32 @@ class ParagraphTest : AbstractIntegrationTest() {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(changeParagraphPositionRequest))
         ).andExpect(status().isBadRequest)
+    }
+
+    @Test
+    fun `check circuit breaker`() {
+        val circuitBreaker = circuitBreakerRegistry.circuitBreaker("default")
+        circuitBreaker.reset()
+        mockCodeExecService.stubFor(
+            WireMock.get(WireMock.urlPathEqualTo("/api/v1/execution/execute"))
+                .withQueryParam("paragraphId", WireMock.matching("\\d+"))
+                .withQueryParam("code", WireMock.matching(".*"))
+                .willReturn(
+                    WireMock.aResponse()
+                        .withStatus(HttpStatus.SERVICE_UNAVAILABLE.value())
+                )
+        )
+        val paragraph = `create paragraph`(ParagraphType.PYTHON_PARAGRAPH, "print('Hello, World!')")
+        // Отправляем запросы и проверяем, что Circuit Breaker переключается в состояние OPEN после порога отказов
+        repeat(10) {
+            mockMvc.perform(
+                MockMvcRequestBuilders.get("/api/v1/paragraph/execute/${paragraph.id}")
+                    .header(AUTHORIZATION, "Bearer $adminToken")
+            ).andExpect(status().isServiceUnavailable)
+        }
+
+        // Проверяем, что Circuit Breaker теперь находится в открытом состоянии
+        Assertions.assertEquals(io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN, circuitBreaker.state)
     }
 
     @ParameterizedTest

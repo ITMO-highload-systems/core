@@ -37,6 +37,7 @@ val jjwtJacksonVersion = "0.11.1"
 val springSecurityTestVersion = "6.3.4"
 val cloudFeignVersion = "1.4.7.RELEASE"
 val cloudConfigVersion = "4.1.3"
+val circuitBreakerVersion = "3.1.2"
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
@@ -48,7 +49,7 @@ dependencies {
     implementation("org.springframework.cloud:spring-cloud-starter-netflix-eureka-client")
     implementation("org.springframework.cloud:spring-cloud-starter-loadbalancer")
     implementation("org.springframework.cloud:spring-cloud-starter-config:$cloudConfigVersion")
-    implementation("org.springframework.cloud:spring-cloud-starter-netflix-hystrix:$netflixVersion")
+    implementation("org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j:$circuitBreakerVersion")
     implementation("org.springframework.cloud:spring-cloud-starter-netflix-hystrix-dashboard:$netflixVersion")
     implementation("org.springframework.cloud:spring-cloud-starter-feign:$cloudFeignVersion")
     implementation("org.springframework.data:spring-data-jdbc:$springDataJdbc")
