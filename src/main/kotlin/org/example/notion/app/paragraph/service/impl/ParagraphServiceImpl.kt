@@ -3,6 +3,7 @@ package org.example.notion.app.paragraph.service.impl
 import org.example.notion.app.exceptions.EntityNotFoundException
 import org.example.notion.app.exceptions.IdSimilarException
 import org.example.notion.app.exceptions.ParagraphErrorTypeException
+import org.example.notion.app.note.NoteRepository
 import org.example.notion.app.paragraph.client.ExecutorServiceClient
 import org.example.notion.app.paragraph.client.ImageServiceClient
 import org.example.notion.app.paragraph.dto.ChangeParagraphPositionRequest
@@ -33,7 +34,8 @@ class ParagraphServiceImpl(
     private val permissionService: PermissionService,
     private val userService: UserService,
     private val executorServiceClient: ExecutorServiceClient,
-    private val imageServiceClient: ImageServiceClient
+    private val imageServiceClient: ImageServiceClient,
+    private val noteRepository: NoteRepository
 ) : ParagraphService {
 
     companion object {
@@ -52,6 +54,9 @@ class ParagraphServiceImpl(
     override fun createParagraph(paragraphCreateRequest: ParagraphCreateRequest): ParagraphGetResponse {
         // получаем параграф который стоял на месте нового параграфа
         permissionService.requireUserPermission(paragraphCreateRequest.noteId, Permission.WRITER)
+        if (noteRepository.findById(paragraphCreateRequest.noteId).isEmpty) {
+            throw EntityNotFoundException("Note with this id ${paragraphCreateRequest.noteId} not found")
+        }
 
         val paragraph = if (paragraphCreateRequest.nextParagraphId != null) {
             paragraphRepository.findByNextParagraphIdAndNoteId(paragraphCreateRequest.nextParagraphId, paragraphCreateRequest.noteId)

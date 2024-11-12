@@ -76,7 +76,7 @@ class TeamPermissionService(
         val currentUserId = userService.getCurrentUser()
         val isTeamOwner = teamService.isOwner(noteTeamPermissionDeleteDto.teamId, currentUserId)
         val isNoteOwner = noteService.isOwner(noteTeamPermissionDeleteDto.noteId, currentUserId)
-        if (isTeamOwner || isNoteOwner) {
+        if (isTeamOwner || isNoteOwner || userService.isAdmin()) {
             teamPermissionRepository.deleteNoteUserPermissionByTeamIdAndNoteId(
                 noteTeamPermissionDeleteDto.teamId,
                 noteTeamPermissionDeleteDto.noteId
@@ -88,13 +88,9 @@ class TeamPermissionService(
 
     @Transactional
     fun deleteByNoteId(noteId: Long) {
-        val currentUserId = userService.getCurrentUser()
-        val isNoteOwner = noteService.isOwner(noteId, currentUserId)
-        if (isNoteOwner) {
-            teamPermissionRepository.deleteNoteUserPermissionByNoteId(noteId)
-        } else {
-            throw ForbiddenException("Current user $currentUserId must be owner of note ${noteId}")
-        }
+        permissionService.requireOwnerPermission(noteId)
+        teamPermissionRepository.deleteNoteUserPermissionByNoteId(noteId)
+
     }
 
 

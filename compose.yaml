@@ -93,7 +93,9 @@ services:
       - python-exec
       - notion-config
       - notion-eureka
-
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    tty: true
   notion-s3:
     hostname: notion-s3
     image: notion-s3:latest

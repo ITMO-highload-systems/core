@@ -29,7 +29,7 @@ class UserPermissionController(
         return ResponseEntity(HttpStatus.OK)
     }
 
-    @PutMapping
+    @PutMapping(consumes = [MediaType.APPLICATION_JSON_VALUE])
     fun update(
         @RequestBody noteUserPermission: NoteUserPermissionDto
     ): ResponseEntity<Void> {

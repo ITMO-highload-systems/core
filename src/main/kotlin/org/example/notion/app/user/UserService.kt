@@ -12,7 +12,7 @@ class UserService(private val repository: UserRepository) {
     }
 
     fun isAdmin(): Boolean {
-        return SecurityContextHolder.getContext().authentication.authorities.any { it.toString() == "ADMIN" }
+        return SecurityContextHolder.getContext().authentication.authorities.any { it.toString() == "ROLE_ADMIN" }
     }
 
     fun requireUserExistence(owner: String) {

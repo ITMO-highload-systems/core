@@ -1,5 +1,6 @@
 package org.example.notion.app.userPermission
 
+import org.example.notion.app.exceptions.EntityAlreadyExistException
 import org.example.notion.app.exceptions.EntityNotFoundException
 import org.example.notion.app.exceptions.ForbiddenException
 import org.example.notion.app.note.NoteService
@@ -36,6 +37,13 @@ class UserPermissionService(
         }
         permissionService.requireOwnerPermission(userPermissionDto.noteId)
         userService.requireUserExistence(userPermissionDto.userId)
+        if (userPermissionRepository.findNoteUserPermissionByUserIdAndNoteId(
+                userPermissionDto.userId,
+                userPermissionDto.noteId
+            ) != null
+        ) {
+            throw EntityAlreadyExistException("This permission already exist")
+        }
         userPermissionRepository.save(userPermissionMapper.toEntity(userPermissionDto))
     }
 
