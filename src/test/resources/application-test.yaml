@@ -1,4 +1,13 @@
 spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/notion-core
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
   main:
     allow-bean-definition-overriding: true
   application:
@@ -14,10 +23,14 @@ spring:
               uri: http://localhost:${mock-port.s3}
             notion-code-exec[0]:
               uri: http://localhost:${mock-port.code-exec}
+    config:
+      enabled: false
+      fail-fast: false
+
 mock-port:
-  security: 82
-  s3: 81
-  code-exec: 83
+  security: 8282
+  s3: 8281
+  code-exec: 8283
 
 eureka:
   client:
@@ -41,3 +54,16 @@ resilience4j:
         minimum-number-of-calls: 5
         failure-rate-threshold: 50
         wait-duration-in-open-state: 5s
+
+sse:
+  timeout: 3000
+
+server:
+  port: 0
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+        exclude: shutdown

@@ -43,7 +43,7 @@ import java.util.concurrent.TimeUnit
 
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
-@SpringBootTest()
+@SpringBootTest
 @ExtendWith()
 @ContextConfiguration(classes = [WireMockConfig::class])
 abstract class AbstractIntegrationTest {
