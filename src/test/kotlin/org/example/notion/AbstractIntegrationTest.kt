@@ -5,9 +5,6 @@ import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.HttpHeaders
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import org.example.notion.app.note.dto.NoteDto
-import org.example.notion.app.team.dto.TeamDto
-import org.example.notion.app.teamUser.dto.TeamUserResponseDto
-import org.example.notion.app.userPermission.dto.NoteTeamPermissionDto
 import org.example.notion.app.userPermission.entity.Permission
 import org.example.notion.config.JwtUtil
 import org.example.notion.configuration.ClockTestConfiguration
@@ -33,7 +30,6 @@ import org.springframework.test.web.servlet.MvcResult
 import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.testcontainers.containers.PostgreSQLContainer
 import java.io.IOException
 import java.util.*
@@ -174,60 +170,6 @@ abstract class AbstractIntegrationTest {
                         .withHeader("Content-Type", "application/json")
                 )
         )
-    }
-
-    protected fun createTeam(username: String): TeamDto {
-        val teamName = UUID.randomUUID().toString()
-        val contentAsString = mockMvc.perform(
-            MockMvcRequestBuilders.post("/api/v1/team")
-                .header(AUTHORIZATION, "Bearer ${signInAs(username)}")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(mapOf("name" to teamName)))
-        ).andExpect(MockMvcResultMatchers.status().isCreated)
-            .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(jsonPath("$.name").value(teamName))
-            .andExpect(jsonPath("$.owner").value(username))
-            .andReturn().response.contentAsString
-        return mapper.readValue(contentAsString, TeamDto::class.java)
-    }
-
-    protected fun createTeamParticipant(token: String, participantUserId: String, teamId: Long): TeamUserResponseDto {
-        mockIsUserExist(participantUserId, true)
-        val contentAsString = mockMvc.perform(
-            MockMvcRequestBuilders.post("/api/v1/team/user")
-                .header(AUTHORIZATION, "Bearer $token")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(
-                    mapper.writeValueAsString(
-                        mapOf(
-                            "user_id" to participantUserId,
-                            "team_id" to teamId
-                        )
-                    )
-                )
-        ).andExpect(MockMvcResultMatchers.status().isCreated).andReturn().response.contentAsString
-        return mapper.readValue(contentAsString, TeamUserResponseDto::class.java)
-    }
-
-    protected fun createTeamPermission(
-        token: String,
-        teamPermissionDto: NoteTeamPermissionDto
-    ): NoteTeamPermissionDto {
-        val contentAsString = mockMvc.perform(
-            MockMvcRequestBuilders.post("/api/v1/team/permissions")
-                .header(AUTHORIZATION, "Bearer $token")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(
-                    mapper.writeValueAsString(
-                        mapOf(
-                            "note_id" to teamPermissionDto.noteId,
-                            "team_id" to teamPermissionDto.teamId,
-                            "permission" to teamPermissionDto.permission
-                        )
-                    )
-                )
-        ).andExpect(MockMvcResultMatchers.status().isCreated).andReturn().response.contentAsString
-        return mapper.readValue(contentAsString, NoteTeamPermissionDto::class.java)
     }
 
     protected fun getNoteById(token: String, noteId: Long): NoteDto {

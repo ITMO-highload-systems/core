@@ -7,7 +7,6 @@ import org.example.notion.app.note.dto.NoteUpdateDto
 import org.example.notion.app.note.mapper.NoteMapper
 import org.example.notion.app.paragraph.service.ParagraphService
 import org.example.notion.app.user.UserService
-import org.example.notion.app.userPermission.TeamPermissionService
 import org.example.notion.app.userPermission.UserPermissionService
 import org.example.notion.app.userPermission.entity.Permission
 import org.example.notion.permission.PermissionService
@@ -22,8 +21,6 @@ class NoteService(
     private val userService: UserService,
     private val permissionService: PermissionService,
     private val paragraphService: ParagraphService,
-    @Lazy
-    private val teamPermissionService: TeamPermissionService,
     @Lazy
     private val userPermissionService: UserPermissionService,
     ) {
@@ -57,7 +54,6 @@ class NoteService(
     fun deleteByNoteId(noteId: Long) {
         permissionService.requireOwnerPermission(noteId)
         paragraphService.deleteParagraphByNoteId(noteId)
-        teamPermissionService.deleteByNoteId(noteId)
         userPermissionService.deleteByNoteId(noteId)
         noteRepository.deleteByNoteId(noteId)
     }
