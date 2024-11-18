@@ -38,6 +38,7 @@ val springSecurityTestVersion = "6.3.4"
 val cloudFeignVersion = "1.4.7.RELEASE"
 val cloudConfigVersion = "4.1.3"
 val circuitBreakerVersion = "3.1.2"
+val webmvcUiVersion = "2.6.0"
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
@@ -59,6 +60,8 @@ dependencies {
     implementation("org.flywaydb:flyway-core:$flyWayVersion")
     implementation("org.mapstruct:mapstruct:$mapstructVersion")
     implementation("io.jsonwebtoken:jjwt-api:$jjwtApiVersion")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$webmvcUiVersion")
+
 
 
     runtimeOnly("io.jsonwebtoken:jjwt-impl:$jjwtImplVersion")

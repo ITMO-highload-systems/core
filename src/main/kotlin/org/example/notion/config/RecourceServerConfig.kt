@@ -17,6 +17,8 @@ class ResourceServerConfig(private val jwtAuthFilter: JwtAuthFilter) {
             csrf { disable() }
             authorizeHttpRequests {
                 authorize("/actuator/**", permitAll)
+                authorize("/v3/**", permitAll)
+                authorize("/swagger-ui/**", permitAll)
                 authorize(anyRequest, authenticated)
             }
             addFilterBefore<UsernamePasswordAuthenticationFilter>(jwtAuthFilter)
