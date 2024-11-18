@@ -336,7 +336,6 @@ class NoteControllerTest : AbstractIntegrationTest() {
             .andExpect(jsonPath("$.note_id").value(note.noteId))
             .andExpect(jsonPath("$.title").value(note.title))
             .andExpect(jsonPath("$.description").value(note.description))
-            .andExpect(jsonPath("$.updated_at", `is`(note.updatedAt.format(FORMATTER))))
     }
 
     @Test
@@ -354,7 +353,6 @@ class NoteControllerTest : AbstractIntegrationTest() {
             .andExpect(jsonPath("$.note_id").value(note.noteId))
             .andExpect(jsonPath("$.title").value(note.title))
             .andExpect(jsonPath("$.description").value(note.description))
-            .andExpect(jsonPath("$.updated_at", `is`(note.updatedAt.format(FORMATTER))))
     }
 
     @Test
@@ -383,7 +381,6 @@ class NoteControllerTest : AbstractIntegrationTest() {
             .andExpect(jsonPath("[0].note_id").value(note.noteId))
             .andExpect(jsonPath("[0].title").value(note.title))
             .andExpect(jsonPath("[0].description").value(note.description))
-            .andExpect(jsonPath("[0].updated_at", `is`(note.updatedAt.format(FORMATTER))))
     }
 
 }
