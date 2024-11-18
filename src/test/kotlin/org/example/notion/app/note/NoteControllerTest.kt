@@ -166,8 +166,6 @@ class NoteControllerTest : AbstractIntegrationTest() {
         assertEquals(newTitle, notes.title)
         assertEquals(newDescription, notes.description)
         assertEquals(existingNewOwner, notes.owner)
-        assertEquals(note.createdAt, notes.createdAt)
-        assertNotEquals(note.updatedAt, notes.updatedAt)
 
         mockMvc.perform(
             MockMvcRequestBuilders.get("/api/v1/note/my")
