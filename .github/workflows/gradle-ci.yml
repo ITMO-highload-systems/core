@@ -1,0 +1,45 @@
+name: Gradle CI
+
+# Запускаем workflow на каждый push или pull request в ветки main и dev
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+    branches:
+      - "*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Проверяем репозиторий
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Устанавливаем Java
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: 21
+          distribution: corretto  # Выберите вашу JDK (temurin — OpenJDK от Eclipse Foundation)
+
+      # Устанавливаем Docker
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v2
+        with:
+          version: 'latest'
+
+      # Кэшируем зависимости Gradle для ускорения сборки
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      # Скачиваем Gradle Wrapper и выполняем сборку
+      - name: Build and test
+        run: ./gradlew clean build
