@@ -10,13 +10,13 @@ import org.springframework.test.context.ActiveProfiles
 @ActiveProfiles("test")
 class WireMockConfig {
     @Value("\${mock-port.s3}")
-    private val portS3: Int = 81
+    private var portS3: Int = 81
 
     @Value("\${mock-port.code-exec}")
-    private val portExec: Int = 83
+    private var portExec: Int = 83
 
     @Value("\${mock-port.security}")
-    private val portSecurity: Int = 82
+    private var portSecurity: Int = 82
 
     @Bean(name = ["mockCodeExecService"], initMethod = "start", destroyMethod = "stop")
     fun mockCodeExecService(): WireMockServer {
@@ -32,7 +32,5 @@ class WireMockConfig {
     fun mockSecurityService(): WireMockServer {
         return WireMockServer(portSecurity)
     }
-
-
 }
 
