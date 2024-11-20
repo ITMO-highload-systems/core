@@ -291,6 +291,12 @@ class ParagraphTest : AbstractIntegrationTest() {
                     .header(AUTHORIZATION, "Bearer $adminToken")
             )
         }
+
+        val response = mockMvc.perform(
+            MockMvcRequestBuilders.get("/api/v1/paragraph/execute/${paragraph.id}")
+                .header(AUTHORIZATION, "Bearer $adminToken")
+        ).andReturn().response
+        Assertions.assertTrue(response.contentAsString.contains("Service is unavailable"))
         // Проверяем, что Circuit Breaker теперь находится в открытом состоянии
         Assertions.assertEquals(io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN, circuitBreaker.state)
         circuitBreaker.reset()
