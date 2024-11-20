@@ -1,33 +1,47 @@
 package org.example.notion.app.paragraph.client
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker
+import org.example.notion.app.paragraph.client.feign.ImageFeignServiceClient
 import org.example.notion.app.paragraph.dto.GetImageResponse
-import org.springframework.cloud.openfeign.FeignClient
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.stereotype.Service
 
-@FeignClient(
-    name = "notion-s3"
-)
-interface ImageServiceClient {
+@Service
+class ImageServiceClient(
+    private val imageFeignServiceClient: ImageFeignServiceClient
+) {
+    companion object {
+        private val logger = org.slf4j.LoggerFactory.getLogger(ImageServiceClient::class.java)
+    }
 
-    @DeleteMapping("/api/v1/image/by-paragraph/{paragraphId}")
-    @CircuitBreaker(name = "default")
-    fun deleteByParagraphId(
-        @PathVariable paragraphId: Long
-    ): ResponseEntity<Unit>
+    @CircuitBreaker(name = "default", fallbackMethod = "deleteByParagraphIdFallback")
+    fun deleteByParagraphId(paragraphId: Long): ResponseEntity<Unit> {
+        return imageFeignServiceClient.deleteByParagraphId(paragraphId)
+    }
 
-    @DeleteMapping("/api/v1/image/by-name/{imageName}")
-    @CircuitBreaker(name = "default")
-    fun deleteImageByName(
-        @PathVariable imageName: String
-    ): ResponseEntity<Unit>
+    fun deleteByParagraphIdFallback(paragraphId: Long, ex: Throwable): ResponseEntity<Unit> {
+        logger.error("Fallback for deleteByParagraphId invoked due to: ${ex.message}")
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build()
+    }
 
-    @GetMapping("/api/v1/image/{paragraphId}")
-    @CircuitBreaker(name = "default")
-    fun getImageByParagraphId(
-        @PathVariable paragraphId: String
-    ): ResponseEntity<GetImageResponse>
+    @CircuitBreaker(name = "default", fallbackMethod = "getImageByParagraphIdFallback")
+    fun deleteImageByName(imageName: String): ResponseEntity<Unit> {
+        return imageFeignServiceClient.deleteImageByName(imageName)
+    }
+
+    fun deleteImageByNameFallback(imageName: String, ex: Throwable): ResponseEntity<Unit> {
+        logger.error("Fallback for deleteByName invoked due to: ${ex.message}")
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build()
+    }
+
+    @CircuitBreaker(name = "default", fallbackMethod = "getImageByParagraphIdFallback")
+    fun getImageByParagraphId(paragraphId: String): ResponseEntity<GetImageResponse> {
+        return imageFeignServiceClient.getImageByParagraphId(paragraphId)
+    }
+
+    fun getImageByParagraphIdFallback(paragraphId: String, ex: Throwable): ResponseEntity<GetImageResponse> {
+        logger.error("Fallback for getImageByParagraphId invoked due to: ${ex.message}")
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(GetImageResponse(emptyList()))
+    }
 }
