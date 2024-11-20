@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler
+import javax.naming.ServiceUnavailableException
 
 @ControllerAdvice
 class EntityControllerExceptionHandler : ResponseEntityExceptionHandler() {
@@ -26,6 +27,19 @@ class EntityControllerExceptionHandler : ResponseEntityExceptionHandler() {
         return ResponseEntity.status(status)
             .contentType(MediaType.APPLICATION_JSON)
             .body(ApiException(status, message))
+    }
+
+    @ExceptionHandler(ServiceUnavailableException::class)
+    protected fun handleFeignException(
+        request: HttpServletRequest?,
+        ex: ServiceUnavailableException
+    ): ResponseEntity<ApiException> {
+        logger.debug(ex.message, ex)
+        val message = ex.message
+
+        return ResponseEntity.status(503)
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(ApiException(503, message))
     }
 
     @ExceptionHandler(Exception::class)

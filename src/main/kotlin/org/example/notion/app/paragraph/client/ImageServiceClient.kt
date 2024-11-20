@@ -3,9 +3,9 @@ package org.example.notion.app.paragraph.client
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker
 import org.example.notion.app.paragraph.client.feign.ImageFeignServiceClient
 import org.example.notion.app.paragraph.dto.GetImageResponse
-import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
+import javax.naming.ServiceUnavailableException
 
 @Service
 class ImageServiceClient(
@@ -13,6 +13,7 @@ class ImageServiceClient(
 ) {
     companion object {
         private val logger = org.slf4j.LoggerFactory.getLogger(ImageServiceClient::class.java)
+        private const val FALLBACK_MESSAGE = "Image Service is unavailable"
     }
 
     @CircuitBreaker(name = "default", fallbackMethod = "deleteByParagraphIdFallback")
@@ -22,7 +23,7 @@ class ImageServiceClient(
 
     fun deleteByParagraphIdFallback(paragraphId: Long, ex: Throwable): ResponseEntity<Unit> {
         logger.error("Fallback for deleteByParagraphId invoked due to: ${ex.message}")
-        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build()
+        throw ServiceUnavailableException(FALLBACK_MESSAGE)
     }
 
     @CircuitBreaker(name = "default", fallbackMethod = "getImageByParagraphIdFallback")
@@ -32,7 +33,7 @@ class ImageServiceClient(
 
     fun deleteImageByNameFallback(imageName: String, ex: Throwable): ResponseEntity<Unit> {
         logger.error("Fallback for deleteByName invoked due to: ${ex.message}")
-        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build()
+        throw ServiceUnavailableException(FALLBACK_MESSAGE)
     }
 
     @CircuitBreaker(name = "default", fallbackMethod = "getImageByParagraphIdFallback")
@@ -42,6 +43,6 @@ class ImageServiceClient(
 
     fun getImageByParagraphIdFallback(paragraphId: String, ex: Throwable): ResponseEntity<GetImageResponse> {
         logger.error("Fallback for getImageByParagraphId invoked due to: ${ex.message}")
-        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(GetImageResponse(emptyList()))
+        throw ServiceUnavailableException(FALLBACK_MESSAGE)
     }
 }

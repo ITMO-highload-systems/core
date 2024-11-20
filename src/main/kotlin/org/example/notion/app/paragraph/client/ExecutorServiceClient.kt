@@ -2,16 +2,18 @@ package org.example.notion.app.paragraph.client
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker
 import org.example.notion.app.paragraph.client.feign.ExecutorFeignServiceClient
-import org.springframework.http.HttpStatus
+import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
+import javax.naming.ServiceUnavailableException
 
 @Service
 class ExecutorServiceClient(
     private val executorFeignServiceClient: ExecutorFeignServiceClient
 ) {
     companion object {
-        private val logger = org.slf4j.LoggerFactory.getLogger(ExecutorServiceClient::class.java)
+        private val logger = LoggerFactory.getLogger(ExecutorServiceClient::class.java)
+        private const val FALLBACK_MESSAGE = "Executor Service is unavailable"
     }
 
     @CircuitBreaker(name = "default", fallbackMethod = "getExecuteFallback")
@@ -21,6 +23,6 @@ class ExecutorServiceClient(
 
     fun getExecuteFallback(paragraphId: Long, code: String, ex: Throwable): ResponseEntity<String> {
         logger.error("Fallback for getExecute invoked due to: ${ex.message}")
-        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("Service is unavailable")
+        throw ServiceUnavailableException(FALLBACK_MESSAGE)
     }
 }
