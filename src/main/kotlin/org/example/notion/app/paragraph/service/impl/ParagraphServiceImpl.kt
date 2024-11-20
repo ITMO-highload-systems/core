@@ -6,6 +6,7 @@ import org.example.notion.app.exceptions.ParagraphErrorTypeException
 import org.example.notion.app.note.NoteRepository
 import org.example.notion.app.paragraph.client.ExecutorServiceClient
 import org.example.notion.app.paragraph.client.ImageServiceClient
+import org.example.notion.app.paragraph.client.feign.ImageFeignServiceClient
 import org.example.notion.app.paragraph.dto.ChangeParagraphPositionRequest
 import org.example.notion.app.paragraph.dto.ParagraphCreateRequest
 import org.example.notion.app.paragraph.dto.ParagraphGetResponse

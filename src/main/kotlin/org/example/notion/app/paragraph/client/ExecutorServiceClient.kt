@@ -1,20 +1,26 @@
 package org.example.notion.app.paragraph.client
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker
-import org.springframework.cloud.openfeign.FeignClient
+import org.example.notion.app.paragraph.client.feign.ExecutorFeignServiceClient
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.stereotype.Service
 
-@FeignClient(
-    name = "notion-code-exec"
-)
-interface ExecutorServiceClient {
+@Service
+class ExecutorServiceClient(
+    private val executorFeignServiceClient: ExecutorFeignServiceClient
+) {
+    companion object {
+        private val logger = org.slf4j.LoggerFactory.getLogger(ExecutorServiceClient::class.java)
+    }
 
-    @GetMapping("/api/v1/execution/execute")
-    @CircuitBreaker(name = "default")
-    fun getExecute(
-        @RequestParam paragraphId: Long,
-        @RequestParam code: String
-    ): ResponseEntity<String>
+    @CircuitBreaker(name = "default", fallbackMethod = "getExecuteFallback")
+    fun getExecute(paragraphId: Long, code: String): ResponseEntity<String> {
+        return executorFeignServiceClient.getExecute(paragraphId, code)
+    }
+
+    fun getExecuteFallback(paragraphId: Long, code: String, ex: Throwable): ResponseEntity<String> {
+        logger.error("Fallback for getExecute invoked due to: ${ex.message}")
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("Service is unavailable")
+    }
 }
