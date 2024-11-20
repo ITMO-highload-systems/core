@@ -292,6 +292,13 @@ class ParagraphTest : AbstractIntegrationTest() {
             )
         }
 
+        mockCodeExecService.verify(
+            WireMock.lessThanOrExactly(circuitBreaker.circuitBreakerConfig.slidingWindowSize),
+            WireMock.getRequestedFor(WireMock.urlPathEqualTo("/api/v1/execution/execute"))
+                .withQueryParam("paragraphId", WireMock.matching("\\d+"))
+                .withQueryParam("code", WireMock.matching(".*"))
+        )
+
         val response = mockMvc.perform(
             MockMvcRequestBuilders.get("/api/v1/paragraph/execute/${paragraph.id}")
                 .header(AUTHORIZATION, "Bearer $adminToken")
