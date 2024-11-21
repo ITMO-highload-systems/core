@@ -13,10 +13,6 @@ import org.springframework.web.bind.annotation.PathVariable
 )
 interface ImageFeignServiceClient {
 
-    companion object {
-        private val logger = org.slf4j.LoggerFactory.getLogger(ImageFeignServiceClient::class.java)
-    }
-
     @DeleteMapping("/api/v1/image/by-paragraph/{paragraphId}")
     @CircuitBreaker(name = "default")
     fun deleteByParagraphId(
