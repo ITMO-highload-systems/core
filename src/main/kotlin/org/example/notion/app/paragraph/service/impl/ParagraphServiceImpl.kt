@@ -13,16 +13,15 @@ import org.example.notion.app.paragraph.repository.ParagraphRepository
 import org.example.notion.app.paragraph.service.ParagraphService
 import org.example.notion.app.user.UserService
 import org.example.notion.app.userPermission.entity.Permission
+import org.example.notion.kafka.Message
+import org.example.notion.kafka.SseService
+import org.example.notion.kafka.Type
 import org.example.notion.permission.PermissionService
-import org.example.notion.sse.Message
-import org.example.notion.sse.SseService
-import org.example.notion.sse.Type
 import org.example.notion.websocket.WebSocketClient
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
-import kotlin.reflect.jvm.internal.impl.descriptors.Visibilities.Private
 
 @Service
 class ParagraphServiceImpl(
@@ -75,8 +74,11 @@ class ParagraphServiceImpl(
         }
 
         sseService.sendMessage(
-            paragraphCreateRequest.noteId,
-            Message(Type.PARAGRAPH_CREATED, PARAGRAPH_CREATED.format(paragraphEntity.id!!))
+            Message(
+                Type.PARAGRAPH_CREATED,
+                PARAGRAPH_CREATED.format(paragraphEntity.id!!),
+                paragraphCreateRequest.noteId
+            )
         )
         return getParagraph(paragraphEntity.id)
     }
@@ -100,8 +102,11 @@ class ParagraphServiceImpl(
         paragraphRepository.deleteById(paragraphId)
 
         sseService.sendMessage(
-            paragraph.noteId,
-            Message(Type.PARAGRAPH_DELETED, PARAGRAPH_DELETED.format(paragraphId))
+            Message(
+                Type.PARAGRAPH_DELETED,
+                PARAGRAPH_DELETED.format(paragraphId),
+                paragraph.noteId
+            )
         )
     }
 
@@ -152,8 +157,11 @@ class ParagraphServiceImpl(
             )
         )
         sseService.sendMessage(
-            paragraph.noteId,
-            Message(Type.PARAGRAPH_CHANGED, PARAGRAPH_CHANGED.format(paragraphUpdateRequest.id))
+            Message(
+                Type.PARAGRAPH_CHANGED,
+                PARAGRAPH_CHANGED.format(paragraphUpdateRequest.id),
+                paragraph.noteId
+            )
         )
         return this.getParagraph(paragraphUpdateRequest.id)
     }
