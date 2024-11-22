@@ -17,8 +17,14 @@ spring:
     client-id: ${spring.application.name}
 
     producer:
+      properties:
+        spring:
+          json:
+            add:
+              type:
+                headers: false
       key-serializer: "org.apache.kafka.common.serialization.LongSerializer"
-      value-serializer: "org.springframework.kafka.support.serializer.JsonSerializer"
+      value-serializer: "org.apache.kafka.common.serialization.StringSerializer"
       retries: 3
     bootstrap-servers: localhost:9092,localhost:9093,localhost:9094
 
@@ -31,9 +37,6 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
-
-sse:
-  timeout: 3000
 
 server:
   port: 9091

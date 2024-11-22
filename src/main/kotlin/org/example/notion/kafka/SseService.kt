@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service
 
 
 @Service
-class SseService(private val kafkaTemplate: KafkaTemplate<String, String>, private val objectMapper: ObjectMapper) {
+class SseService(private val kafkaTemplate: KafkaTemplate<Long, String>, private val objectMapper: ObjectMapper) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(this::class.java)
