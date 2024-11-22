@@ -21,8 +21,8 @@ services:
     hostname: notion-config
     image: notion-config:latest
     environment:
-      - GITHUB_USERNAME=NastyaLush
-      - GITHUB_TOKEN=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
+      - GITHUB_USERNAME=username
+      - GITHUB_TOKEN=password
 
     ports:
       - "8888:8888"
