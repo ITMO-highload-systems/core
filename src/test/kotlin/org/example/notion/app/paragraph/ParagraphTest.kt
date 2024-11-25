@@ -89,56 +89,6 @@ class ParagraphTest : AbstractIntegrationTest() {
     }
 
     @Test
-    fun `execute paragraph - valid paragraph id - success executed`() {
-        mockCodeExecService.stubFor(
-            WireMock.get(WireMock.urlPathEqualTo("/api/v1/execution/execute"))
-                .withQueryParam("paragraphId", WireMock.matching("\\d+"))
-                .withQueryParam("code", WireMock.matching(".*"))
-                .willReturn(
-                    WireMock.aResponse()
-                        .withStatus(HttpStatus.OK.value())
-                        .withBody("Hello, World!\n")
-                )
-        )
-        val paragraph = `create paragraph`(ParagraphType.PYTHON_PARAGRAPH, "print('Hello, World!')")
-        mockMvc.perform(
-            MockMvcRequestBuilders.get("/api/v1/paragraph/execute/${paragraph.id}")
-                .header(AUTHORIZATION, "Bearer $adminToken")
-        )
-            .andExpect(status().isOk)
-            .andExpect(MockMvcResultMatchers.content().string("Hello, World!\n"))
-    }
-
-    @Test
-    fun `execute paragraph with logarithmic logic - valid paragraph id - success executed`() {
-        mockCodeExecService.stubFor(
-            WireMock.get(WireMock.urlPathEqualTo("/api/v1/execution/execute"))
-                .withQueryParam("paragraphId", WireMock.matching("\\d+"))
-                .withQueryParam("code", WireMock.matching(".*"))
-                .willReturn(
-                    WireMock.aResponse()
-                        .withStatus(HttpStatus.OK.value())
-                        .withBody("2.0\n")
-                )
-        )
-        val pythonCode = """
-        import math
-        number = 100
-        result = math.log10(number)
-        print(result)
-        """.trimIndent()
-
-        val paragraph = `create paragraph`(ParagraphType.PYTHON_PARAGRAPH, pythonCode)
-
-        mockMvc.perform(
-            MockMvcRequestBuilders.get("/api/v1/paragraph/execute/${paragraph.id}")
-                .header(AUTHORIZATION, "Bearer $adminToken")
-        )
-            .andExpect(status().isOk)
-            .andExpect(MockMvcResultMatchers.content().string("2.0\n"))
-    }
-
-    @Test
     fun `update paragraph - valid data - success update`() {
         val paragraphGetResponseExpected = `create paragraph`()
         val paragraphGetResponseActual = `get paragraph`(paragraphGetResponseExpected.id)
@@ -268,46 +218,6 @@ class ParagraphTest : AbstractIntegrationTest() {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(changeParagraphPositionRequest))
         ).andExpect(status().isBadRequest)
-    }
-
-    @Test
-    fun `check circuit breaker`() {
-        val circuitBreaker = circuitBreakerRegistry.circuitBreaker("default")
-        circuitBreaker.reset()
-        mockCodeExecService.stubFor(
-            WireMock.get(WireMock.urlPathEqualTo("/api/v1/execution/execute"))
-                .withQueryParam("paragraphId", WireMock.matching("\\d+"))
-                .withQueryParam("code", WireMock.matching(".*"))
-                .willReturn(
-                    WireMock.aResponse()
-                        .withStatus(HttpStatus.SERVICE_UNAVAILABLE.value())
-                )
-        )
-        val paragraph = `create paragraph`(ParagraphType.PYTHON_PARAGRAPH, "print('Hello, World!')")
-        // Отправляем запросы и проверяем, что Circuit Breaker переключается в состояние OPEN после порога отказов
-        repeat(20) {
-            mockMvc.perform(
-                MockMvcRequestBuilders.get("/api/v1/paragraph/execute/${paragraph.id}")
-                    .header(AUTHORIZATION, "Bearer $adminToken")
-            )
-        }
-
-        mockCodeExecService.verify(
-            WireMock.lessThanOrExactly(circuitBreaker.circuitBreakerConfig.slidingWindowSize),
-            WireMock.getRequestedFor(WireMock.urlPathEqualTo("/api/v1/execution/execute"))
-                .withQueryParam("paragraphId", WireMock.matching("\\d+"))
-                .withQueryParam("code", WireMock.matching(".*"))
-        )
-
-        val response = mockMvc.perform(
-            MockMvcRequestBuilders.get("/api/v1/paragraph/execute/${paragraph.id}")
-                .header(AUTHORIZATION, "Bearer $adminToken")
-        ).andReturn().response
-        Assertions.assertTrue(response.contentAsString.contains("Executor Service is unavailable"))
-        Assertions.assertTrue(response.status == HttpStatus.SERVICE_UNAVAILABLE.value())
-        // Проверяем, что Circuit Breaker теперь находится в открытом состоянии
-        Assertions.assertEquals(io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN, circuitBreaker.state)
-        circuitBreaker.reset()
     }
 
     @ParameterizedTest

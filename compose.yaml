@@ -72,6 +72,7 @@ services:
       - NOTION_CORE_DATABASE_URL=jdbc:postgresql://postgres:5432/notion-core
       - EUREKA_CLIENT_URL=http://notion-eureka:8761/eureka
       - CONFIG_SERVER_URL=http://notion-config:8888
+      - WEBSOCKET_SERVER_ADDRESS=ws://notion-code-exec:52835/ws
     networks:
       - backend
     depends_on:
