@@ -113,6 +113,17 @@ services:
       - minio1
       - notion-eureka
       - notion-config
+  notion-notification:
+    hostname: notion-notification
+    image: notion-notification:latest
+    environment:
+      - EUREKA_CLIENT_URL=http://notion-eureka:8761/eureka
+      - CONFIG_SERVER_URL=http://notion-config:8888
+    networks:
+      - backend
+    depends_on:
+      - notion-eureka
+      - notion-config
 
   minio1:
     <<: *minio-common
@@ -152,66 +163,73 @@ services:
     command: tail -f /dev/null
     networks:
       - backend
-  zookeeper:
-    image: confluentinc/cp-zookeeper:latest
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    ports:
-      - 22181:2181
 
   kafka1:
     image: apache/kafka:latest
-    depends_on:
-      - zookeeper
     ports:
       - 29092:29092
       - 9092:9092
-    hostname: kafka
+    hostname: kafka1
     environment:
       KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092, CONTROLLER://0.0.0.0:19092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka1:29092,PLAINTEXT_HOST://localhost:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,CONTROLLER:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: true
-
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS:  1@kafka1:19092, 2@kafka2:19092, 3@kafka3:19092
+    volumes:
+      - ./kafka/kafka1/data:/var/lib/kafka/data
+    networks:
+      - backend
   kafka2:
     image: apache/kafka:latest
-    depends_on:
-      - zookeeper
     ports:
       - 29093:29092
-      - 9093:9093
+      - 9093:9092
     hostname: kafka2
     environment:
       KAFKA_BROKER_ID: 2
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENERS: PLAINTEXT://:29093,PLAINTEXT_HOST://:9093
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29093,PLAINTEXT_HOST://0.0.0.0:9093, CONTROLLER://0.0.0.0:19092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka2:29093,PLAINTEXT_HOST://localhost:9093
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT, PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,CONTROLLER:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: true
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS:  1@kafka1:19092, 2@kafka2:19092, 3@kafka3:19092
+    volumes:
+      - ./kafka/kafka2/data:/var/lib/kafka/data
+    networks:
+      - backend
   kafka3:
     image: apache/kafka:latest
-    depends_on:
-      - zookeeper
     ports:
       - 29094:29092
-      - 9094:9094
+      - 9094:9092
     hostname: kafka3
     environment:
       KAFKA_BROKER_ID: 3
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENERS: PLAINTEXT://:29094,PLAINTEXT_HOST://:9094
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29094,PLAINTEXT_HOST://0.0.0.0:9094, CONTROLLER://0.0.0.0:19092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka3:29094,PLAINTEXT_HOST://localhost:9094
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT, PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,CONTROLLER:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: true
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka1:19092, 2@kafka2:19092, 3@kafka3:19092
+    volumes:
+      - ./kafka/kafka3/data:/var/lib/kafka/data
+    networks:
+      - backend
   kafka-ui:
     image: provectuslabs/kafka-ui
     container_name: kafka-ui
@@ -221,12 +239,10 @@ services:
     environment:
       - KAFKA_CLUSTERS_0_NAME=local
       - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka1:29092,kafka2:29093,kafka3:29094
-      - KAFKA_CLUSTERS_0_ZOOKEEPER=zookeeper:2181
     links:
       - kafka1
       - kafka2
       - kafka3
-      - zookeeper
 
 volumes:
   postgres_data:
