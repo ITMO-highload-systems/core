@@ -61,7 +61,7 @@ class WebSocketClient(
             logger.info("Sent: $executeParagraphRequest")
         } catch (ex: Exception) {
             logger.error("Failed to send message: ${ex.message}")
-            throw ServiceUnavailableException("Image Service is unavailable")
+            throw ServiceUnavailableException("Code exec service is unavailable")
         }
     }
 }
