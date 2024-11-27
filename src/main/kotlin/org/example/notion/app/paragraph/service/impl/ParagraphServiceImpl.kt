@@ -4,12 +4,8 @@ import org.example.notion.app.exceptions.EntityNotFoundException
 import org.example.notion.app.exceptions.IdSimilarException
 import org.example.notion.app.exceptions.ParagraphErrorTypeException
 import org.example.notion.app.note.NoteRepository
-import org.example.notion.app.paragraph.client.ExecutorServiceClient
 import org.example.notion.app.paragraph.client.ImageServiceClient
-import org.example.notion.app.paragraph.dto.ChangeParagraphPositionRequest
-import org.example.notion.app.paragraph.dto.ParagraphCreateRequest
-import org.example.notion.app.paragraph.dto.ParagraphGetResponse
-import org.example.notion.app.paragraph.dto.ParagraphUpdateRequest
+import org.example.notion.app.paragraph.dto.*
 import org.example.notion.app.paragraph.entity.Paragraph
 import org.example.notion.app.paragraph.entity.ParagraphType
 import org.example.notion.app.paragraph.mapper.ParagraphMapper
@@ -17,10 +13,11 @@ import org.example.notion.app.paragraph.repository.ParagraphRepository
 import org.example.notion.app.paragraph.service.ParagraphService
 import org.example.notion.app.user.UserService
 import org.example.notion.app.userPermission.entity.Permission
+import org.example.notion.kafka.Message
+import org.example.notion.kafka.SseService
+import org.example.notion.kafka.Type
 import org.example.notion.permission.PermissionService
-import org.example.notion.sse.Message
-import org.example.notion.sse.SseService
-import org.example.notion.sse.Type
+import org.example.notion.websocket.WebSocketClient
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -33,9 +30,9 @@ class ParagraphServiceImpl(
     private val paragraphMapper: ParagraphMapper,
     private val permissionService: PermissionService,
     private val userService: UserService,
-    private val executorServiceClient: ExecutorServiceClient,
     private val imageServiceClient: ImageServiceClient,
-    private val noteRepository: NoteRepository
+    private val noteRepository: NoteRepository,
+    private val webSocketClient: WebSocketClient
 ) : ParagraphService {
 
     companion object {
@@ -48,6 +45,7 @@ class ParagraphServiceImpl(
         private const val PARAGRAPH_CHANGED = "Paragraph with id %d changed"
         private const val PARAGRAPH_NOT_FOUND_BY_NEXT_PARAGRAPH_ID =
             "Paragraph with next paragraph id %d not found that means that it is the first paragraph in the note"
+        private const val PARAGRAPH_EXECUTE_REQUEST_SEND = "Execute request for paragraph with id %d send"
     }
 
     @Transactional
@@ -76,8 +74,11 @@ class ParagraphServiceImpl(
         }
 
         sseService.sendMessage(
-            paragraphCreateRequest.noteId,
-            Message(Type.PARAGRAPH_CREATED, PARAGRAPH_CREATED.format(paragraphEntity.id!!))
+            Message(
+                Type.PARAGRAPH_CREATED,
+                PARAGRAPH_CREATED.format(paragraphEntity.id!!),
+                paragraphCreateRequest.noteId
+            )
         )
         return getParagraph(paragraphEntity.id)
     }
@@ -101,8 +102,11 @@ class ParagraphServiceImpl(
         paragraphRepository.deleteById(paragraphId)
 
         sseService.sendMessage(
-            paragraph.noteId,
-            Message(Type.PARAGRAPH_DELETED, PARAGRAPH_DELETED.format(paragraphId))
+            Message(
+                Type.PARAGRAPH_DELETED,
+                PARAGRAPH_DELETED.format(paragraphId),
+                paragraph.noteId
+            )
         )
     }
 
@@ -131,13 +135,9 @@ class ParagraphServiceImpl(
             throw ParagraphErrorTypeException(PARAGRAPH_TYPE_NOT_PYTHON.format(paragraphId))
         }
 
-        val executionResult = executorServiceClient.getExecute(paragraph.id!!, paragraph.text).body.toString()
+        webSocketClient.sendMessage("/app/paragraph.execute", ExecuteParagraphRequest(paragraphId, paragraph.text))
 
-        sseService.sendMessage(
-            paragraph.noteId,
-            Message(Type.PARAGRAPH_EXECUTED, PARAGRAPH_EXECUTED.format(paragraphId))
-        )
-        return executionResult
+        return PARAGRAPH_EXECUTE_REQUEST_SEND.format(paragraph.id!!)
     }
 
     @Transactional
@@ -157,8 +157,11 @@ class ParagraphServiceImpl(
             )
         )
         sseService.sendMessage(
-            paragraph.noteId,
-            Message(Type.PARAGRAPH_CHANGED, PARAGRAPH_CHANGED.format(paragraphUpdateRequest.id))
+            Message(
+                Type.PARAGRAPH_CHANGED,
+                PARAGRAPH_CHANGED.format(paragraphUpdateRequest.id),
+                paragraph.noteId
+            )
         )
         return this.getParagraph(paragraphUpdateRequest.id)
     }

@@ -38,15 +38,19 @@ val springSecurityTestVersion = "6.3.4"
 val cloudFeignVersion = "1.4.7.RELEASE"
 val cloudConfigVersion = "4.1.3"
 val circuitBreakerVersion = "3.1.2"
+val webmvcUiVersion = "2.6.0"
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-websocket")
+    implementation("org.springframework:spring-messaging")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
     implementation("org.springframework.cloud:spring-cloud-starter-netflix-eureka-client")
+    implementation("org.springframework.kafka:spring-kafka")
     implementation("org.springframework.cloud:spring-cloud-starter-loadbalancer")
     implementation("org.springframework.cloud:spring-cloud-starter-config:$cloudConfigVersion")
     implementation("org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j:$circuitBreakerVersion")
@@ -57,6 +61,8 @@ dependencies {
     implementation("org.flywaydb:flyway-core:$flyWayVersion")
     implementation("org.mapstruct:mapstruct:$mapstructVersion")
     implementation("io.jsonwebtoken:jjwt-api:$jjwtApiVersion")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$webmvcUiVersion")
+
 
 
     runtimeOnly("io.jsonwebtoken:jjwt-impl:$jjwtImplVersion")

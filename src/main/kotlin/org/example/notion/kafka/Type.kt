@@ -1,8 +1,7 @@
-package org.example.notion.sse
+package org.example.notion.kafka
 
 enum class Type {
     PARAGRAPH_CHANGED,
-    PARAGRAPH_EXECUTED,
     PARAGRAPH_CREATED,
     PARAGRAPH_DELETED
 }

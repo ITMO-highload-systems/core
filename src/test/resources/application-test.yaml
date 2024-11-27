@@ -67,3 +67,6 @@ management:
       exposure:
         include: "*"
         exclude: shutdown
+
+websocket:
+  server-address: ws://localhost:52835/ws

@@ -1,0 +1,68 @@
+application:
+
+  security:
+    jwt:
+      expiration: 123456789
+      server-expiration: 123456789009876
+      secret-key: MegaLargeSigningSecretKeyForDemoApplicationMegaLargeSigningSecretKeyForDemoApplication
+
+spring:
+  application:
+    name: notion
+  cloud:
+    config:
+      enabled: off
+
+  kafka:
+    client-id: ${spring.application.name}
+
+    producer:
+      properties:
+        spring:
+          json:
+            add:
+              type:
+                headers: false
+      key-serializer: "org.apache.kafka.common.serialization.LongSerializer"
+      value-serializer: "org.apache.kafka.common.serialization.StringSerializer"
+      retries: 3
+    bootstrap-servers: localhost:9092,localhost:9093,localhost:9094
+
+  datasource:
+    url: ${NOTION_CORE_DATABASE_URL:jdbc:postgresql://localhost:5432/notion-core}
+    username: ${NOTION_CORE_DATABASE_USERNAME:postgres}
+    password: ${NOTION_CORE_DATABASE_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+server:
+  port: 9091
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+        exclude: shutdown
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_URL:http://localhost:8761/eureka}
+    enabled: true
+logging:
+  level:
+    root: info
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 10
+        sliding-window-type: count_based
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 5s
