@@ -9,32 +9,31 @@ import org.example.notion.app.userPermission.entity.Permission
 import org.example.notion.config.JwtUtil
 import org.example.notion.configuration.ClockTestConfiguration
 import org.example.notion.configuration.WireMockConfig
+import org.example.notion.kafka.Message
+import org.example.notion.kafka.SseService
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.Mockito
+import org.mockito.Mockito.doNothing
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
 import org.springframework.http.MediaType
-import org.springframework.mock.web.MockAsyncContext
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.MvcResult
-import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import org.testcontainers.containers.PostgreSQLContainer
-import java.io.IOException
 import java.util.*
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 
 
 @ActiveProfiles("test")
@@ -64,6 +63,9 @@ abstract class AbstractIntegrationTest {
     @Qualifier("mockCodeExecService")
     protected lateinit var mockCodeExecService: WireMockServer
 
+    @MockBean
+    lateinit var sseService: SseService
+
     companion object {
         private val logger = LoggerFactory.getLogger(this::class.java)
 
@@ -80,43 +82,6 @@ abstract class AbstractIntegrationTest {
     @BeforeEach
     fun prepareEnv() {
         ClockTestConfiguration.TestClockProxy.setToFixedClock()
-    }
-
-    fun subscribe(noteId: Long): MvcResult {
-        return mockMvc.perform(
-            MockMvcRequestBuilders.get("/sse/bind/$noteId/user")
-                .header(AUTHORIZATION, "Bearer ${signInAs(createUser())}")
-        )
-            .andExpect(MockMvcResultMatchers.request().asyncStarted()).andReturn()
-    }
-
-    fun sendSse(noteId: Long, message: Map<String, Any>) {
-        val valueAsBytes = mapper.writeValueAsBytes(message)
-        logger.debug("Sending JSON: ${String(valueAsBytes)}")
-        mockMvc.perform(
-            MockMvcRequestBuilders.post("/sse/send/$noteId").content(valueAsBytes)
-                .header(AUTHORIZATION, "Bearer ${signInAs(createUser())}")
-                .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(MockMvcResultMatchers.status().isOk)
-    }
-
-    fun getSse(result: MvcResult): ResultActions {
-        val execService = Executors.newScheduledThreadPool(1)
-        val timeout = 500L
-        val timeUnit = TimeUnit.MILLISECONDS
-        val asyncContext = result.request.asyncContext as MockAsyncContext?
-        execService.schedule({
-            for (listener in asyncContext!!.listeners) try {
-                listener.onTimeout(null)
-            } catch (e: IOException) {
-                e.printStackTrace()
-            }
-        }, timeout, timeUnit)
-
-        result.asyncResult
-
-        return mockMvc.perform(MockMvcRequestBuilders.asyncDispatch(result))
-
     }
 
     protected fun createNote(token: String): NoteDto {
