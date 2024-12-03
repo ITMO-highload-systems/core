@@ -243,8 +243,6 @@ class ParagraphServiceImpl(
                 logger.error(PARAGRAPH_NOT_FOUND.format(paragraphId))
                 throw EntityNotFoundException(PARAGRAPH_NOT_FOUND.format(paragraphId))
             }
-
-            permissionService.requireUserPermission(paragraph.noteId, Permission.WRITER)
         } catch (e: Exception) {
             return false
         }
