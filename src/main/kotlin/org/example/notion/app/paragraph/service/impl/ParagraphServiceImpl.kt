@@ -37,7 +37,6 @@ class ParagraphServiceImpl(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ParagraphServiceImpl::class.java)
-        private const val PARAGRAPH_EXECUTED = "Paragraph with id %d executed"
         private const val PARAGRAPH_NOT_FOUND = "Paragraph with id %d not found"
         private const val PARAGRAPH_TYPE_NOT_PYTHON = "Paragraph with id %d is not a python paragraph"
         private const val PARAGRAPH_CREATED = "Paragraph with id %d created"
@@ -135,7 +134,7 @@ class ParagraphServiceImpl(
             throw ParagraphErrorTypeException(PARAGRAPH_TYPE_NOT_PYTHON.format(paragraphId))
         }
 
-        webSocketClient.sendMessage("/app/paragraph.execute", ExecuteParagraphRequest(paragraphId, paragraph.text))
+        webSocketClient.sendMessage("/app/paragraph.execute", ExecuteParagraphRequest(paragraphId, paragraph.noteId, paragraph.text))
 
         return PARAGRAPH_EXECUTE_REQUEST_SEND.format(paragraph.id!!)
     }
