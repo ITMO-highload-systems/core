@@ -20,7 +20,7 @@ class ResourceServerConfig(private val jwtAuthFilter: JwtAuthFilter) {
                 authorize("/actuator/**", permitAll)
                 authorize("/v3/**", permitAll)
                 authorize("/swagger-ui/**", permitAll)
-                authorize("/api/v1/paragraph/paragraphs", permitAll)
+                authorize("/api/v1/paragraph/paragraphs/**", permitAll)
                 authorize(anyRequest, authenticated)
             }
             addFilterBefore<UsernamePasswordAuthenticationFilter>(jwtAuthFilter)
